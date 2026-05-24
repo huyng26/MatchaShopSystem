@@ -43,12 +43,6 @@ const SIDEBAR_HTML = `
     <a class="${_NAV_INACTIVE}" data-nav="employees" href="employee_list.html">
       <span class="material-symbols-outlined">badge</span><span>Employees</span>
     </a>
-    <a class="${_NAV_INACTIVE}" data-nav="analytics" href="#">
-      <span class="material-symbols-outlined">bar_chart</span><span>Analytics</span>
-    </a>
-    <a class="${_NAV_INACTIVE}" data-nav="analytics" href="#">
-      <span class="material-symbols-outlined">bar_chart</span><span>Analytics</span>
-    </a>
   </nav>
   <div class="pt-6 border-t border-[#06440c]/80 space-y-1">
     <a class="${_NAV_INACTIVE}" href="#">
