@@ -1,13 +1,114 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MatchaShop — Điều hướng giao diện</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800&family=Manrope:wght@400;600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <style>
+    .nav-index {
+      max-width: 56rem;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 4rem;
+    }
+    .nav-index h1 {
+      font-family: 'Newsreader', serif;
+      font-size: 2.25rem;
+      color: #002c04;
+      margin-bottom: 0.5rem;
+    }
+    .nav-index .subtitle {
+      color: #41493e;
+      margin-bottom: 2.5rem;
+    }
+    .nav-index section {
+      margin-bottom: 2rem;
+    }
+    .nav-index h2 {
+      font-family: 'Newsreader', serif;
+      font-size: 1.125rem;
+      color: #006e08;
+      margin-bottom: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .nav-index ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 0.5rem;
+    }
+    @media (min-width: 640px) {
+      .nav-index ul {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    .nav-index a {
+      display: block;
+      padding: 0.75rem 1rem;
+      background: #fff;
+      border: 1px solid #e1e3e2;
+      border-radius: 0.5rem;
+      color: #002c04;
+      text-decoration: none;
+      font-weight: 500;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .nav-index a:hover {
+      border-color: #8efb7c;
+      box-shadow: 0 4px 12px rgba(0, 44, 4, 0.06);
+    }
+    .nav-index a span {
+      display: block;
+      font-size: 0.75rem;
+      color: #71796d;
+      font-weight: 400;
+      margin-top: 0.15rem;
+    }
+  </style>
+</head>
+<body>
+  <main class="nav-index">
+    <h1>Hoppers' Matcha Shop</h1>
+    <p class="subtitle">Trang điều hướng tới các giao diện frontend (prototype).</p>
+
+    <section>
+      <h2>Xác thực</h2>
+      <ul>
+        <li><a href="pages/login.html">Đăng nhập<span>login.html</span></a></li>
+        <li><a href="pages/forgot_password_1.html">Quên mật khẩu (bước 1)<span>forgot_password_1.html</span></a></li>
+        <li><a href="pages/forgot_password_2.html">Quên mật khẩu (bước 2)<span>forgot_password_2.html</span></a></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Quản trị</h2>
+      <ul>
+        <li><a href="pages/dashboard.html">Dashboard<span>dashboard.html</span></a></li>
+        <li><a href="pages/menu.html">Thực đơn<span>menu.html</span></a></li>
+        <li><a href="pages/product_detail.html">Chi tiết sản phẩm<span>product_detail.html</span></a></li>
+        <li><a href="pages/inventory_list.html">Kho hàng<span>inventory_list.html</span></a></li>
+        <li><a href="pages/inventory_detail.html">Chi tiết kho<span>inventory_detail.html</span></a></li>
+        <li><a href="pages/customer_list.html">Khách hàng<span>customer_list.html</span></a></li>
+        <li><a href="pages/customer_detail.html">Chi tiết khách hàng<span>customer_detail.html</span></a></li>
+        <li><a href="pages/employee_list.html">Nhân viên<span>employee_list.html</span></a></li>
+        <li><a href="pages/employee_detail.html">Chi tiết nhân viên<span>employee_detail.html</span></a></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Bán hàng &amp; giao hàng</h2>
+      <ul>
+        <li><a href="pages/POS_menu.html">POS — Menu<span>POS_menu.html</span></a></li>
+        <li><a href="pages/POS_payment.html">POS — Thanh toán<span>POS_payment.html</span></a></li>
+        <li><a href="pages/delivery_manage.html">Quản lý giao hàng<span>delivery_manage.html</span></a></li>
+        <li><a href="pages/shipper.html">Shipper<span>shipper.html</span></a></li>
+      </ul>
+    </section>
+  </main>
+</body>
 </html>

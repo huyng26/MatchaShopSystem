@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Manrope:wght@200..800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+      <link rel="stylesheet" href="../assets/css/style.css" />
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+      <script src="../assets/js/tailwind-config.js"></script>
+</head>
+
+<body class="page-customer-list bg-background text-on-surface flex min-h-screen" data-page="customer-list">
+    <!-- SideNavBar -->
+    <aside id="app-sidebar" class="h-screen w-72 fixed left-0 top-0 z-40 bg-[#002c04] dark:bg-[#001a02] shadow-[32px_0_64px_-12px_rgba(0,44,4,0.08)] flex flex-col py-8 px-6"></aside>
+    <!-- TopAppBar -->
+    <header id="app-topbar" class="fixed top-0 right-0 left-72 h-20 z-30 bg-[#f9f9f8]/80 dark:bg-[#191c1c]/80 backdrop-blur-2xl flex items-center justify-between px-10"></header>
+    <!-- Content Canvas -->
+    <div class="ml-72 pt-24 p-10 space-y-8 flex-1">
+        <!-- Page Header -->
+        <div class="flex items-end justify-between mb-10">
+            <div>
+                    <h2 class="font-serif text-4xl text-primary">Customer List</h2>
+                    <p class="text-stone-500 mt-2 font-body">Manage and track your loyal customers in the system.</p>
+            </div>
+            <button
+                class="bg-secondary text-on-secondary px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-secondary/20 hover:scale-[1.02] transition-transform active:scale-95">
+                <span class="material-symbols-outlined" data-icon="person_add">person_add</span>
+                Add New Customer
+            </button>
+        </div>
+        <!-- Dashboard Stats Cluster (Bento Style) -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+            <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
+                <p class="text-xs font-label uppercase tracking-widest text-stone-400 mb-1">Total Customers</p>
+                <p class="text-3xl font-serif font-bold text-primary">1,284</p>
+                <div class="mt-4 flex items-center text-xs text-secondary font-bold">
+                    <span class="material-symbols-outlined text-sm mr-1" data-icon="trending_up">trending_up</span>
+                    +12% this month
+                </div>
+            </div>
+            <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
+                <p class="text-xs font-label uppercase tracking-widest text-stone-400 mb-1">Gold Members</p>
+                <p class="text-3xl font-serif font-bold text-primary">156</p>
+                <div class="mt-4 flex items-center text-xs text-tertiary-container font-bold">
+                    <span class="material-symbols-outlined text-sm mr-1" data-icon="military_tech">military_tech</span>
+                    Top tier
+                </div>
+            </div>
+            <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
+                <p class="text-xs font-label uppercase tracking-widest text-stone-400 mb-1">Retention Rate</p>
+                <p class="text-3xl font-serif font-bold text-primary">84%</p>
+                <div class="mt-4 flex items-center text-xs text-secondary font-bold">
+                    <span class="material-symbols-outlined text-sm mr-1" data-icon="favorite">favorite</span>
+                    Above target by 5%
+                </div>
+            </div>
+            <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
+                <p class="text-xs font-label uppercase tracking-widest text-stone-400 mb-1">Average Spend</p>
+                <p class="text-3xl font-serif font-bold text-primary">450k</p>
+                <div class="mt-4 flex items-center text-xs text-stone-400">
+                    <span class="material-symbols-outlined text-sm mr-1" data-icon="payments">payments</span>
+                    per transaction
+                </div>
+            </div>
+        </div>
+        <!-- Filters & List -->
+        <div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/10 overflow-hidden">
+            <!-- Filter Bar -->
+            <div class="p-6 border-b border-surface-container flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="flex items-center bg-surface-container px-3 py-2 rounded-lg gap-2 text-sm font-label text-stone-600 cursor-pointer hover:bg-surface-container-high transition-colors">
+                        <span class="material-symbols-outlined text-lg" data-icon="filter_list">filter_list</span>
+                        Membership Tier: All
+                    </div>
+                    <div
+                        class="flex items-center bg-surface-container px-3 py-2 rounded-lg gap-2 text-sm font-label text-stone-600 cursor-pointer hover:bg-surface-container-high transition-colors">
+                        <span class="material-symbols-outlined text-lg" data-icon="calendar_today">calendar_today</span>
+                        Registered: This Year
+                    </div>
+                </div>
+                    <div class="text-xs text-stone-400 font-label">
+                    Showing 1-10 of 1,284 customers
+                </div>
+            </div>
+            <!-- Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-surface-container-low/50">
+                            <th
+                                class="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-stone-400 font-label">
+                                Customer ID</th>
+                            <th
+                                class="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-stone-400 font-label">
+                                Full Name</th>
+                            <th
+                                class="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-stone-400 font-label">
+                                Membership Tier</th>
+                            <th
+                                class="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-stone-400 font-label text-right">
+                                Total Spent</th>
+                            <th
+                                class="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-stone-400 font-label">
+                                Registered</th>
+                            <th
+                                class="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-stone-400 font-label text-center">
+                                Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-surface-container">
+                        <!-- Row 1 -->
+                        <tr class="hover:bg-surface-container-low/30 transition-colors group cursor-pointer"
+                            onclick="window.location='customer_detail.html'">
+                            <td class="px-6 py-5 font-mono text-xs text-stone-500">#MA-10293</td>
+                            <td class="px-6 py-5">
+                                <a class="flex items-center gap-3" href="customer_detail.html">
+                                    <div
+                                        class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed font-bold text-xs">
+                                        NL</div>
+                                    <div>
+                                        <p class="font-bold text-primary text-sm">Nguyễn Lan Anh</p>
+                                        <p class="text-xs text-stone-400">lananh.nguyen@email.com</p>
+                                    </div>
+                                </a>
+                            </td>
+                            <td class="px-6 py-5">
+                                <span
+                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
+                                    <span class="material-symbols-outlined text-sm mr-1" data-icon="stars"
+                                        data-weight="fill" style="font-variation-settings: 'FILL' 1;">stars</span>
+                                    Gold
+                                </span>
+                            </td>
+                            <td class="px-6 py-5 text-right font-bold text-primary text-sm">12,450,000 VND</td>
+                            <td class="px-6 py-5 text-stone-500 text-xs font-label">12/05/2023</td>
+                            <td class="px-6 py-5">
+                                <div
+                                    class="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button
+                                        class="p-1.5 hover:bg-surface-container rounded-lg text-stone-400 hover:text-primary transition-colors">
+                                        <span class="material-symbols-outlined text-lg"
+                                            data-icon="visibility">visibility</span>
+                                    </button>
+                                    <button
+                                        class="p-1.5 hover:bg-surface-container rounded-lg text-stone-400 hover:text-secondary transition-colors">
+                                        <span class="material-symbols-outlined text-lg" data-icon="edit">edit</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <!-- Row 2 -->
+                        <tr class="hover:bg-surface-container-low/30 transition-colors group cursor-pointer"
+                            onclick="window.location='customer_detail.html'">
+                            <td class="px-6 py-5 font-mono text-xs text-stone-500">#MA-10442</td>
+                            <td class="px-6 py-5">
+                                <a class="flex items-center gap-3" href="customer_detail.html">
+                                    <div
+                                        class="w-8 h-8 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed font-bold text-xs">
+                                        TH</div>
+                                    <div>
+                                        <p class="font-bold text-primary text-sm">Trần Hoàng Nam</p>
+                                        <p class="text-xs text-stone-400">nam.hoang@email.com</p>
+                                    </div>
+                                </a>
+                            </td>
+                            <td class="px-6 py-5">
+                                <span
+                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-stone-200 text-stone-700">
+                                    <span class="material-symbols-outlined text-sm mr-1" data-icon="stars"
+                                        data-weight="fill" style="font-variation-settings: 'FILL' 1;">stars</span>
+                                    Silver
+                                </span>
+                            </td>
+                            <td class="px-6 py-5 text-right font-bold text-primary text-sm">5,200,000 VND</td>
+                            <td class="px-6 py-5 text-stone-500 text-xs font-label">03/08/2023</td>
+                            <td class="px-6 py-5">
+                                <div
+                                    class="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button
+                                        class="p-1.5 hover:bg-surface-container rounded-lg text-stone-400 hover:text-primary transition-colors">
+                                        <span class="material-symbols-outlined text-lg"
+                                            data-icon="visibility">visibility</span>
+                                    </button>
+                                    <button
+                                        class="p-1.5 hover:bg-surface-container rounded-lg text-stone-400 hover:text-secondary transition-colors">
+                                        <span class="material-symbols-outlined text-lg" data-icon="edit">edit</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <!-- Row 3 -->
+                        <tr class="hover:bg-surface-container-low/30 transition-colors group cursor-pointer"
+                            onclick="window.location='customer_detail.html'">
+                            <td class="px-6 py-5 font-mono text-xs text-stone-500">#MA-10512</td>
+                            <td class="px-6 py-5">
+                                <a class="flex items-center gap-3" href="customer_detail.html">
+                                    <div
+                                        class="w-8 h-8 rounded-full bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed font-bold text-xs">
+                                        PV</div>
+                                    <div>
+                                        <p class="font-bold text-primary text-sm">Phạm Văn Minh</p>
+                                        <p class="text-xs text-stone-400">minh.pham@email.com</p>
+                                    </div>
+                                </a>
+                            </td>
+                            <td class="px-6 py-5">
+                                <span
+                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-800">
+                                    <span class="material-symbols-outlined text-sm mr-1" data-icon="stars"
+                                        data-weight="fill" style="font-variation-settings: 'FILL' 1;">stars</span>
+                                    Bronze
+                                </span>
+                            </td>
+                            <td class="px-6 py-5 text-right font-bold text-primary text-sm">850,000 VND</td>
+                            <td class="px-6 py-5 text-stone-500 text-xs font-label">20/10/2023</td>
+                            <td class="px-6 py-5">
+                                <div
+                                    class="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button
+                                        class="p-1.5 hover:bg-surface-container rounded-lg text-stone-400 hover:text-primary transition-colors">
+                                        <span class="material-symbols-outlined text-lg"
+                                            data-icon="visibility">visibility</span>
+                                    </button>
+                                    <button
+                                        class="p-1.5 hover:bg-surface-container rounded-lg text-stone-400 hover:text-secondary transition-colors">
+                                        <span class="material-symbols-outlined text-lg" data-icon="edit">edit</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <!-- Row 4 -->
+                        <tr class="hover:bg-surface-container-low/30 transition-colors group cursor-pointer"
+                            onclick="window.location='customer_detail.html'">
+                            <td class="px-6 py-5 font-mono text-xs text-stone-500">#MA-10668</td>
+                            <td class="px-6 py-5">
+                                <a class="flex items-center gap-3" href="customer_detail.html">
+                                    <div
+                                        class="w-8 h-8 rounded-full bg-primary-fixed-dim flex items-center justify-center text-on-primary-fixed-variant font-bold text-xs">
+                                        LT</div>
+                                    <div>
+                                        <p class="font-bold text-primary text-sm">Lê Thu Thảo</p>
+                                        <p class="text-xs text-stone-400">thao.le@email.com</p>
+                                    </div>
+                                </a>
+                            </td>
+                            <td class="px-6 py-5">
+                                <span
+                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
+                                    <span class="material-symbols-outlined text-sm mr-1" data-icon="stars"
+                                        data-weight="fill" style="font-variation-settings: 'FILL' 1;">stars</span>
+                                    Gold
+                                </span>
+                            </td>
+                            <td class="px-6 py-5 text-right font-bold text-primary text-sm">21,900,000 VND</td>
+                            <td class="px-6 py-5 text-stone-500 text-xs font-label">15/01/2024</td>
+                            <td class="px-6 py-5">
+                                <div
+                                    class="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button
+                                        class="p-1.5 hover:bg-surface-container rounded-lg text-stone-400 hover:text-primary transition-colors">
+                                        <span class="material-symbols-outlined text-lg"
+                                            data-icon="visibility">visibility</span>
+                                    </button>
+                                    <button
+                                        class="p-1.5 hover:bg-surface-container rounded-lg text-stone-400 hover:text-secondary transition-colors">
+                                        <span class="material-symbols-outlined text-lg" data-icon="edit">edit</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Pagination -->
+            <div
+                class="p-6 bg-surface-container-low/30 border-t border-surface-container flex items-center justify-between">
+                <button
+                    class="text-stone-400 hover:text-primary flex items-center gap-1 text-sm font-bold transition-colors">
+                    <span class="material-symbols-outlined" data-icon="chevron_left">chevron_left</span>
+                    Previous
+                </button>
+                <div class="flex items-center gap-2">
+                    <button class="w-8 h-8 rounded-lg bg-primary text-white text-xs font-bold">1</button>
+                    <button
+                        class="w-8 h-8 rounded-lg hover:bg-surface-container text-stone-600 text-xs font-bold transition-colors">2</button>
+                    <button
+                        class="w-8 h-8 rounded-lg hover:bg-surface-container text-stone-600 text-xs font-bold transition-colors">3</button>
+                    <span class="text-stone-400 text-xs">...</span>
+                    <button
+                        class="w-8 h-8 rounded-lg hover:bg-surface-container text-stone-600 text-xs font-bold transition-colors">128</button>
+                </div>
+                <button
+                    class="text-stone-400 hover:text-primary flex items-center gap-1 text-sm font-bold transition-colors">
+                    Next
+                    <span class="material-symbols-outlined" data-icon="chevron_right">chevron_right</span>
+                </button>
+            </div>
+        </div>
+        <!-- Footer Meta Info -->
+        <div class="mt-12 text-center">
+            <p class="text-[10px] text-stone-400 font-label uppercase tracking-widest">Matcha Atelier Internal Portal © 2024</p>
+        </div>
+        </main>
+  <script src="../assets/js/layout.js"></script>
+  <script src="../assets/js/main.js"></script>
+</body>
+
+</html>

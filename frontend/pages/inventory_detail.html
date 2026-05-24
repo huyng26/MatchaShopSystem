@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Matcha Atelier | Inventory Detail</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+      <script src="../assets/js/tailwind-config.js"></script>
+<link
+        href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600;6..72,700&amp;family=Manrope:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+      <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+
+<body class="page-inventory-detail bg-surface text-on-surface min-h-screen" data-page="inventory-detail">
+    <!-- SideNavBar -->
+    <aside id="app-sidebar" class="h-screen w-72 fixed left-0 top-0 z-40 bg-[#002c04] dark:bg-[#001a02] shadow-[32px_0_64px_-12px_rgba(0,44,4,0.08)] flex flex-col py-8 px-6"></aside>
+    <!-- TopAppBar -->
+    <header id="app-topbar" class="fixed top-0 right-0 left-72 h-20 z-30 bg-[#f9f9f8]/80 dark:bg-[#191c1c]/80 backdrop-blur-2xl flex items-center justify-between px-10"></header>
+    <!-- Main Content Canvas -->
+    <main class="ml-72 pt-24 px-10 pb-12 min-h-screen">
+        <div class="max-w-7xl mx-auto space-y-8">
+            <!-- Hero Header Section -->
+            <section class="flex flex-col md:flex-row gap-8 items-start">
+                <div class="relative group">
+                    <div
+                        class="absolute -inset-1 bg-gradient-to-tr from-secondary/20 to-primary/20 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000">
+                    </div>
+                    <img alt="Uji Ceremonial Matcha"
+                        class="relative w-full md:w-80 aspect-square object-cover rounded-xl shadow-2xl"
+                        data-alt="High quality vibrant green ceremonial matcha powder in a black ceramic bowl on a wooden surface with a bamboo whisk"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAS3VVoHEvWt-jcKXAWm_Zwd1gJDwSDVoIkQ9TCDvvm2AH53A7dHOMuTk5rrsL8jHCTxnHLU9r53MvUiqAU2Oe-MTzL4tB7EpdpfcXdGHTcX7ZGXANP5fMR8ur82CrVYuAD77sM-nXIzqqYgoLe_LCYnRJh4eKCDnqmBYzTUzdeztDQZXLt-FY44GoVwwqTkGhT_fPxx_09FI0Xp9E1omK0pw-Vn-dt4LXOiXIbiLmmdBrViIFCSi-edCa4xelD_DMiMBsbhj0_Z_K" />
+                </div>
+                <div class="flex-1 space-y-6">
+                    <div>
+                        <span
+                            class="inline-block px-3 py-1 bg-primary-container/10 text-primary text-xs font-bold rounded-full mb-3 uppercase tracking-widest">Premium
+                            Grade</span>
+                        <h2 class="text-5xl font-headline font-bold text-primary leading-tight">Uji Ceremonial Matcha
+                        </h2>
+                        <p class="text-on-surface-variant max-w-2xl mt-2">First-harvest tea leaves from the Uji region,
+                            stone-ground to a fine, vibrant powder. Known for its intense umami and smooth finish.</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div
+                            class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
+                            <div class="text-on-surface-variant text-sm mb-1">Current Stock</div>
+                            <div class="text-3xl font-headline font-bold text-primary">12.4 <span
+                                    class="text-lg font-body font-normal">kg</span></div>
+                            <div class="mt-2 text-xs font-bold text-secondary flex items-center gap-1">
+                                <span class="material-symbols-outlined text-sm">trending_up</span>
+                                +2.1kg from last week
+                            </div>
+                        </div>
+                        <div
+                            class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
+                            <div class="text-on-surface-variant text-sm mb-1">Unit Cost</div>
+                            <div class="text-3xl font-headline font-bold text-primary">$142.00 <span
+                                    class="text-lg font-body font-normal">/kg</span></div>
+                            <div class="mt-2 text-xs font-medium text-on-surface-variant">Last updated: Oct 12, 2023
+                            </div>
+                        </div>
+                        <div
+                            class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
+                            <div class="text-on-surface-variant text-sm mb-1">Total Value</div>
+                            <div class="text-3xl font-headline font-bold text-primary">$1,760.80</div>
+                            <div class="mt-2 text-xs font-medium text-on-surface-variant">Asset valuation</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- Bento Grid Content -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Stock Level Indicator (Left Column) -->
+                <div class="lg:col-span-1 space-y-8">
+                    <!-- Current Level Card -->
+                    <div class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm border border-outline-variant/10">
+                        <h3 class="text-xl font-headline font-bold mb-6">Stock Status</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <div class="flex justify-between text-sm font-semibold mb-2">
+                                    <span>Inventory Level</span>
+                                    <span class="text-primary">82% Healthy</span>
+                                </div>
+                                <div class="w-full h-4 bg-surface-container rounded-full overflow-hidden">
+                                    <div class="bg-secondary h-full rounded-full" style="width: 82%"></div>
+                                </div>
+                                <div class="flex justify-between mt-2">
+                                    <span class="text-xs text-on-surface-variant">Empty</span>
+                                    <span class="text-xs font-bold text-primary">Safety Threshold (5kg)</span>
+                                    <span class="text-xs text-on-surface-variant">Full (15kg)</span>
+                                </div>
+                            </div>
+                            <div class="p-4 bg-surface-container-low rounded-xl space-y-3">
+                                <div class="flex items-center gap-3">
+                                    <span class="material-symbols-outlined text-secondary">verified</span>
+                                    <span class="text-sm font-medium">Optimum levels maintained.</span>
+                                </div>
+                                <p class="text-xs text-on-surface-variant leading-relaxed">Based on current burn rates,
+                                    you have 18 days of supply remaining before hitting safety stock.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Quick Actions -->
+                    <div class="space-y-4">
+                        <button
+                            class="w-full flex items-center justify-between p-4 bg-primary text-[#f9f9f8] rounded-xl hover:scale-[0.98] transition-all">
+                            <span class="font-bold">Adjust Stock Count</span>
+                            <span class="material-symbols-outlined">edit_square</span>
+                        </button>
+                        <button
+                            class="w-full flex items-center justify-between p-4 bg-secondary text-on-secondary rounded-xl hover:scale-[0.98] transition-all">
+                            <span class="font-bold">Order from Supplier</span>
+                            <span class="material-symbols-outlined">shopping_cart</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- Main Details & Chart (Right Column) -->
+                <div class="lg:col-span-2 space-y-8">
+                    <!-- Chart Section -->
+                    <div class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm border border-outline-variant/10">
+                        <div class="flex justify-between items-center mb-8">
+                            <h3 class="text-xl font-headline font-bold">Stock History</h3>
+                            <select
+                                class="bg-transparent border-none text-sm font-semibold text-secondary focus:ring-0 cursor-pointer">
+                                <option>Last 30 Days</option>
+                                <option>Last 6 Months</option>
+                            </select>
+                        </div>
+                        <!-- Visual Mockup of a Chart -->
+                        <div class="relative h-64 w-full flex items-end justify-between gap-1">
+                            <div class="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-10">
+                                <div class="border-t border-primary w-full"></div>
+                                <div class="border-t border-primary w-full"></div>
+                                <div class="border-t border-primary w-full"></div>
+                                <div class="border-t border-primary w-full"></div>
+                            </div>
+                            <div class="bg-secondary/40 w-full rounded-t-sm" style="height: 60%"></div>
+                            <div class="bg-secondary/40 w-full rounded-t-sm" style="height: 55%"></div>
+                            <div class="bg-secondary/40 w-full rounded-t-sm" style="height: 70%"></div>
+                            <div class="bg-secondary/40 w-full rounded-t-sm" style="height: 65%"></div>
+                            <div class="bg-secondary/40 w-full rounded-t-sm" style="height: 85%"></div>
+                            <div class="bg-secondary/40 w-full rounded-t-sm" style="height: 80%"></div>
+                            <div class="bg-secondary w-full rounded-t-sm" style="height: 95%"></div>
+                            <div class="bg-secondary w-full rounded-t-sm" style="height: 90%"></div>
+                            <div class="bg-secondary w-full rounded-t-sm" style="height: 75%"></div>
+                            <div class="bg-secondary w-full rounded-t-sm" style="height: 65%"></div>
+                            <div class="bg-secondary w-full rounded-t-sm" style="height: 55%"></div>
+                            <div class="bg-secondary w-full rounded-t-sm" style="height: 45%"></div>
+                            <div class="bg-secondary w-full rounded-t-sm" style="height: 40%"></div>
+                            <div class="bg-secondary w-full rounded-t-sm" style="height: 60%"></div>
+                            <div class="bg-secondary w-full rounded-t-sm" style="height: 70%"></div>
+                        </div>
+                        <div
+                            class="flex justify-between mt-4 text-[10px] uppercase tracking-widest font-bold text-on-surface-variant opacity-60">
+                            <span>Oct 01</span>
+                            <span>Oct 08</span>
+                            <span>Oct 15</span>
+                            <span>Oct 22</span>
+                            <span>Today</span>
+                        </div>
+                    </div>
+                    <!-- Form Fields -->
+                    <div class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm border border-outline-variant/10">
+                        <h3 class="text-xl font-headline font-bold mb-8">Ingredient Configuration</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <!-- Left Column Inputs -->
+                            <div class="space-y-6">
+                                <div>
+                                    <label
+                                        class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Unit
+                                        Cost (USD)</label>
+                                    <input
+                                        class="w-full bg-surface-container border-none rounded-xl p-4 focus:ring-2 focus:ring-secondary/30 transition-all font-medium text-primary"
+                                        type="text" value="142.00" />
+                                </div>
+                                <div>
+                                    <label
+                                        class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Supplier
+                                        Info</label>
+                                    <div class="relative">
+                                        <input
+                                            class="w-full bg-surface-container border-none rounded-xl p-4 focus:ring-2 focus:ring-secondary/30 transition-all font-medium text-primary pr-12"
+                                            type="text" value="Kyoto Tea Collective" />
+                                        <span
+                                            class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant">launch</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label
+                                        class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Shelf
+                                        Life (Days)</label>
+                                    <input
+                                        class="w-full bg-surface-container border-none rounded-xl p-4 focus:ring-2 focus:ring-secondary/30 transition-all font-medium text-primary"
+                                        type="number" value="180" />
+                                </div>
+                            </div>
+                            <!-- Right Column Inputs -->
+                            <div class="space-y-6">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label
+                                            class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Min
+                                            Stock (kg)</label>
+                                        <input
+                                            class="w-full bg-surface-container border-none rounded-xl p-4 focus:ring-2 focus:ring-secondary/30 transition-all font-medium text-primary"
+                                            type="text" value="5.0" />
+                                    </div>
+                                    <div>
+                                        <label
+                                            class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Max
+                                            Stock (kg)</label>
+                                        <input
+                                            class="w-full bg-surface-container border-none rounded-xl p-4 focus:ring-2 focus:ring-secondary/30 transition-all font-medium text-primary"
+                                            type="text" value="15.0" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label
+                                        class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Storage
+                                        Location</label>
+                                    <select
+                                        class="w-full bg-surface-container border-none rounded-xl p-4 focus:ring-2 focus:ring-secondary/30 transition-all font-medium text-primary appearance-none">
+                                        <option>Cold Storage A-12</option>
+                                        <option>Main Pantry</option>
+                                        <option>Ambient Shelf 04</option>
+                                    </select>
+                                </div>
+                                <div class="pt-2">
+                                    <label class="flex items-center gap-3 cursor-pointer group">
+                                        <div class="relative">
+                                            <input checked="" class="sr-only" type="checkbox" />
+                                            <div
+                                                class="w-10 h-6 bg-secondary/20 rounded-full transition-colors group-hover:bg-secondary/30">
+                                            </div>
+                                            <div class="absolute left-1 top-1 w-4 h-4 bg-secondary rounded-full"></div>
+                                        </div>
+                                        <span class="text-sm font-semibold text-primary">Auto-reorder enabled</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-10 flex justify-end gap-4">
+                            <button
+                                class="px-8 py-3 text-on-surface-variant font-bold hover:text-primary transition-colors">Discard
+                                Changes</button>
+                            <button
+                                class="px-10 py-3 bg-primary text-[#f9f9f8] rounded-xl font-bold shadow-lg shadow-primary/10 hover:translate-y-[-2px] transition-all">Save
+                                Ingredient Profile</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Audit Log / Additional Metadata -->
+            <section class="bg-surface-container/50 p-8 rounded-2xl">
+                <div class="flex items-center gap-4 mb-6">
+                    <span class="material-symbols-outlined text-on-surface-variant">history</span>
+                    <h3 class="text-lg font-headline font-bold">Recent Activities</h3>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between py-3 border-b border-outline-variant/10">
+                        <div class="flex items-center gap-4">
+                            <div class="w-2 h-2 rounded-full bg-secondary"></div>
+                            <span class="text-sm font-medium">Restock received - 5.0 kg</span>
+                        </div>
+                        <span class="text-xs text-on-surface-variant font-medium">Oct 18, 14:20 by Admin</span>
+                    </div>
+                    <div class="flex items-center justify-between py-3 border-b border-outline-variant/10">
+                        <div class="flex items-center gap-4">
+                            <div class="w-2 h-2 rounded-full bg-tertiary"></div>
+                            <span class="text-sm font-medium">Daily consumption sync - 0.45 kg</span>
+                        </div>
+                        <span class="text-xs text-on-surface-variant font-medium">Oct 18, 08:00 by System</span>
+                    </div>
+                    <div class="flex items-center justify-between py-3">
+                        <div class="flex items-center gap-4">
+                            <div class="w-2 h-2 rounded-full bg-outline"></div>
+                            <span class="text-sm font-medium">Unit cost updated from $140.00</span>
+                        </div>
+                        <span class="text-xs text-on-surface-variant font-medium">Oct 12, 11:45 by Procurement</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+  <script src="../assets/js/layout.js"></script>
+  <script src="../assets/js/main.js"></script>
+</body>
+
+</html>

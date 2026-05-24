@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Product Detail Management - The Matcha Atelier</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+      <script src="../assets/js/tailwind-config.js"></script>
+<link
+        href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Manrope:wght@200..800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+      <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+
+<body class="page-product-detail bg-background text-on-surface flex min-h-screen" data-page="product-detail">
+    <!-- SideNavBar Component -->
+    <aside id="app-sidebar" class="h-screen w-72 fixed left-0 top-0 z-40 bg-[#002c04] dark:bg-[#001a02] shadow-[32px_0_64px_-12px_rgba(0,44,4,0.08)] flex flex-col py-8 px-6"></aside>
+    <!-- TopAppBar -->
+    <header id="app-topbar" class="fixed top-0 right-0 left-72 h-20 z-30 bg-[#f9f9f8]/80 dark:bg-[#191c1c]/80 backdrop-blur-2xl flex items-center justify-between px-10"></header>
+    <!-- Product Detail Content -->
+    <div class="ml-72 pt-20 p-10 space-y-8">
+        <!-- Hero Header Section (Asymmetric) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start mb-16">
+            <!-- Gallery Cluster -->
+            <div class="lg:col-span-7 grid grid-cols-4 gap-4">
+                <div class="col-span-4 h-[500px] rounded-xl overflow-hidden shadow-sm">
+                    <img alt="Matcha Cream Cheese Main"
+                        class="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
+                        data-alt="vibrant green matcha latte topped with thick white cream cheese foam in a clear glass on a rustic wooden table with scattered tea leaves"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuAgfS9rC7i_LhWHaCUGYnye4Bo1cgSpqJrHQGI-OmUFwr4PWRdCQLwY-U_Q8RNmHY2TCHSt4w9zYwc9MM9lEm7wyajMUALi9nF3WcRRSvDgY8_-dfI1yc9mDcYmuJtSpWcIZj29mWHtxoduBsSb-vab-d6T5JszcPImPqs3w11ARzDhRv_dOqc1tDnbajjwQl6iqsuI8NtqfK7_HmOosYMd2Kz9GIAhtfZqncbBhpYd7M6hgXBNxwLLs6B6CupIfOxXTcoGvUtYvH2-" />
+                </div>
+                <div
+                    class="col-span-1 h-32 rounded-lg overflow-hidden grayscale hover:grayscale-0 transition-all cursor-pointer border-2 border-transparent hover:border-secondary">
+                    <img alt="Matcha detail" class="w-full h-full object-cover"
+                        data-alt="close-up macro shot of fine emerald green matcha powder texture with organic swirls"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDyXPxX4ARUgDbc8DVBMXFY-gjVuLI8J0rnppDEZD2lDQCksujRrNoTTmbWGX0Sgg3hTo8K62-66qey8vw7TUp9OaFXk8_ZdLEwn9w9BeZZKvHWHaYNzan6HSbXmC4rHl_gHzldoFboHGnvyzXo033HKz93cHG0-uXFEUl4QS-QX9hZKUySodPfzzoZ7Jj7jTB3dtXLA0I0LK74_YfsSXBEZM0dEcfhASrHXztSHLxtEwmtCBTItcbpD1EERCe95VQDzARJfaMwpD1V" />
+                </div>
+                <div
+                    class="col-span-1 h-32 rounded-lg overflow-hidden grayscale hover:grayscale-0 transition-all cursor-pointer border-2 border-transparent hover:border-secondary">
+                    <img alt="Cream cheese foam" class="w-full h-full object-cover"
+                        data-alt="thick whipped white cream cheese foam being poured onto a beverage in slow motion"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCc4kWtoNKkk-1idMdve4vxlI0S1Wfn_E9La1tQGAJpR-7jD5Qtb1va5c4FAFB7jyiOCyWNP437Kis7i4arbRsV-hiJ4ZlOMplXyQoA8nJ_BMp9nzeumujW1Atyj69MNxBxDOFG8r1luWHvnm5lYBMnIjQY5oais9v-qzZi8En2fh15XsMGT4HezOqbmLD3ROR66secsORBPPW2ecLxgB6y1ktq4utCKujNGd8InhvzHoaeGBI5cuICXGCjcEg4TNtGmKrcg45xfIzz" />
+                </div>
+                <div
+                    class="col-span-1 h-32 rounded-lg overflow-hidden grayscale hover:grayscale-0 transition-all cursor-pointer border-2 border-transparent hover:border-secondary">
+                    <img alt="Coffee shop atmosphere" class="w-full h-full object-cover"
+                        data-alt="minimalist modern cafe interior with botanical plants and soft afternoon sunlight hitting the counter"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNElq_N6UzW6KNEcaPqA5_0-g1EtsVyNcADsv6hbdP7SFVd6QMwUJhfn1H1qbEWlGucaU3LBo8CiI5n617nebwZRpSYW3uqNsQmaCBn4xv5ZxQwZTQESO7C4KP9vLpPqqms8RSMzlewBtDHJWgjGMchmy9bRiw_VXsA-W7op1zAJl9OrCsVFjbpj6lOLXT5-h_r31Tgpju-T7aNE2-Zh8Pp4qq7u6yjSax-b7Juogn8wBYNeoTOpKnsSARkS88GdWrOnAnQxtVJsfb" />
+                </div>
+                <div
+                    class="col-span-1 h-32 rounded-lg bg-surface-container flex flex-col items-center justify-center text-secondary hover:bg-surface-container-high transition-colors cursor-pointer border-2 border-dashed border-outline-variant">
+                    <span class="material-symbols-outlined">add_a_photo</span>
+                    <span class="text-[10px] font-bold uppercase mt-1">Add Image</span>
+                </div>
+            </div>
+            <!-- Primary Meta Fields -->
+            <div class="lg:col-span-5 space-y-8">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-[0.2em] text-secondary mb-2 block">Product
+                        Identity</span>
+                    <h1 class="text-5xl font-serif italic text-primary leading-tight">Matcha Cream Cheese</h1>
+                    <p class="text-on-surface-variant mt-4 leading-relaxed font-medium">A signature botanical blend
+                        featuring ceremonial grade matcha topped with a velvety, savory-sweet cream cheese foam cloud.
+                    </p>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="p-6 bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/10">
+                        <label
+                            class="text-[10px] uppercase font-bold text-on-surface/40 tracking-widest block mb-2">Base
+                            Price</label>
+                        <div class="flex items-baseline gap-1">
+                            <span class="text-2xl font-serif text-primary">$</span>
+                            <input
+                                class="text-3xl font-serif text-primary bg-transparent border-none p-0 w-24 focus:ring-0"
+                                type="text" value="6.50" />
+                        </div>
+                    </div>
+                    <div class="p-6 bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/10">
+                        <label
+                            class="text-[10px] uppercase font-bold text-on-surface/40 tracking-widest block mb-2">Category</label>
+                        <select
+                            class="bg-transparent border-none p-0 w-full text-lg font-serif text-primary focus:ring-0 appearance-none">
+                            <option>Signature Tea</option>
+                            <option>Coffee</option>
+                            <option>Seasonal</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-bold text-primary">Availability</span>
+                        <div
+                            class="flex items-center gap-2 bg-secondary/10 text-secondary px-3 py-1 rounded-full text-xs font-bold">
+                            <span class="w-2 h-2 bg-secondary rounded-full"></span>
+                            Active
+                        </div>
+                    </div>
+                    <div class="p-1 bg-surface-container rounded-xl flex gap-1">
+                        <button
+                            class="flex-1 py-3 text-xs font-bold uppercase bg-surface-container-lowest text-primary rounded-lg shadow-sm">In
+                            Stock</button>
+                        <button
+                            class="flex-1 py-3 text-xs font-bold uppercase text-on-surface/40 hover:text-on-surface transition-colors">Out
+                            of Stock</button>
+                        <button
+                            class="flex-1 py-3 text-xs font-bold uppercase text-on-surface/40 hover:text-on-surface transition-colors">Hidden</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Detailed Management Bento Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Ingredients Section (Bento Card 1) -->
+            <div class="lg:col-span-1 bg-surface-container-lowest rounded-2xl p-8 shadow-sm">
+                <div class="flex justify-between items-center mb-8">
+                    <h3 class="text-2xl font-serif italic text-primary">Ingredients</h3>
+                    <button
+                        class="w-10 h-10 bg-secondary/10 text-secondary rounded-full flex items-center justify-center hover:bg-secondary hover:text-white transition-all">
+                        <span class="material-symbols-outlined">add</span>
+                    </button>
+                </div>
+                <ul class="space-y-6">
+                    <li class="flex items-center justify-between pb-4 border-b border-outline-variant/10">
+                        <div>
+                            <p class="text-sm font-bold text-primary">Ceremonial Matcha</p>
+                            <p class="text-[10px] text-on-surface-variant">Grade A Organic</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm font-bold text-secondary">5g</span>
+                            <span
+                                class="material-symbols-outlined text-on-surface/20 text-sm cursor-pointer hover:text-error">close</span>
+                        </div>
+                    </li>
+                    <li class="flex items-center justify-between pb-4 border-b border-outline-variant/10">
+                        <div>
+                            <p class="text-sm font-bold text-primary">Cream Cheese Foam</p>
+                            <p class="text-[10px] text-on-surface-variant">House-made Salty</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm font-bold text-secondary">40ml</span>
+                            <span
+                                class="material-symbols-outlined text-on-surface/20 text-sm cursor-pointer hover:text-error">close</span>
+                        </div>
+                    </li>
+                    <li class="flex items-center justify-between pb-4 border-b border-outline-variant/10">
+                        <div>
+                            <p class="text-sm font-bold text-primary">Oat Milk</p>
+                            <p class="text-[10px] text-on-surface-variant">Barista Edition</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm font-bold text-secondary">180ml</span>
+                            <span
+                                class="material-symbols-outlined text-on-surface/20 text-sm cursor-pointer hover:text-error">close</span>
+                        </div>
+                    </li>
+                    <li class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-bold text-primary">Brown Sugar Syrup</p>
+                            <p class="text-[10px] text-on-surface-variant">Natural Cane</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm font-bold text-secondary">15ml</span>
+                            <span
+                                class="material-symbols-outlined text-on-surface/20 text-sm cursor-pointer hover:text-error">close</span>
+                        </div>
+                    </li>
+                </ul>
+                <div class="mt-10 p-4 bg-primary/5 rounded-xl border border-primary/10">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="material-symbols-outlined text-primary text-lg">info</span>
+                        <span class="text-[10px] font-bold uppercase text-primary tracking-wider">Inventory Sync</span>
+                    </div>
+                    <p class="text-xs text-on-surface-variant leading-relaxed">Estimated cost per unit: <strong
+                            class="text-primary">$1.42</strong>. Ingredients are currently in stock for ~450 servings.
+                    </p>
+                </div>
+            </div>
+            <!-- Preparation Steps (Bento Card 2) -->
+            <div class="lg:col-span-2 bg-[#06440c] text-white rounded-2xl p-10 overflow-hidden relative">
+                <!-- Botanical Decoration Overlay -->
+                <div class="absolute -right-20 -bottom-20 opacity-10 pointer-events-none">
+                    <span class="material-symbols-outlined text-[300px]"
+                        style="font-variation-settings: 'FILL' 1;">eco</span>
+                </div>
+                <div class="relative z-10">
+                    <div class="flex justify-between items-start mb-10">
+                        <div>
+                            <h3 class="text-3xl font-serif italic text-[#f9f9f8]">Preparation Guide</h3>
+                            <p class="text-[#f9f9f8]/60 text-sm mt-2 font-medium">Standardized steps for atelier quality
+                                control</p>
+                        </div>
+                        <button
+                            class="px-6 py-2 border border-[#f9f9f8]/20 rounded-full text-xs font-bold uppercase hover:bg-white/10 transition-all flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm">edit</span>
+                            Edit Recipe
+                        </button>
+                    </div>
+                    <div class="space-y-10">
+                        <div class="flex gap-6">
+                            <div
+                                class="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-xl font-serif italic shrink-0 border border-white/20">
+                                01</div>
+                            <div>
+                                <h4 class="text-lg font-bold mb-1">Matcha Sifting</h4>
+                                <p class="text-[#f9f9f8]/70 leading-relaxed text-sm">Sift 5g of ceremonial matcha into a
+                                    warmed chawan. Add 20ml of 80°C water and whisk vigorously in a 'W' motion until a
+                                    dense, fine froth forms with no large bubbles.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-6">
+                            <div
+                                class="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-xl font-serif italic shrink-0 border border-white/20">
+                                02</div>
+                            <div>
+                                <h4 class="text-lg font-bold mb-1">Base Combination</h4>
+                                <p class="text-[#f9f9f8]/70 leading-relaxed text-sm">Combine chilled oat milk and brown
+                                    sugar syrup in the serving glass. Add filtered ice up to 70% of the volume. Gently
+                                    pour the whisked matcha over the back of a spoon to create a layer.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-6">
+                            <div
+                                class="w-12 h-12 rounded-full bg-[#3ba633] flex items-center justify-center text-xl font-serif italic shrink-0 border border-white/20">
+                                03</div>
+                            <div>
+                                <h4 class="text-lg font-bold mb-1">Foam Crowning</h4>
+                                <p class="text-[#f9f9f8]/70 leading-relaxed text-sm">Slowly top with 40ml of chilled
+                                    cream cheese foam. The foam should sit cleanly on the matcha layer without immediate
+                                    bleeding. Dust lightly with matcha powder for garnish.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-12 flex items-center gap-10 border-t border-white/10 pt-8">
+                        <div>
+                            <span
+                                class="text-[10px] uppercase font-bold text-[#f9f9f8]/40 tracking-widest block mb-1">Prep
+                                Time</span>
+                            <p class="text-lg font-serif">180 Seconds</p>
+                        </div>
+                        <div>
+                            <span
+                                class="text-[10px] uppercase font-bold text-[#f9f9f8]/40 tracking-widest block mb-1">Temperature</span>
+                            <p class="text-lg font-serif">4°C (Served Cold)</p>
+                        </div>
+                        <div>
+                            <span
+                                class="text-[10px] uppercase font-bold text-[#f9f9f8]/40 tracking-widest block mb-1">Glassware</span>
+                            <p class="text-lg font-serif">Tall Fluted Glass</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Footer Actions -->
+        <div class="mt-12 pt-8 border-t border-outline-variant/20 flex justify-end gap-4">
+            <button
+                class="px-10 py-4 text-on-surface-variant font-bold hover:bg-surface-container rounded-xl transition-all">Discard
+                Changes</button>
+            <button
+                class="px-12 py-4 bg-secondary text-white font-bold rounded-xl shadow-lg shadow-secondary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">Save
+                Product Details</button>
+        </div>
+    </div>
+    </main>
+  <script src="../assets/js/layout.js"></script>
+  <script src="../assets/js/main.js"></script>
+</body>
+
+</html>

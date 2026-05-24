@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+      <script src="../assets/js/tailwind-config.js"></script>
+<link
+        href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Manrope:wght@200..800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+      <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+
+<body class="page-menu bg-background text-on-surface min-h-screen" data-page="menu">
+    <!-- SideNavBar -->
+    <aside id="app-sidebar"
+        class="h-screen w-72 fixed left-0 top-0 z-40 bg-[#002c04] dark:bg-[#001a02] shadow-[32px_0_64px_-12px_rgba(0,44,4,0.08)] flex flex-col py-8 px-6"></aside>
+
+    <!-- TopAppBar -->
+    <header id="app-topbar"
+        class="fixed top-0 right-0 left-72 h-20 z-30 bg-[#f9f9f8]/80 dark:bg-[#191c1c]/80 backdrop-blur-2xl flex items-center justify-between px-10"></header>
+
+    <!-- Main Content Area -->
+    <main class="ml-72 pt-24 p-10 space-y-8">
+        <!-- Page Content (full width to match other UIs) -->
+            <!-- Header Cluster -->
+            <div class="flex items-end justify-between mb-8">
+                <div>
+                    <h1 class="font-serif text-4xl text-primary mb-4">Menu</h1>
+                    <p class="text-on-surface-variant max-w-md font-body">Manage your seasonal offerings. Adjust
+                        availability and basic details for the admin view.</p>
+                </div>
+                <div class="flex gap-3">
+                    <button
+                        class="flex items-center gap-2 px-6 py-2.5 rounded-full bg-surface-container-high text-on-surface font-bold text-sm hover:bg-surface-container-highest transition-colors">
+                        <span class="material-symbols-outlined text-sm" data-icon="filter_list">filter_list</span>
+                        Filters
+                    </button>
+                    <button
+                        class="flex items-center gap-2 px-6 py-2.5 rounded-full bg-surface-container-high text-on-surface font-bold text-sm hover:bg-surface-container-highest transition-colors">
+                        <span class="material-symbols-outlined text-sm" data-icon="sort">sort</span>
+                        Sort
+                    </button>
+                </div>
+            </div>
+            <!-- Simplified Uniform Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                <!-- Add New Product Card -->
+                <div
+                    class="group border-2 border-dashed border-outline-variant rounded-2xl flex flex-col items-center justify-center p-6 text-center hover:bg-surface-container-low transition-all cursor-pointer aspect-square">
+                    <div
+                        class="w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center mb-3 group-hover:bg-secondary group-hover:text-white transition-all">
+                        <span class="material-symbols-outlined" data-icon="add">add</span>
+                    </div>
+                    <p class="font-bold text-sm">New Product</p>
+                </div>
+                <!-- Product Card 1 -->
+                <a class="group block product-card bg-surface rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1 cursor-pointer"
+                    href="product_detail.html">
+                    <div class="aspect-square relative overflow-hidden bg-surface-container">
+                        <img class="w-full h-full object-cover transition-transform group-hover:scale-105"
+                            data-alt="vibrant matcha bowl"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuAW2NW0iDcULEjrNB98sKSR27R0hDnIX3OAiNh965jYu4v9jK8j6RMGz8IGD9B27JN57XoiJsB-STI6bRJvV-BpsJaBUTgfCu7cn9fZ-oOQRdAyGzOa9pEecFRLAzP8kjMre6d9-_pm4bRYToUutckD092sTKJnqOVGh0mbOvhR2XOq8DsFwcHh0ENWZsmAsFrkTcGFqugQorqoXRy5j_FGePrWIGwrvgIZyVT0wt-0AbD8rSHOEgs80bV0trpvg5qLefqrXjcafD6a" />
+                        <button
+                            class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur shadow-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span class="material-symbols-outlined text-sm" data-icon="edit">edit</span>
+                        </button>
+                    </div>
+                    <div class="p-4 flex flex-col flex-1">
+                        <p class="text-[10px] font-bold text-secondary uppercase tracking-widest mb-1">Ceremonial</p>
+                        <h3 class="font-bold text-on-surface text-sm mb-1 line-clamp-1">Uji Reserve Matcha</h3>
+                        <div class="mt-auto flex justify-between items-baseline">
+                            <span class="text-xs text-on-surface-variant">Drinks</span>
+                            <span class="font-bold text-primary">$8.50</span>
+                        </div>
+                    </div>
+                </a>
+                <!-- Product Card 2 -->
+                <a class="group block product-card bg-surface rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1 cursor-pointer"
+                    href="product_detail.html">
+                    <div class="aspect-square relative overflow-hidden bg-surface-container">
+                        <img class="w-full h-full object-cover transition-transform group-hover:scale-105"
+                            data-alt="layered iced matcha latte"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCyAL6ZImjuCMjggTCN8SELoSp2jrKhoSQxiQSb4_ernWfTuFrZgky-lfCCZ0Av7CABlhwYPZL_EyJb25P-vbdt_lezdq3UVYaQ_ftmn3XTn0ycwt5mTlawPUplxX1sT0VJOdgcU3h4s8BblwYnaIZKn7VFI_pTmwn9v1bOtvJ81Ta0M-NmU7p03yhCFPUGufa30ARH3DUM9B5OZzaojLdnKpAVg3Lb6h3TLA7RRoWme5I1XyjqcpchwQ_JEP_3FX2ZZjgzn5TiP1I" />
+                        <button
+                            class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur shadow-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span class="material-symbols-outlined text-sm" data-icon="edit">edit</span>
+                        </button>
+                    </div>
+                    <div class="p-4 flex flex-col flex-1">
+                        <p class="text-[10px] font-bold text-secondary uppercase tracking-widest mb-1">Cold Brew</p>
+                        <h3 class="font-bold text-on-surface text-sm mb-1 line-clamp-1">Iced Forest Latte</h3>
+                        <div class="mt-auto flex justify-between items-baseline">
+                            <span class="text-xs text-on-surface-variant">Drinks</span>
+                            <span class="font-bold text-primary">$6.75</span>
+                        </div>
+                    </div>
+                </a>
+                <!-- Product Card 3 -->
+                <a class="group block product-card bg-surface rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1 cursor-pointer"
+                    href="product_detail.html">
+                    <div class="aspect-square relative overflow-hidden bg-surface-container">
+                        <img class="w-full h-full object-cover transition-transform group-hover:scale-105"
+                            data-alt="matcha crepe cake"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBEFwim6o9Gv3x5NhXKHZL7PihBCm1Fh2BhsNtwfMR1vzO9omaZ4I6_SgOyeyMKylremxegcf5XG3XtIBtPvHcEDDng_oyw-UdgX2tw92HUlbXZB93olbxqu9MP0dla5RzDhUyoEbBLO2oaCNKMRGsNQ_2EJ8dKkfgYtbk7Y_-rFlVBT9WQrXNdp5IYjRF5ImvC1lkbWKPCE22ORLW0HGHuz8CEEee2eo7zgotYpxVtvOlKGZRDyF-ClXOl1cUUg2jUbM0xfIueFuwt" />
+                        <button
+                            class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur shadow-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span class="material-symbols-outlined text-sm" data-icon="edit">edit</span>
+                        </button>
+                    </div>
+                    <div class="p-4 flex flex-col flex-1">
+                        <p class="text-[10px] font-bold text-secondary uppercase tracking-widest mb-1">Patisserie</p>
+                        <h3 class="font-bold text-on-surface text-sm mb-1 line-clamp-1">Matcha Crepe</h3>
+                        <div class="mt-auto flex justify-between items-baseline">
+                            <span class="text-xs text-on-surface-variant">Food</span>
+                            <span class="font-bold text-primary">$12.00</span>
+                        </div>
+                    </div>
+                </a>
+                <!-- Product Card 4 -->
+                <a class="group block product-card bg-surface rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1 cursor-pointer"
+                    href="product_detail.html">
+                    <div class="aspect-square relative overflow-hidden bg-surface-container">
+                        <img class="w-full h-full object-cover transition-transform group-hover:scale-105"
+                            data-alt="jasmine tea bloom"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZBjACukAF8faio5Mu2_8pvlB84a22qbfb2jiL-nRMPF2QVChwe0BrwDgxaDeaffk3jxy4VpoC2RN3ktZd6w5oH6Kt5SOsfZOeSIFBblqSldLz6TbZMWJ_h5SZ-YtM78WtwNsDJ5YOiXiiETcgp8q535YE3gBoi17hCAYWqJywCHEbX5AlZHtfoMBlsTKPRL_dC0Mpo2TaNLb2xuslb7sAevm0Ze-y8tIQU9QLMP0qtphwnfc1xuhLenDL7pV0L6cXzCU8dEZJ1_Ti" />
+                        <button
+                            class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur shadow-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span class="material-symbols-outlined text-sm" data-icon="edit">edit</span>
+                        </button>
+                    </div>
+                    <div class="p-4 flex flex-col flex-1">
+                        <p class="text-[10px] font-bold text-secondary uppercase tracking-widest mb-1">Infusion</p>
+                        <h3 class="font-bold text-on-surface text-sm mb-1 line-clamp-1">Jasmine Bloom</h3>
+                        <div class="mt-auto flex justify-between items-baseline">
+                            <span class="text-xs text-on-surface-variant">Drinks</span>
+                            <span class="font-bold text-primary">$5.50</span>
+                        </div>
+                    </div>
+                </a>
+                <!-- Product Card 5 -->
+                <a class="group block product-card bg-surface rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1 cursor-pointer"
+                    href="product_detail.html">
+                    <div class="aspect-square relative overflow-hidden bg-surface-container">
+                        <img class="w-full h-full object-cover transition-transform group-hover:scale-105"
+                            data-alt="rose syrup bottle"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_RHaqEvdE8zqewfzAkTfPRVVhA55KneNQ2f2P05w7TmTL4pc9mA5hMEgmdfXzn4CKFXClyoV80U1eZ2Mh7vo1sfpBto8O7UgK4UOVr3bLG69VrhMguCIzuFoR51-CgT3Oxsilc59Ca9rLn1Knzhugf5N0M8powsBiKdeGSjzrTltiKebkTtBU1gA8N4kz51IRSEzIJWQK0CvE6Zu3LzWim8VfT3PlSdSafECUQ3DZNoZuVUWdBbH-9YCQ2dkNgU6VC9BjOrqks-Oy" />
+                        <button
+                            class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur shadow-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span class="material-symbols-outlined text-sm" data-icon="edit">edit</span>
+                        </button>
+                    </div>
+                    <div class="p-4 flex flex-col flex-1">
+                        <p class="text-[10px] font-bold text-secondary uppercase tracking-widest mb-1">Add-on</p>
+                        <h3 class="font-bold text-on-surface text-sm mb-1 line-clamp-1">Rose Matcha Syrup</h3>
+                        <div class="mt-auto flex justify-between items-baseline">
+                            <span class="text-xs text-on-surface-variant">Toppings</span>
+                            <span class="font-bold text-primary">$1.25</span>
+                        </div>
+                    </div>
+                </a>
+                <!-- Product Card 6 -->
+                <a class="group block product-card bg-surface rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1 cursor-pointer"
+                    href="product_detail.html">
+                    <div class="aspect-square relative overflow-hidden bg-surface-container">
+                        <img class="w-full h-full object-cover transition-transform group-hover:scale-105"
+                            data-alt="matcha croissant"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDqlk_a7JFOgACTaCRi8S7Gxw7ROJ5mK6K0S0w5dM380GSxUPvZOfnCnkncV2TnDtms-O2EgSelDPIluCmQLmTsN1vA7xUMUKfnv3Tj3OcLh2AwgGFggXAoO0Yx6BlHAvcc0ruzAx83R8uxGpa3ojaaAyEbw0N_cCFJkRfTrXErPw3jp0r6tOJwUA-rj_TNnxrsUtTXKKFTjnN7f7lcwQDrpDsW5fULP7dEoVKX3K6__KPkKPMnIUbLBadgVYK9pSi0fLAU6L0A6DTg" />
+                        <button
+                            class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur shadow-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span class="material-symbols-outlined text-sm" data-icon="edit">edit</span>
+                        </button>
+                    </div>
+                    <div class="p-4 flex flex-col flex-1">
+                        <p class="text-[10px] font-bold text-secondary uppercase tracking-widest mb-1">Patisserie</p>
+                        <h3 class="font-bold text-on-surface text-sm mb-1 line-clamp-1">Matcha Croissant</h3>
+                        <div class="mt-auto flex justify-between items-baseline">
+                            <span class="text-xs text-on-surface-variant">Food</span>
+                            <span class="font-bold text-primary">$4.50</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <!-- Management Section -->
+            <div class="mt-20">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="text-3xl serif text-primary">Inventory Snapshot</h2>
+                    <button class="text-secondary font-bold text-sm flex items-center gap-1 hover:underline">
+                        Detailed Inventory
+                        <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+                    </button>
+                </div>
+                <div
+                    class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden border border-surface-container-high">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr
+                                class="bg-surface-container-low text-on-surface-variant font-label text-[10px] tracking-widest uppercase">
+                                <th class="px-8 py-4 font-bold">Product</th>
+                                <th class="px-8 py-4 font-bold">Category</th>
+                                <th class="px-8 py-4 font-bold text-right">Price</th>
+                                <th class="px-8 py-4 font-bold text-center">Status</th>
+                                <th class="px-8 py-4 font-bold text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-surface-container">
+                            <tr class="hover:bg-surface-container-low transition-colors">
+                                <td class="px-8 py-4">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-10 h-10 rounded-lg bg-surface-container overflow-hidden">
+                                            <img class="w-full h-full object-cover" data-alt="rose syrup thumbnail"
+                                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_RHaqEvdE8zqewfzAkTfPRVVhA55KneNQ2f2P05w7TmTL4pc9mA5hMEgmdfXzn4CKFXClyoV80U1eZ2Mh7vo1sfpBto8O7UgK4UOVr3bLG69VrhMguCIzuFoR51-CgT3Oxsilc59Ca9rLn1Knzhugf5N0M8powsBiKdeGSjzrTltiKebkTtBU1gA8N4kz51IRSEzIJWQK0CvE6Zu3LzWim8VfT3PlSdSafECUQ3DZNoZuVUWdBbH-9YCQ2dkNgU6VC9BjOrqks-Oy" />
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-sm text-on-surface">Rose Matcha Syrup</p>
+                                            <p class="text-[10px] text-on-surface-variant">RMS-001</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-8 py-4 text-sm text-on-surface-variant">Toppings</td>
+                                <td class="px-8 py-4 text-sm font-bold text-right text-on-surface">$1.25</td>
+                                <td class="px-8 py-4 text-center">
+                                    <span
+                                        class="inline-block px-2.5 py-1 rounded-full bg-secondary-container/30 text-secondary text-[10px] font-bold">ACTIVE</span>
+                                </td>
+                                <td class="px-8 py-4 text-right">
+                                    <button class="text-on-surface-variant hover:text-primary"><span
+                                            class="material-symbols-outlined"
+                                            data-icon="more_horiz">more_horiz</span></button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-surface-container-low transition-colors">
+                                <td class="px-8 py-4">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-10 h-10 rounded-lg bg-surface-container overflow-hidden">
+                                            <img class="w-full h-full object-cover" data-alt="croissant thumbnail"
+                                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDqlk_a7JFOgACTaCRi8S7Gxw7ROJ5mK6K0S0w5dM380GSxUPvZOfnCnkncV2TnDtms-O2EgSelDPIluCmQLmTsN1vA7xUMUKfnv3Tj3OcLh2AwgGFggXAoO0Yx6BlHAvcc0ruzAx83R8uxGpa3ojaaAyEbw0N_cCFJkRfTrXErPw3jp0r6tOJwUA-rj_TNnxrsUtTXKKFTjnN7f7lcwQDrpDsW5fULP7dEoVKX3K6__KPkKPMnIUbLBadgVYK9pSi0fLAU6L0A6DTg" />
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-sm text-on-surface">Matcha Croissant</p>
+                                            <p class="text-[10px] text-on-surface-variant">MCR-042</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-8 py-4 text-sm text-on-surface-variant">Food</td>
+                                <td class="px-8 py-4 text-sm font-bold text-right text-on-surface">$4.50</td>
+                                <td class="px-8 py-4 text-center">
+                                    <span
+                                        class="inline-block px-2.5 py-1 rounded-full bg-error-container/30 text-error text-[10px] font-bold">LOW
+                                        STOCK</span>
+                                </td>
+                                <td class="px-8 py-4 text-right">
+                                    <button class="text-on-surface-variant hover:text-primary"><span
+                                            class="material-symbols-outlined"
+                                            data-icon="more_horiz">more_horiz</span></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+  <script src="../assets/js/layout.js"></script>
+  <script src="../assets/js/main.js"></script>
+</body>
+
+</html>

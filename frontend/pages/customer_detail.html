@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,600;6..72,700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+      <link rel="stylesheet" href="../assets/css/style.css" />
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+      <script src="../assets/js/tailwind-config.js"></script>
+</head>
+
+<body class="page-customer-detail bg-background text-on-background antialiased" data-page="customer-detail">
+    <!-- SideNavBar -->
+    <aside id="app-sidebar" class="h-screen w-72 fixed left-0 top-0 z-40 bg-[#002c04] dark:bg-[#001a02] shadow-[32px_0_64px_-12px_rgba(0,44,4,0.08)] flex flex-col py-8 px-6"></aside>
+    <!-- TopNavBar -->
+    <header id="app-topbar" class="fixed top-0 right-0 left-72 h-20 z-30 bg-[#f9f9f8]/80 dark:bg-[#191c1c]/80 backdrop-blur-2xl flex items-center justify-between px-10"></header>
+    <!-- Main Canvas -->
+    <main class="ml-72 pt-20 min-h-screen bg-surface p-8">
+        <div class="max-w-6xl mx-auto">
+            <!-- Profile Header & Highlights -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
+                <!-- Profile Summary Card -->
+                <div
+                    class="lg:col-span-8 bg-surface-container-lowest rounded-xl p-8 shadow-[32px_0_64px_-12px_rgba(0,44,4,0.04)] flex flex-col md:flex-row gap-8 items-start">
+                    <div class="relative">
+                        <div class="w-32 h-32 rounded-2xl overflow-hidden bg-stone-100">
+                            <img alt="Họ Tên" class="w-full h-full object-cover"
+                                data-alt="Portrait of a sophisticated person in a boutique tea shop, warm lighting, botanical elements in soft focus background"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSmxKaeRAp-qgrv7enYG7BSfsw6eU_tq7JMm2S05DQLFACsx0-NAg2J-nCmsKXu_ySs_UmiiB_OoRajJuRuzb1m2GHNdjMxRpyRF3jeuqdzGTq4oHv-GPJ4CouhlIGdI5YPF0Ksl-jVF6rSxg7phDKXj3YeGeB5oRtemIcv7KUbxLIZFsv0_rTsrnt-9DHq6wYoNApaAwAmJK_g46qIO5fqPwFGKX7bq6w_g21b82X9l5ZcfqkT1tvLqCqxo65hKbZVpupTIQb40ID" />
+                        </div>
+                        <div
+                            class="absolute -bottom-2 -right-2 bg-secondary text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter">
+                            Diamond Tier
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h2 class="text-3xl font-serif text-primary leading-none mb-2">Name: Minh Anh Nguyễn
+                                </h2>
+                                <p class="text-stone-500 font-medium flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-[16px]">fingerprint</span>
+                                    Customer ID: #CUST-8829-VN
+                                </p>
+                            </div>
+                            <button
+                                class="bg-secondary text-on-secondary px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-secondary/10 hover:opacity-90 transition-opacity">
+                                Edit Profile
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8">
+                            <div>
+                                <p class="text-[10px] uppercase font-bold text-stone-400 tracking-wider mb-1">Loyalty
+                                    Points</p>
+                                <p class="text-2xl font-serif text-primary">2,450 pts</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] uppercase font-bold text-stone-400 tracking-wider mb-1">Total
+                                    Spent</p>
+                                <p class="text-2xl font-serif text-primary">12.5M VND</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] uppercase font-bold text-stone-400 tracking-wider mb-1">Total
+                                    Orders</p>
+                                <p class="text-2xl font-serif text-primary">48</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] uppercase font-bold text-stone-400 tracking-wider mb-1">Avg. Order
+                                </p>
+                                <p class="text-2xl font-serif text-primary">260k VND</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Status Activity -->
+                <div class="lg:col-span-4 flex flex-col gap-4">
+                    <div class="bg-primary-container p-6 rounded-xl text-white relative overflow-hidden">
+                        <div class="relative z-10">
+                            <h3 class="text-emerald-200 text-[10px] font-bold uppercase tracking-widest mb-4">Next Tier
+                                Progress</h3>
+                            <p class="text-xl font-serif mb-2">Artisan Curator</p>
+                            <div class="w-full bg-white/10 h-1.5 rounded-full overflow-hidden mb-2">
+                                <div class="bg-secondary-container h-full w-[75%]"></div>
+                            </div>
+                            <p class="text-xs text-emerald-100/70">550 pts until next milestone</p>
+                        </div>
+                        <span class="material-symbols-outlined absolute -bottom-4 -right-4 text-white/5 text-[120px]"
+                            style="font-variation-settings: 'FILL' 1;">eco</span>
+                    </div>
+                    <div class="bg-surface-container-high p-6 rounded-xl flex-1 flex items-center justify-between">
+                        <div>
+                            <p class="text-[10px] uppercase font-bold text-stone-500 mb-1">Last Active</p>
+                            <p class="font-bold text-primary">Today, 10:45 AM</p>
+                        </div>
+                        <span
+                            class="w-3 h-3 bg-secondary rounded-full animate-pulse shadow-[0_0_12px_rgba(59,166,51,0.5)]"></span>
+                    </div>
+                </div>
+            </div>
+            <!-- Bento Information Layout -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+                <!-- Personal Info & Contact -->
+                <div class="md:col-span-1 space-y-8">
+                        <section class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-stone-100">
+                        <h3 class="text-primary font-serif text-xl mb-6">Personal Information</h3>
+                        <div class="space-y-6">
+                            <div class="flex items-start gap-4">
+                                <span
+                                    class="material-symbols-outlined text-secondary bg-secondary/5 p-2 rounded-lg">phone</span>
+                                <div>
+                                    <p class="text-[10px] uppercase font-bold text-stone-400">Phone</p>
+                                    <p class="text-sm font-semibold text-primary">+84 902 334 112</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <span
+                                    class="material-symbols-outlined text-secondary bg-secondary/5 p-2 rounded-lg">mail</span>
+                                <div>
+                                    <p class="text-[10px] uppercase font-bold text-stone-400">Email</p>
+                                    <p class="text-sm font-semibold text-primary">minhanh.n@gmail.com</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <span
+                                    class="material-symbols-outlined text-secondary bg-secondary/5 p-2 rounded-lg">location_on</span>
+                                <div>
+                                    <p class="text-[10px] uppercase font-bold text-stone-400">Address</p>
+                                    <p class="text-sm font-semibold text-primary">215 Lê Lợi, Quận 1, TP. Hồ Chí Minh
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <span
+                                    class="material-symbols-outlined text-secondary bg-secondary/5 p-2 rounded-lg">cake</span>
+                                <div>
+                                    <p class="text-[10px] uppercase font-bold text-stone-400">Date of Birth</p>
+                                    <p class="text-sm font-semibold text-primary">August 12, 1994</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-4">
+                                <span
+                                    class="material-symbols-outlined text-secondary bg-secondary/5 p-2 rounded-lg">calendar_today</span>
+                                <div>
+                                    <p class="text-[10px] uppercase font-bold text-stone-400">Registered</p>
+                                    <p class="text-sm font-semibold text-primary">Jan 15, 2023</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    <!-- Preferences Section -->
+                    <section class="bg-emerald-900/5 rounded-xl p-6 border border-emerald-900/10">
+                        <h3 class="text-primary font-serif text-xl mb-4">Preferences &amp; Notes</h3>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span
+                                class="px-3 py-1 bg-white text-secondary text-[11px] font-bold rounded-full border border-secondary/20">Ceremonial
+                                Grade</span>
+                            <span
+                                class="px-3 py-1 bg-white text-secondary text-[11px] font-bold rounded-full border border-secondary/20">No
+                                Sugar</span>
+                            <span
+                                class="px-3 py-1 bg-white text-secondary text-[11px] font-bold rounded-full border border-secondary/20">Eco-conscious</span>
+                        </div>
+                        <p class="text-xs text-stone-600 leading-relaxed italic">"Prefers eco-friendly packaging. Usually orders on weekend mornings."</p>
+                    </section>
+                </div>
+                <!-- Purchase History & Activity -->
+                <div class="md:col-span-2 space-y-8">
+                    <!-- Order History Table -->
+                    <section
+                        class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm border border-stone-100">
+                        <div class="px-6 py-5 flex justify-between items-center border-b border-stone-50">
+                            <h3 class="text-primary font-serif text-xl">Order History</h3>
+                            <button class="text-secondary text-sm font-bold flex items-center gap-1 hover:underline">
+                                View All
+                                <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead
+                                    class="bg-surface-container-low text-[10px] uppercase font-bold text-stone-500 tracking-wider">
+                                    <tr>
+                                        <th class="px-6 py-4">Order ID</th>
+                                        <th class="px-6 py-4">Purchase Date</th>
+                                        <th class="px-6 py-4">Primary Product</th>
+                                        <th class="px-6 py-4">Total</th>
+                                        <th class="px-6 py-4">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-sm divide-y divide-stone-50">
+                                    <tr class="hover:bg-stone-50 transition-colors">
+                                        <td class="px-6 py-4 font-bold text-primary">#ORD-99102</td>
+                                        <td class="px-6 py-4 text-stone-500">22/05/2024</td>
+                                        <td class="px-6 py-4 font-medium">Uji Ceremonial Matcha</td>
+                                        <td class="px-6 py-4 font-bold">450,000 VND</td>
+                                        <td class="px-6 py-4">
+                                            <span
+                                                class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase">Completed</span>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-stone-50 transition-colors">
+                                        <td class="px-6 py-4 font-bold text-primary">#ORD-98845</td>
+                                        <td class="px-6 py-4 text-stone-500">14/05/2024</td>
+                                        <td class="px-6 py-4 font-medium">Chasen Bamboo Whisk</td>
+                                        <td class="px-6 py-4 font-bold">280,000 VND</td>
+                                        <td class="px-6 py-4">
+                                            <span
+                                                class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase">Completed</span>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-stone-50 transition-colors">
+                                        <td class="px-6 py-4 font-bold text-primary">#ORD-97331</td>
+                                        <td class="px-6 py-4 text-stone-500">02/05/2024</td>
+                                        <td class="px-6 py-4 font-medium">Matcha Latte Mix (Set of 3)</td>
+                                        <td class="px-6 py-4 font-bold">1,250,000 VND</td>
+                                        <td class="px-6 py-4">
+                                            <span
+                                                class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase">Completed</span>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-stone-50 transition-colors">
+                                        <td class="px-6 py-4 font-bold text-primary">#ORD-96552</td>
+                                        <td class="px-6 py-4 text-stone-500">20/04/2024</td>
+                                        <td class="px-6 py-4 font-medium">Genmaicha Loose Leaf</td>
+                                        <td class="px-6 py-4 font-bold">320,000 VND</td>
+                                        <td class="px-6 py-4">
+                                            <span
+                                                class="px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-500 text-[10px] font-bold uppercase">Cancelled</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                    <!-- Recent Activity Timeline -->
+                    <section class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-stone-100">
+                        <h3 class="text-primary font-serif text-xl mb-6">Recent Activity</h3>
+                        <div
+                            class="relative pl-8 space-y-8 before:content-[''] before:absolute before:left-[11px] before:top-0 before:bottom-0 before:w-[2px] before:bg-stone-100">
+                            <!-- Activity Item 1 -->
+                            <div class="relative">
+                                <span
+                                    class="absolute -left-[30px] top-0 w-6 h-6 rounded-full bg-secondary flex items-center justify-center text-white text-[14px] z-10">
+                                    <span class="material-symbols-outlined text-[16px]">stars</span>
+                                </span>
+                                <div>
+                                    <p class="text-sm font-bold text-primary">Promoted to Diamond Tier</p>
+                                    <p class="text-xs text-stone-500 mt-1">May 20, 2024 • 09:15 AM</p>
+                                    <p
+                                        class="text-xs mt-2 bg-secondary/5 text-secondary inline-block px-3 py-1 rounded-lg">
+                                        +1,500 Reward Points earned this month</p>
+                                </div>
+                            </div>
+                            <!-- Activity Item 2 -->
+                            <div class="relative">
+                                <span
+                                    class="absolute -left-[30px] top-0 w-6 h-6 rounded-full bg-stone-200 flex items-center justify-center text-stone-500 text-[14px] z-10">
+                                    <span class="material-symbols-outlined text-[16px]">reviews</span>
+                                </span>
+                                <div>
+                                    <p class="text-sm font-bold text-primary">Wrote a 5-star review for "Uji Ceremonial Matcha"</p>
+                                    <p class="text-xs text-stone-500 mt-1">May 18, 2024 • 03:40 PM</p>
+                                </div>
+                            </div>
+                            <!-- Activity Item 3 -->
+                            <div class="relative">
+                                <span
+                                    class="absolute -left-[30px] top-0 w-6 h-6 rounded-full bg-stone-200 flex items-center justify-center text-stone-500 text-[14px] z-10">
+                                    <span class="material-symbols-outlined text-[16px]">local_shipping</span>
+                                </span>
+                                <div>
+                                    <p class="text-sm font-bold text-primary">Order #ORD-99102 was delivered successfully</p>
+                                    <p class="text-xs text-stone-500 mt-1">May 15, 2024 • 11:20 AM</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </main>
+    <!-- Contextual FAB for high-level customer action -->
+    <button
+        class="fixed bottom-8 right-8 w-14 h-14 bg-secondary text-white rounded-full flex items-center justify-center shadow-2xl shadow-secondary/40 hover:scale-105 active:scale-95 transition-transform group">
+        <span class="material-symbols-outlined group-hover:rotate-90 transition-transform">add</span>
+        <span
+            class="absolute right-16 bg-primary text-white text-xs py-2 px-4 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">Create
+            New Order</span>
+    </button>
+  <script src="../assets/js/layout.js"></script>
+  <script src="../assets/js/main.js"></script>
+</body>
+
+</html>

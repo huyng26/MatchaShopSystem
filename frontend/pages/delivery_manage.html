@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Delivery Dashboard | The Botanical Atelier</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script src="../assets/js/tailwind-config.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,600;6..72,700;6..72,800&amp;family=Manrope:wght@300;400;500;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body class="page-delivery-manage bg-background text-on-surface antialiased overflow-x-hidden" data-page="delivery-manage">
+<!-- SideNavBar -->
+<aside id="app-sidebar" class="h-screen w-72 fixed left-0 top-0 z-40 bg-[#002c04] dark:bg-[#001a02] shadow-[32px_0_64px_-12px_rgba(0,44,4,0.08)] flex flex-col py-8 px-6"></aside>
+<!-- Main Content Area -->
+<main class="ml-72 min-h-screen">
+<!-- TopAppBar -->
+<header id="app-topbar" class="fixed top-0 right-0 left-72 h-20 z-30 bg-[#f9f9f8]/80 dark:bg-[#191c1c]/80 backdrop-blur-2xl flex items-center justify-between px-10"></header>
+<!-- Dashboard Canvas -->
+<div class="p-8 pt-24 grid grid-cols-12 gap-8">
+<!-- Bento Grid Section: Stats & Map -->
+<div class="col-span-12 lg:col-span-8 space-y-8">
+<!-- Quick Insights -->
+<div class="grid grid-cols-3 gap-6">
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-[32px_0px_64px_rgba(0,44,4,0.02)]">
+<p class="font-label text-label-sm text-on-surface-variant uppercase tracking-widest mb-2">Pending Batches</p>
+<div class="flex items-end gap-2">
+<span class="font-headline text-4xl font-bold text-primary">12</span>
+<span class="text-secondary font-bold text-sm mb-1">+2 from 1h ago</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-[32px_0px_64px_rgba(0,44,4,0.02)]">
+<p class="font-label text-label-sm text-on-surface-variant uppercase tracking-widest mb-2">Active Shippers</p>
+<div class="flex items-end gap-2">
+<span class="font-headline text-4xl font-bold text-primary">08</span>
+<span class="text-on-surface-variant font-medium text-sm mb-1">out of 10</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-[32px_0px_64px_rgba(0,44,4,0.02)]">
+<p class="font-label text-label-sm text-on-surface-variant uppercase tracking-widest mb-2">Avg. Delivery</p>
+<div class="flex items-end gap-2">
+<span class="font-headline text-4xl font-bold text-primary">24</span>
+<span class="text-on-surface-variant font-medium text-sm mb-1">minutes</span>
+</div>
+</div>
+</div>
+<!-- Stylized Real-time Map -->
+<section class="bg-surface-container-lowest rounded-xl p-2 shadow-[32px_0px_64px_rgba(0,44,4,0.02)] overflow-hidden relative group">
+<div class="absolute top-6 left-6 z-10 glass-panel px-4 py-2 rounded-full flex items-center gap-2 border border-white/20">
+<span class="w-2 h-2 bg-secondary rounded-full animate-pulse"></span>
+<span class="font-label text-label-sm font-bold text-primary">Active Delivery Routes</span>
+</div>
+<div class="h-[400px] w-full rounded-lg bg-surface-container flex items-center justify-center relative overflow-hidden">
+<!-- Simulated Map Background -->
+<div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle at 2px 2px, #002c04 1px, transparent 0); background-size: 24px 24px;"></div>
+<!-- Stylized Paths -->
+<svg class="absolute inset-0 w-full h-full" viewbox="0 0 800 400">
+<path class="opacity-40" d="M100,300 Q200,100 400,200 T700,100" fill="none" stroke="#006e08" stroke-dasharray="8 4" stroke-width="2"></path>
+<path class="opacity-20" d="M50,50 L300,350 L750,200" fill="none" stroke="#002c04" stroke-dasharray="10 5" stroke-width="2"></path>
+<!-- Active Units -->
+<circle class="animate-bounce" cx="280" cy="180" fill="#3ba633" r="6">
+<title>Shipper: Leo - Transit</title>
+</circle>
+<circle cx="550" cy="150" fill="#3ba633" r="6">
+<title>Shipper: Sarah - Arrived</title>
+</circle>
+</svg>
+<img class="absolute inset-0 object-cover opacity-10 mix-blend-multiply pointer-events-none" data-alt="A minimalist, high-contrast urban map pattern seen from a bird's eye view. The map features clean geometric lines and blocks representing a sophisticated city layout. The color palette is restricted to shades of parchment, soft grays, and deep botanical greens. The aesthetic is editorial and professional, avoiding cluttered cartography for a clean, brand-aligned visual." data-location="Tokyo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZvfprQGj-IkznITM7PSUFdxlMkMyuCnyxHRdictir8oSOXkgRLxAJ5fxy6Vr6UWtoxp8jCKQbxAhTK5ZovWyMVv4QTSk-YyCbig_ihHrXAnMHYoEiupulvHUowTsejeiJlgCsjvvKY9ck30eXohbEpSQtVGggeDFk7gqKTPoM4EJ59uZ0LXBy54d2dBXPd_99kZI-W--FYs6D7RKxwUsWYXzzX4APkAUQ9N4iH0fjIp7yLSQCFsGkHk9HK0KjkdLG764DGPoOR9ko"/>
+<span class="text-on-surface-variant/40 font-headline italic">Fleet Tracking Live System</span>
+</div>
+</section>
+<!-- COD Reconciliation Table -->
+<section class="bg-surface-container-lowest rounded-xl p-8 shadow-[32px_0px_64px_rgba(0,44,4,0.02)]">
+<div class="flex justify-between items-end mb-8">
+<div>
+<h3 class="font-headline text-2xl font-bold text-primary">COD Reconciliation</h3>
+<p class="font-body text-body-md text-on-surface-variant">Verify collected payments for today's completed deliveries.</p>
+</div>
+<button class="bg-secondary text-on-secondary px-6 py-2 rounded-full font-bold text-sm flex items-center gap-2 hover:opacity-90 transition-all">
+<span class="material-symbols-outlined text-sm" data-icon="check_circle">check_circle</span>
+                            Finalize All
+                        </button>
+</div>
+<div class="overflow-hidden">
+<table class="w-full">
+<thead>
+<tr class="text-left border-b border-surface-container-high">
+<th class="pb-4 font-label text-label-sm text-on-surface-variant uppercase tracking-widest">Order ID</th>
+<th class="pb-4 font-label text-label-sm text-on-surface-variant uppercase tracking-widest">Shipper</th>
+<th class="pb-4 font-label text-label-sm text-on-surface-variant uppercase tracking-widest">Amount</th>
+<th class="pb-4 font-label text-label-sm text-on-surface-variant uppercase tracking-widest">Method</th>
+<th class="pb-4 font-label text-label-sm text-on-surface-variant uppercase tracking-widest">Status</th>
+<th class="pb-4"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container">
+<tr class="group hover:bg-surface-container-low transition-colors">
+<td class="py-4 font-body font-bold text-primary">#VER-9402</td>
+<td class="py-4">Marcus Reed</td>
+<td class="py-4 font-body font-bold">$124.50</td>
+<td class="py-4 text-on-surface-variant">Cash</td>
+<td class="py-4">
+<span class="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-xs font-bold uppercase tracking-tighter">Collected</span>
+</td>
+<td class="py-4 text-right">
+<button class="p-2 rounded-full hover:bg-white text-on-surface-variant opacity-0 group-hover:opacity-100 transition-all">
+<span class="material-symbols-outlined">receipt_long</span>
+</button>
+</td>
+</tr>
+<tr class="group hover:bg-surface-container-low transition-colors">
+<td class="py-4 font-body font-bold text-primary">#VER-9405</td>
+<td class="py-4">Elena Thorne</td>
+<td class="py-4 font-body font-bold">$89.00</td>
+<td class="py-4 text-on-surface-variant">Link/QR</td>
+<td class="py-4">
+<span class="px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-xs font-bold uppercase tracking-tighter">Pending</span>
+</td>
+<td class="py-4 text-right">
+<button class="p-2 rounded-full hover:bg-white text-on-surface-variant opacity-0 group-hover:opacity-100 transition-all">
+<span class="material-symbols-outlined">receipt_long</span>
+</button>
+</td>
+</tr>
+<tr class="group hover:bg-surface-container-low transition-colors">
+<td class="py-4 font-body font-bold text-primary">#VER-9408</td>
+<td class="py-4">Marcus Reed</td>
+<td class="py-4 font-body font-bold">$210.20</td>
+<td class="py-4 text-on-surface-variant">Cash</td>
+<td class="py-4">
+<span class="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-xs font-bold uppercase tracking-tighter">Collected</span>
+</td>
+<td class="py-4 text-right">
+<button class="p-2 rounded-full hover:bg-white text-on-surface-variant opacity-0 group-hover:opacity-100 transition-all">
+<span class="material-symbols-outlined">receipt_long</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</div>
+<!-- Right Sidebar: Batching & Shippers -->
+<div class="col-span-12 lg:col-span-4 space-y-8">
+<!-- Batch Orders Panel -->
+<section class="bg-primary dark:bg-primary-container text-on-primary p-8 rounded-xl shadow-xl">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline text-2xl font-bold">Batch Orders</h3>
+<span class="bg-secondary px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">New</span>
+</div>
+<p class="text-on-primary-container/80 text-sm mb-6">Grouping pending orders by district for optimized delivery.</p>
+<div class="space-y-4 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
+<!-- Batch Card 1 -->
+<div class="bg-on-primary-fixed-variant/20 p-4 rounded-xl border border-on-primary-fixed-variant/10 hover:border-secondary/50 transition-all cursor-pointer group">
+<div class="flex justify-between items-start mb-3">
+<span class="font-body font-bold">District A: Minato-ku</span>
+<span class="text-xs bg-primary px-2 py-0.5 rounded border border-on-primary-container/20">6 Orders</span>
+</div>
+<div class="flex -space-x-2 mb-4">
+<div class="w-8 h-8 rounded-full border-2 border-primary bg-surface-container-highest flex items-center justify-center text-[10px] font-bold text-primary">TM</div>
+<div class="w-8 h-8 rounded-full border-2 border-primary bg-surface-container-highest flex items-center justify-center text-[10px] font-bold text-primary">SC</div>
+<div class="w-8 h-8 rounded-full border-2 border-primary bg-surface-container-highest flex items-center justify-center text-[10px] font-bold text-primary">+4</div>
+</div>
+<button class="w-full bg-on-primary text-primary py-2 rounded-lg text-xs font-bold group-hover:bg-secondary group-hover:text-on-secondary transition-all">Create Group</button>
+</div>
+<!-- Batch Card 2 -->
+<div class="bg-on-primary-fixed-variant/20 p-4 rounded-xl border border-on-primary-fixed-variant/10 hover:border-secondary/50 transition-all cursor-pointer group">
+<div class="flex justify-between items-start mb-3">
+<span class="font-body font-bold">District B: Shibuya</span>
+<span class="text-xs bg-primary px-2 py-0.5 rounded border border-on-primary-container/20">4 Orders</span>
+</div>
+<div class="flex -space-x-2 mb-4">
+<div class="w-8 h-8 rounded-full border-2 border-primary bg-surface-container-highest flex items-center justify-center text-[10px] font-bold text-primary">KA</div>
+<div class="w-8 h-8 rounded-full border-2 border-primary bg-surface-container-highest flex items-center justify-center text-[10px] font-bold text-primary">RY</div>
+</div>
+<button class="w-full bg-on-primary text-primary py-2 rounded-lg text-xs font-bold group-hover:bg-secondary group-hover:text-on-secondary transition-all">Create Group</button>
+</div>
+</div>
+</section>
+<!-- Shipper Assignment Panel -->
+<section class="bg-surface-container-lowest p-8 rounded-xl shadow-[32px_0px_64px_rgba(0,44,4,0.02)]">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline text-2xl font-bold text-primary">Active Shippers</h3>
+<button class="text-secondary text-sm font-bold hover:underline">View All</button>
+</div>
+<div class="space-y-6">
+<!-- Shipper 1 -->
+<div class="flex items-center gap-4">
+<img alt="Shipper Avatar" class="w-12 h-12 rounded-full object-cover grayscale hover:grayscale-0 transition-all" data-alt="A close-up high-resolution portrait of a young professional delivery driver, looking friendly and energetic. The style is bright and clean with a minimalist background. The lighting is crisp, emphasizing professional reliability. Soft green color accents in the clothing align with a high-end botanical brand aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxKD7HXvQ1oDto-Sx0LA_HrWsoiXQzukWlnBTorVIDVJxtnl_YKmZjIwhMRXCHkZ9eo1nkfz1m8hn92LtBKoVdXR2zjiHsqsuwLqgXENWZyIEvEWf2W96BMsB43Fi06YDQdlc4aynJvI8BnXEzqLZcPVEoSr_zD2aiVnm4c__JXd1mktNaMRh549qjpTfpelvXcxgOpty7Ws_3ebVZVIMcAlHxVT_fZ9mIbowDCU9g97D7DFefZeOtbEVawnBbvNXUOBCDf7lvdPzo"/>
+<div class="flex-1">
+<div class="flex justify-between">
+<p class="font-body font-bold text-sm">Marcus Reed</p>
+<span class="text-[10px] font-bold text-secondary uppercase tracking-widest">Active</span>
+</div>
+<div class="mt-1 w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 75%;"></div>
+</div>
+<p class="text-[10px] text-on-surface-variant mt-1">Load: 3/4 Deliveries</p>
+</div>
+</div>
+<!-- Shipper 2 -->
+<div class="flex items-center gap-4">
+<img alt="Shipper Avatar" class="w-12 h-12 rounded-full object-cover grayscale hover:grayscale-0 transition-all" data-alt="A portrait of a female delivery professional smiling confidently at the camera. She is set against a clean, soft-lit studio background with organic green elements. The mood is trustworthy and premium. Her attire is modern and professional. High-end photography with a shallow depth of field." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAsHoH8qFM9q5nfidQaDNMCbgxHnxrxHO_8va4ZDeF6zhmyN5etMioG9_d_MJ2bs7a_jzrY9zrhhf3v3rziju73O_Ytv0JOWajAliGIHrxl7Mh8GpvqRkMixTCpDGAVU2XEy3MPeoxiDc3t6P3BPEiqJjyd67oT1zc6UX9XSgfr7ztSKW4b670ZOV1DMI7h6Vnf4hNcmOJJRScJBa1QIIEpD3v4U2HPuX0JLLMIadWcsJLvdEar9hue8hK2vLCPdDRReCGyUIkZveDt"/>
+<div class="flex-1">
+<div class="flex justify-between">
+<p class="font-body font-bold text-sm">Elena Thorne</p>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">At Hub</span>
+</div>
+<div class="mt-1 w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-outline h-full rounded-full" style="width: 25%;"></div>
+</div>
+<p class="text-[10px] text-on-surface-variant mt-1">Load: 1/4 Deliveries</p>
+</div>
+</div>
+<!-- Shipper 3 -->
+<div class="flex items-center gap-4">
+<img alt="Shipper Avatar" class="w-12 h-12 rounded-full object-cover grayscale hover:grayscale-0 transition-all" data-alt="A focused portrait of an experienced delivery person in their late 30s. The lighting is sophisticated and natural, highlighting a reliable and serene character. The environment suggests an upscale retail logistics setting with subtle botanical textures in the background. Digital art style with professional clean lines." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQ6g5U53Vne5lkPyGKTKy1L21Y9wHmr3BP_oNhKbciliARGtzMxeM_bSUZkvP42MaQGkesangRKNtUAw3fMu0_vOpOy1DivjBsG89Oc2CBzg21OOIOXec71Tp82X90GB4-wdKwJlPVe5vl_nr8hDhYemtkf53cFpb5eLBKLkzQGkbUYakN55SMPtOPrLjgP2_z1erSiEG_7FGkA0ahQp9dfddOWZQOig_R6-aDKAP42YvKTSnI1Wqe0XZvlyKPfMjDonKIww441Xes"/>
+<div class="flex-1">
+<div class="flex justify-between">
+<p class="font-body font-bold text-sm">Kenji Sato</p>
+<span class="text-[10px] font-bold text-error uppercase tracking-widest">Delayed</span>
+</div>
+<div class="mt-1 w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-error h-full rounded-full" style="width: 100%;"></div>
+</div>
+<p class="text-[10px] text-on-surface-variant mt-1">Load: 4/4 Deliveries</p>
+</div>
+</div>
+</div>
+<button class="w-full mt-8 border border-outline-variant/30 py-3 rounded-xl font-bold text-sm hover:bg-surface-container-low transition-all">
+                        Assign New Driver
+                    </button>
+</section>
+</div>
+</div>
+</main>
+<!-- Interactive micro-interactions -->
+  <script src="../assets/js/layout.js"></script>
+  <script src="../assets/js/main.js"></script>
+</body></html>

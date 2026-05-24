@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Atelier Matcha - Artisan POS Dashboard</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Manrope:wght@200..800&amp;display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet" />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="../assets/js/tailwind-config.js"></script>
+</head>
+
+<body class="page-dashboard bg-surface text-on-surface min-h-screen" data-page="dashboard">
+  <!-- SideNavBar -->
+  <aside id="app-sidebar"
+    class="h-screen w-72 fixed left-0 top-0 z-40 bg-[#002c04] dark:bg-[#001a02] shadow-[32px_0_64px_-12px_rgba(0,44,4,0.08)] flex flex-col py-8 px-6">
+  </aside>
+  <!-- TopAppBar -->
+  <header id="app-topbar"
+    class="fixed top-0 right-0 left-72 h-20 z-30 bg-[#f9f9f8]/80 dark:bg-[#191c1c]/80 backdrop-blur-2xl flex items-center justify-between px-10"></header>
+  <!-- Main Content Canvas -->
+  <main class="ml-72 pt-24 p-10 space-y-8">
+    <!-- Header & Tabs -->
+    <div class="space-y-6">
+      <h2 class="font-serif text-4xl text-primary">Dashboard</h2>
+      <div class="flex gap-2 p-1 bg-surface-container-low rounded-xl w-fit">
+        <button
+          class="px-6 py-2 bg-primary-container text-on-primary-container rounded-lg font-semibold text-sm">Overview</button>
+        <button
+          class="px-6 py-2 text-on-surface-variant hover:bg-surface-container transition-colors rounded-lg font-medium text-sm">Product
+          Insights</button>
+        <button
+          class="px-6 py-2 text-on-surface-variant hover:bg-surface-container transition-colors rounded-lg font-medium text-sm">Customer
+          Insights</button>
+        <button
+          class="px-6 py-2 text-on-surface-variant hover:bg-surface-container transition-colors rounded-lg font-medium text-sm">Warning</button>
+      </div>
+    </div>
+    <!-- Metric Summary Cards -->
+    <div class="grid grid-cols-4 gap-6">
+      <!-- Card 1 -->
+      <div
+        class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10 flex flex-col justify-between">
+        <div class="flex justify-between items-start">
+          <div class="p-2 bg-secondary-container/30 rounded-lg">
+            <span class="material-symbols-outlined text-secondary" data-icon="payments">payments</span>
+          </div>
+          <span class="text-xs font-bold text-secondary flex items-center">+15% <span
+              class="material-symbols-outlined text-xs ml-1" data-icon="trending_up">trending_up</span></span>
+        </div>
+        <div class="mt-4">
+          <p class="text-xs text-on-surface-variant font-medium">Monthly Revenue</p>
+          <p class="text-xl font-bold text-primary mt-1">42,500,000 VND</p>
+          <p class="text-[10px] text-outline mt-2">compared to last month</p>
+        </div>
+      </div>
+      <!-- Card 2 -->
+      <div
+        class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10 flex flex-col justify-between">
+        <div class="flex justify-between items-start">
+          <div class="p-2 bg-surface-container-highest rounded-lg">
+            <span class="material-symbols-outlined text-on-surface-variant" data-icon="receipt_long">receipt_long</span>
+          </div>
+          <span class="text-xs font-bold text-error flex items-center">+5% <span
+              class="material-symbols-outlined text-xs ml-1" data-icon="trending_up">trending_up</span></span>
+        </div>
+        <div class="mt-4">
+          <p class="text-xs text-on-surface-variant font-medium">Operating Costs</p>
+          <p class="text-xl font-bold text-primary mt-1">12,800,000 VND</p>
+          <p class="text-[10px] text-outline mt-2">compared to last month</p>
+        </div>
+      </div>
+      <!-- Card 3 -->
+      <div
+        class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10 flex flex-col justify-between">
+        <div class="flex justify-between items-start">
+          <div class="p-2 bg-surface-container-highest rounded-lg">
+            <span class="material-symbols-outlined text-on-surface-variant" data-icon="inventory">inventory</span>
+          </div>
+          <span class="text-xs font-bold text-secondary flex items-center">-2% <span
+              class="material-symbols-outlined text-xs ml-1" data-icon="trending_down">trending_down</span></span>
+        </div>
+        <div class="mt-4">
+          <p class="text-xs text-on-surface-variant font-medium">Ingredient Costs</p>
+          <p class="text-xl font-bold text-primary mt-1">15,200,000 VND</p>
+          <p class="text-[10px] text-outline mt-2">compared to last month</p>
+        </div>
+      </div>
+      <!-- Card 4 -->
+      <div
+        class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10 flex flex-col justify-between">
+        <div class="flex justify-between items-start">
+          <div class="p-2 bg-primary-container rounded-lg">
+            <span class="material-symbols-outlined text-on-primary-container"
+              data-icon="account_balance_wallet">account_balance_wallet</span>
+          </div>
+          <span class="text-xs font-bold text-secondary flex items-center">+22% <span
+              class="material-symbols-outlined text-xs ml-1" data-icon="trending_up">trending_up</span></span>
+        </div>
+        <div class="mt-4">
+          <p class="text-xs text-on-surface-variant font-medium">Net Profit</p>
+          <p class="text-xl font-bold text-primary mt-1">14,500,000 VND</p>
+          <p class="text-[10px] text-outline mt-2">compared to last month</p>
+        </div>
+      </div>
+    </div>
+    <!-- Charts Section -->
+    <div class="grid grid-cols-3 gap-8">
+      <!-- Main Bar/Line Chart -->
+      <div class="col-span-2 bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/10">
+        <div class="flex justify-between items-center mb-10">
+          <h3 class="font-serif text-2xl text-primary">Profit/Cost/Revenue <span
+              class="text-sm font-sans font-medium text-outline ml-2">last 6 months</span></h3>
+          <div class="flex gap-4 items-center">
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-secondary"></span>
+              <span class="text-xs font-medium text-on-surface-variant">Revenue</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-surface-container-highest"></span>
+              <span class="text-xs font-medium text-on-surface-variant">Costs</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-1 bg-primary rounded-full"></span>
+              <span class="text-xs font-medium text-on-surface-variant">Profit</span>
+            </div>
+          </div>
+        </div>
+        <!-- Mock Chart Visualization -->
+        <div class="h-64 flex items-end justify-between relative px-2">
+          <!-- Profit Line Overlay -->
+          <svg class="absolute inset-0 h-full w-full pointer-events-none" preserveaspectratio="none"
+            viewbox="0 0 600 200">
+            <path d="M50 140 Q150 100 250 120 T450 60 T550 40" fill="none" stroke="#002c04" stroke-width="3"></path>
+            <circle cx="50" cy="140" fill="#002c04" r="4"></circle>
+            <circle cx="150" cy="100" fill="#002c04" r="4"></circle>
+            <circle cx="250" cy="120" fill="#002c04" r="4"></circle>
+            <circle cx="350" cy="90" fill="#002c04" r="4"></circle>
+            <circle cx="450" cy="60" fill="#002c04" r="4"></circle>
+            <circle cx="550" cy="40" fill="#002c04" r="4"></circle>
+          </svg>
+          <!-- Bar Groups -->
+          <div class="flex flex-col items-center gap-2 w-16">
+            <div class="flex items-end gap-1 h-48">
+              <div class="w-4 bg-secondary rounded-t-sm h-[80%]"></div>
+              <div class="w-4 bg-surface-container-highest rounded-t-sm h-[60%]"></div>
+            </div>
+            <span class="text-xs font-medium text-outline">Jan</span>
+          </div>
+          <div class="flex flex-col items-center gap-2 w-16">
+            <div class="flex items-end gap-1 h-48">
+              <div class="w-4 bg-secondary rounded-t-sm h-[70%]"></div>
+              <div class="w-4 bg-surface-container-highest rounded-t-sm h-[50%]"></div>
+            </div>
+            <span class="text-xs font-medium text-outline">Feb</span>
+          </div>
+          <div class="flex flex-col items-center gap-2 w-16">
+            <div class="flex items-end gap-1 h-48">
+              <div class="w-4 bg-secondary rounded-t-sm h-[85%]"></div>
+              <div class="w-4 bg-surface-container-highest rounded-t-sm h-[65%]"></div>
+            </div>
+            <span class="text-xs font-medium text-outline">Mar</span>
+          </div>
+          <div class="flex flex-col items-center gap-2 w-16">
+            <div class="flex items-end gap-1 h-48">
+              <div class="w-4 bg-secondary rounded-t-sm h-[75%]"></div>
+              <div class="w-4 bg-surface-container-highest rounded-t-sm h-[55%]"></div>
+            </div>
+            <span class="text-xs font-medium text-outline">Apr</span>
+          </div>
+          <div class="flex flex-col items-center gap-2 w-16">
+            <div class="flex items-end gap-1 h-48">
+              <div class="w-4 bg-secondary rounded-t-sm h-[90%]"></div>
+              <div class="w-4 bg-surface-container-highest rounded-t-sm h-[40%]"></div>
+            </div>
+            <span class="text-xs font-medium text-outline">May</span>
+          </div>
+          <div class="flex flex-col items-center gap-2 w-16">
+            <div class="flex items-end gap-1 h-48">
+              <div class="w-4 bg-secondary rounded-t-sm h-[95%]"></div>
+              <div class="w-4 bg-surface-container-highest rounded-t-sm h-[30%]"></div>
+            </div>
+            <span class="text-xs font-medium text-outline">Jun</span>
+          </div>
+        </div>
+      </div>
+      <!-- Expense Breakdown Donut -->
+      <div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/10">
+        <h3 class="font-serif text-2xl text-primary mb-8">Types of expenses</h3>
+        <div class="relative w-48 h-48 mx-auto mb-10">
+          <!-- Mock Donut Chart -->
+          <svg class="w-full h-full transform -rotate-90" viewbox="0 0 36 36">
+            <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#f1f1f0" stroke-width="4"></circle>
+            <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#002c04" stroke-dasharray="40 60"
+              stroke-dashoffset="0" stroke-width="4"></circle>
+            <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#006e08" stroke-dasharray="25 75"
+              stroke-dashoffset="-40" stroke-width="4"></circle>
+            <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#3ba633" stroke-dasharray="20 80"
+              stroke-dashoffset="-65" stroke-width="4"></circle>
+            <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#e1e3e2" stroke-dasharray="15 85"
+              stroke-dashoffset="-85" stroke-width="4"></circle>
+          </svg>
+          <div class="absolute inset-0 flex flex-col items-center justify-center">
+            <span class="text-2xl font-bold text-primary">28M</span>
+            <span class="text-[10px] text-outline font-medium uppercase tracking-tighter">Total VND</span>
+          </div>
+        </div>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-primary"></span>
+              <span class="text-sm font-medium text-on-surface-variant">Ingredients</span>
+            </div>
+            <span class="text-sm font-bold text-primary">40%</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-secondary"></span>
+              <span class="text-sm font-medium text-on-surface-variant">Staffs</span>
+            </div>
+            <span class="text-sm font-bold text-primary">25%</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-[#3ba633]"></span>
+              <span class="text-sm font-medium text-on-surface-variant">Delivery</span>
+            </div>
+            <span class="text-sm font-bold text-primary">20%</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-surface-container-highest"></span>
+              <span class="text-sm font-medium text-on-surface-variant">Others</span>
+            </div>
+            <span class="text-sm font-bold text-primary">15%</span>
+          </div>
+        </div>
+      </div>
+      <!-- Bottom Full-Width Bar Chart -->
+      <div class="col-span-3 bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/10">
+        <div class="flex justify-between items-center mb-8">
+          <h3 class="font-serif text-2xl text-primary">Peak Hours <span
+              class="text-sm font-sans font-medium text-outline ml-2">for the last month</span></h3>
+          <div class="bg-surface-container p-1 rounded-lg flex text-[10px] font-bold">
+            <button class="px-3 py-1 bg-white shadow-sm rounded-md">Hourly</button>
+            <button class="px-3 py-1 text-outline">Daily</button>
+          </div>
+        </div>
+        <div class="h-40 flex items-end justify-between gap-1">
+          <!-- Logic for 24 bars -->
+          <div class="flex-1 bg-surface-container-low rounded-t-sm h-[10%]"></div>
+          <div class="flex-1 bg-surface-container-low rounded-t-sm h-[5%]"></div>
+          <div class="flex-1 bg-surface-container-low rounded-t-sm h-[5%]"></div>
+          <div class="flex-1 bg-surface-container-low rounded-t-sm h-[8%]"></div>
+          <div class="flex-1 bg-surface-container-low rounded-t-sm h-[12%]"></div>
+          <div class="flex-1 bg-surface-container-low rounded-t-sm h-[20%]"></div>
+          <div class="flex-1 bg-surface-container-low rounded-t-sm h-[35%]"></div>
+          <div class="flex-1 bg-secondary rounded-t-sm h-[60%]"></div>
+          <div class="flex-1 bg-secondary rounded-t-sm h-[75%]"></div>
+          <div class="flex-1 bg-primary rounded-t-sm h-[95%]"></div>
+          <div class="flex-1 bg-primary rounded-t-sm h-[100%]"></div>
+          <div class="flex-1 bg-secondary rounded-t-sm h-[85%]"></div>
+          <div class="flex-1 bg-secondary rounded-t-sm h-[70%]"></div>
+          <div class="flex-1 bg-secondary-fixed-dim rounded-t-sm h-[50%]"></div>
+          <div class="flex-1 bg-secondary-fixed-dim rounded-t-sm h-[45%]"></div>
+          <div class="flex-1 bg-secondary rounded-t-sm h-[65%]"></div>
+          <div class="flex-1 bg-primary rounded-t-sm h-[90%]"></div>
+          <div class="flex-1 bg-primary rounded-t-sm h-[85%]"></div>
+          <div class="flex-1 bg-secondary rounded-t-sm h-[60%]"></div>
+          <div class="flex-1 bg-surface-container-low rounded-t-sm h-[40%]"></div>
+          <div class="flex-1 bg-surface-container-low rounded-t-sm h-[25%]"></div>
+          <div class="flex-1 bg-surface-container-low rounded-t-sm h-[15%]"></div>
+          <div class="flex-1 bg-surface-container-low rounded-t-sm h-[10%]"></div>
+          <div class="flex-1 bg-surface-container-low rounded-t-sm h-[5%]"></div>
+        </div>
+        <div class="flex justify-between mt-4 text-[10px] font-bold text-outline">
+          <span>0:00</span>
+          <span>4:00</span>
+          <span>8:00</span>
+          <span>12:00</span>
+          <span>16:00</span>
+          <span>20:00</span>
+          <span>23:59</span>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script src="../assets/js/layout.js"></script>
+  <script src="../assets/js/main.js"></script>
+</body>
+
+</html>
