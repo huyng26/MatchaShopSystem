@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script src="../assets/js/tailwind-config.js"></script>
+  <title>Settings | The Matcha Atelier</title>
+</head>
+
+<body class="page-settings bg-surface text-on-surface" data-page="settings">
+  <aside id="app-sidebar" class="h-screen w-72 fixed left-0 top-0 z-40 bg-[#002c04] dark:bg-[#001a02] shadow-[32px_0_64px_-12px_rgba(0,44,4,0.08)] flex flex-col py-8 px-6"></aside>
+  <header id="app-topbar" class="fixed top-0 right-0 left-72 h-20 z-30 bg-[#f9f9f8]/80 dark:bg-[#191c1c]/80 backdrop-blur-2xl flex items-center justify-between px-10"></header>
+
+  <main class="ml-72 pt-24 p-10 space-y-8">
+    <section class="flex items-end justify-between">
+      <div>
+        <h2 class="font-serif text-4xl text-primary mb-2">Settings</h2>
+        <p class="text-on-surface-variant font-medium">Manage basic system preferences and account options.</p>
+      </div>
+    </section>
+
+    <section class="settings-panel max-w-4xl">
+      <div class="settings-row">
+        <div class="flex items-center gap-4">
+          <div class="settings-row-icon">
+            <span class="material-symbols-outlined">manage_accounts</span>
+          </div>
+          <div>
+            <h3 class="text-base font-extrabold text-primary">Account Settings</h3>
+            <p class="text-sm text-on-surface-variant mt-1">Profile, password, and store account details.</p>
+          </div>
+        </div>
+        <span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+      </div>
+
+      <div class="settings-row">
+        <div class="flex items-center gap-4">
+          <div class="settings-row-icon">
+            <span class="material-symbols-outlined">notifications</span>
+          </div>
+          <div>
+            <h3 class="text-base font-extrabold text-primary">Notification Settings</h3>
+            <p class="text-sm text-on-surface-variant mt-1">Alerts for orders, stock, and staff activity.</p>
+          </div>
+        </div>
+        <span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+      </div>
+
+      <div class="settings-row">
+        <div class="flex items-center gap-4">
+          <div class="settings-row-icon">
+            <span class="material-symbols-outlined">palette</span>
+          </div>
+          <div>
+            <h3 class="text-base font-extrabold text-primary">Theme Settings</h3>
+            <p class="text-sm text-on-surface-variant mt-1">Display mode and visual preferences.</p>
+          </div>
+        </div>
+        <span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+      </div>
+
+      <div class="settings-row">
+        <div class="flex items-center gap-4">
+          <div class="settings-row-icon">
+            <span class="material-symbols-outlined">lock</span>
+          </div>
+          <div>
+            <h3 class="text-base font-extrabold text-primary">Privacy Settings</h3>
+            <p class="text-sm text-on-surface-variant mt-1">Access visibility and privacy preferences.</p>
+          </div>
+        </div>
+        <span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+      </div>
+    </section>
+  </main>
+
+  <script src="../assets/js/layout.js"></script>
+  <script src="../assets/js/main.js"></script>
+</body>
+
+</html>
