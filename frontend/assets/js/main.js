@@ -179,6 +179,14 @@ function initSharedLogoutConfirmation() {
 }
 
 function initLogin() {
+  const form = document.querySelector('body.page-login form');
+  if (form) {
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      window.location.href = 'dashboard.html';
+    });
+  }
+
   document.querySelectorAll('input').forEach((input) => {
     input.addEventListener('focus', () => {
       const label = input.parentElement?.parentElement?.querySelector('label');

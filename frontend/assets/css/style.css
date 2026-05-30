@@ -118,13 +118,15 @@ body.page-shipper .custom-scrollbar::-webkit-scrollbar-thumb {
 body.page-inventory-list,
 body.page-customer-list,
 body.page-employee-list,
+body.page-financial-management,
 body.page-settings {
   background: #f9f9f8;
 }
 
 body.page-inventory-list table,
 body.page-customer-list table,
-body.page-employee-list table {
+body.page-employee-list table,
+body.page-financial-management table {
   width: 100%;
   border-collapse: collapse !important;
   border-spacing: 0 !important;
@@ -133,6 +135,10 @@ body.page-employee-list table {
   font-size: 14px;
 }
 
+body.page-inventory-list .management-table-card,
+body.page-customer-list .management-table-card,
+body.page-employee-list .management-table-card,
+body.page-financial-management .management-table-card,
 body.page-inventory-list main > div:has(> table),
 body.page-customer-list .ml-72 > div:has(table),
 body.page-employee-list .grid > .col-span-12.lg\:col-span-12 {
@@ -143,20 +149,29 @@ body.page-employee-list .grid > .col-span-12.lg\:col-span-12 {
   overflow: hidden;
 }
 
+body.page-inventory-list .management-table-card,
+body.page-customer-list .management-table-card,
+body.page-employee-list .management-table-card,
+body.page-financial-management .management-table-card {
+  font-family: 'Manrope', sans-serif !important;
+}
+
 body.page-employee-list .grid > .col-span-12.lg\:col-span-12 {
   padding: 0;
 }
 
 body.page-inventory-list thead tr,
 body.page-customer-list thead tr,
-body.page-employee-list thead tr {
+body.page-employee-list thead tr,
+body.page-financial-management thead tr {
   background: #eef3ec !important;
   border-bottom: 1px solid rgba(121, 129, 119, 0.18);
 }
 
 body.page-inventory-list th,
 body.page-customer-list th,
-body.page-employee-list th {
+body.page-employee-list th,
+body.page-financial-management th {
   padding: 16px 24px !important;
   color: #496648 !important;
   font-family: 'Manrope', sans-serif !important;
@@ -171,7 +186,8 @@ body.page-employee-list th {
 
 body.page-inventory-list td,
 body.page-customer-list td,
-body.page-employee-list td {
+body.page-employee-list td,
+body.page-financial-management td {
   background: transparent !important;
   border-bottom: 1px solid rgba(121, 129, 119, 0.1);
   border-radius: 0 !important;
@@ -182,28 +198,39 @@ body.page-employee-list td {
   vertical-align: middle;
 }
 
+body.page-inventory-list td *,
+body.page-customer-list td *,
+body.page-employee-list td *,
+body.page-financial-management td * {
+  letter-spacing: 0;
+}
+
 body.page-inventory-list tbody tr,
 body.page-customer-list tbody tr,
-body.page-employee-list tbody tr {
+body.page-employee-list tbody tr,
+body.page-financial-management tbody tr {
   background: #ffffff;
   transition: background-color 160ms ease;
 }
 
 body.page-inventory-list tbody tr:hover,
 body.page-customer-list tbody tr:hover,
-body.page-employee-list tbody tr:hover {
+body.page-employee-list tbody tr:hover,
+body.page-financial-management tbody tr:hover {
   background: #f3f7f1 !important;
 }
 
 body.page-inventory-list tbody tr:hover td,
 body.page-customer-list tbody tr:hover td,
-body.page-employee-list tbody tr:hover td {
+body.page-employee-list tbody tr:hover td,
+body.page-financial-management tbody tr:hover td {
   background: transparent !important;
 }
 
 body.page-inventory-list tbody tr:last-child td,
 body.page-customer-list tbody tr:last-child td,
-body.page-employee-list tbody tr:last-child td {
+body.page-employee-list tbody tr:last-child td,
+body.page-financial-management tbody tr:last-child td {
   border-bottom: 0;
 }
 
@@ -217,7 +244,8 @@ body.page-employee-list td a {
 
 body.page-inventory-list td p,
 body.page-customer-list td p,
-body.page-employee-list td div.text-xs {
+body.page-employee-list td div.text-xs,
+body.page-financial-management td p {
   color: #6f786f !important;
 }
 
@@ -227,7 +255,8 @@ body.page-customer-list td:last-child > div {
 
 body.page-inventory-list td:last-child button,
 body.page-customer-list td:last-child button,
-body.page-employee-list td:last-child button {
+body.page-employee-list td:last-child button,
+body.page-financial-management td:last-child button {
   min-height: 36px;
   border-radius: 10px !important;
   background: #eef3ec;
@@ -237,7 +266,8 @@ body.page-employee-list td:last-child button {
 
 body.page-inventory-list td:last-child button:hover,
 body.page-customer-list td:last-child button:hover,
-body.page-employee-list td:last-child button:hover {
+body.page-employee-list td:last-child button:hover,
+body.page-financial-management td:last-child button:hover {
   background: #dce8d9;
   color: #002c04 !important;
   transform: translateY(-1px);
@@ -249,9 +279,154 @@ body.page-employee-list td:last-child button + button:hover {
 
 body.page-inventory-list button.bg-secondary,
 body.page-customer-list button.bg-secondary,
-body.page-employee-list button.bg-secondary {
+body.page-employee-list button.bg-secondary,
+body.page-financial-management button.bg-secondary {
   border-radius: 12px !important;
   box-shadow: 0 14px 28px -18px rgba(0, 77, 9, 0.6) !important;
+}
+
+body.page-inventory-list .management-primary-action,
+body.page-customer-list .management-primary-action,
+body.page-employee-list .management-primary-action,
+body.page-financial-management .management-primary-action {
+  min-height: 44px;
+  padding: 0 20px !important;
+  border-radius: 12px !important;
+  font-family: 'Manrope', sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0 !important;
+}
+
+body.page-inventory-list .management-filter-bar,
+body.page-customer-list .management-filter-bar,
+body.page-employee-list .management-filter-bar,
+body.page-financial-management .management-filter-bar {
+  background: #ffffff !important;
+  border-color: rgba(121, 129, 119, 0.14) !important;
+  font-family: 'Manrope', sans-serif !important;
+}
+
+body.page-inventory-list .management-filter-bar *,
+body.page-customer-list .management-filter-bar *,
+body.page-employee-list .management-filter-bar *,
+body.page-financial-management .management-filter-bar * {
+  font-family: 'Manrope', sans-serif !important;
+  font-size: 13px !important;
+  letter-spacing: 0 !important;
+}
+
+body.page-inventory-list .management-filter-bar .material-symbols-outlined,
+body.page-customer-list .management-filter-bar .material-symbols-outlined,
+body.page-employee-list .management-filter-bar .material-symbols-outlined,
+body.page-financial-management .management-filter-bar .material-symbols-outlined {
+  font-family: 'Material Symbols Outlined' !important;
+  font-size: 18px !important;
+}
+
+body.page-inventory-list .management-filter-bar button,
+body.page-customer-list .management-filter-bar button,
+body.page-employee-list .management-filter-bar button,
+body.page-financial-management .management-filter-bar button,
+body.page-customer-list .management-filter-bar > div > div {
+  min-height: 36px;
+  border-radius: 10px !important;
+  font-weight: 700 !important;
+}
+
+body.page-inventory-list .management-table-footer,
+body.page-customer-list .management-table-footer,
+body.page-employee-list .management-table-footer,
+body.page-financial-management .management-table-footer {
+  margin-top: 0 !important;
+  padding: 16px 24px !important;
+  border-top: 1px solid rgba(121, 129, 119, 0.14) !important;
+  background: #f7faf6 !important;
+  font-family: 'Manrope', sans-serif !important;
+}
+
+body.page-employee-list .management-table-footer {
+  min-height: 64px !important;
+  align-items: center !important;
+}
+
+body.page-inventory-list .management-table-footer p,
+body.page-customer-list .management-table-footer p,
+body.page-employee-list .management-table-footer p,
+body.page-financial-management .management-table-footer p,
+body.page-inventory-list .management-table-footer span,
+body.page-customer-list .management-table-footer span,
+body.page-employee-list .management-table-footer span,
+body.page-financial-management .management-table-footer span {
+  color: #5f6b5f !important;
+  font-family: 'Manrope', sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.4 !important;
+}
+
+body.page-inventory-list .management-table-footer p span,
+body.page-customer-list .management-table-footer p span,
+body.page-employee-list .management-table-footer p span,
+body.page-financial-management .management-table-footer p span {
+  color: #002c04 !important;
+  font-weight: 800 !important;
+}
+
+body.page-inventory-list .management-table-footer .material-symbols-outlined,
+body.page-customer-list .management-table-footer .material-symbols-outlined,
+body.page-employee-list .management-table-footer .material-symbols-outlined,
+body.page-financial-management .management-table-footer .material-symbols-outlined {
+  color: inherit !important;
+  font-family: 'Material Symbols Outlined' !important;
+  font-size: 18px !important;
+  font-weight: 400 !important;
+}
+
+body.page-inventory-list .management-table-footer button,
+body.page-customer-list .management-table-footer button,
+body.page-employee-list .management-table-footer button,
+body.page-financial-management .management-table-footer button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 36px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 12px !important;
+  border: 1px solid rgba(121, 129, 119, 0.18) !important;
+  border-radius: 10px !important;
+  background: #ffffff !important;
+  color: #496648 !important;
+  font-family: 'Manrope', sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+body.page-employee-list .management-table-footer button {
+  width: 36px !important;
+  max-width: 36px !important;
+}
+
+body.page-inventory-list .management-table-footer button.bg-primary,
+body.page-customer-list .management-table-footer button.bg-primary,
+body.page-employee-list .management-table-footer button.bg-primary,
+body.page-financial-management .management-table-footer button.bg-primary {
+  border-color: #002c04 !important;
+  background: #002c04 !important;
+  color: #ffffff !important;
+}
+
+body.page-inventory-list .management-table-footer button:hover,
+body.page-customer-list .management-table-footer button:hover,
+body.page-employee-list .management-table-footer button:hover,
+body.page-financial-management .management-table-footer button:hover {
+  background: #eef3ec !important;
+  color: #002c04 !important;
+  transform: translateY(-1px);
 }
 
 .management-empty-state {

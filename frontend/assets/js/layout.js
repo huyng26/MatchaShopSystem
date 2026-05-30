@@ -31,6 +31,9 @@ const SIDEBAR_HTML = `
     <a class="${_NAV_INACTIVE}" data-nav="delivery-manage" href="delivery_manage.html">
       <span class="material-symbols-outlined">local_shipping</span><span>Delivery Management</span>
     </a>
+    <a class="${_NAV_INACTIVE}" data-nav="financial-management" href="financial_management.html">
+      <span class="material-symbols-outlined">account_balance</span><span>Financial Management</span>
+    </a>
     <a class="${_NAV_INACTIVE}" data-nav="menu" href="menu.html">
       <span class="material-symbols-outlined">eco</span><span>Menu</span>
     </a>
@@ -104,6 +107,7 @@ const PAGE_CONFIG = {
   'customer-detail': { activeNav: 'customers',   searchPlaceholder: 'Search customers...',               backUrl: 'customer_list.html' },
   'employee-list':   { activeNav: 'employees',   searchPlaceholder: 'Search employees...',               backUrl: null },
   'employee-detail': { activeNav: 'employees',   searchPlaceholder: 'Search employees...',               backUrl: 'employee_list.html' },
+  'financial-management': { activeNav: 'financial-management', searchPlaceholder: 'Search finance records...', backUrl: null },
   'settings':        { activeNav: 'settings',    searchPlaceholder: 'Search settings...',                backUrl: null },
   'pos-menu':        { activeNav: 'pos-menu',    searchPlaceholder: 'Search menu items...',               backUrl: null },
   'pos-payment':     { activeNav: 'pos-payment', searchPlaceholder: 'Search payment items...',             backUrl: null },
