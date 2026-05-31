@@ -5,7 +5,9 @@
 <head>
   <meta charset="utf-8" />
   <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-  <title>Atelier Matcha - Artisan POS Dashboard</title>
+  <title>Point of Sale | The Matcha Atelier</title>
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
   <link
     href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Manrope:wght@200..800&amp;display=swap"
     rel="stylesheet" />
@@ -19,303 +21,142 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script src="../assets/js/tailwind-config.js"></script>
 </head>
+
 <body class="page-pos-menu bg-surface text-on-surface min-h-screen" data-page="pos-menu">
-<!-- Sidebar Component (SideNavBar) -->
-<aside id="app-sidebar"
+  <aside id="app-sidebar"
     class="h-screen w-72 fixed left-0 top-0 z-40 bg-[#002c04] dark:bg-[#001a02] shadow-[32px_0_64px_-12px_rgba(0,44,4,0.08)] flex flex-col py-8 px-6">
   </aside>
-<!-- Header Component (TopAppBar) -->
-<header id="app-topbar"
-class="fixed top-0 right-0 left-72 h-20 z-30 bg-[#f9f9f8]/80 dark:bg-[#191c1c]/80 backdrop-blur-2xl flex items-center justify-between px-10"></header>
-<!-- <header class="fixed top-0 right-0 w-[calc(100%-16rem)] h-20 bg-surface dark:bg-surface-dim flex justify-between items-center px-12 z-40">
-<div class="flex-1 max-w-xl">
-<div class="relative group">
-<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
-<input class="w-full bg-surface-container border-none rounded-full py-3 pl-12 pr-6 focus:ring-2 focus:ring-secondary/20 transition-all placeholder:text-on-surface-variant/50" placeholder="Search menu items..." type="text"/>
-</div>
-</div>
-<div class="flex items-center gap-6">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-secondary hover:text-secondary-fixed transition-colors cursor-pointer p-2 rounded-full hover:bg-secondary-container/20">notifications</span>
-<span class="material-symbols-outlined text-secondary hover:text-secondary-fixed transition-colors cursor-pointer p-2 rounded-full hover:bg-secondary-container/20">history</span>
-</div>
-<div class="flex items-center gap-3 pl-6 border-l border-surface-container-highest">
-<div class="text-right">
-<p class="text-sm font-bold text-primary leading-tight">Nguyen Luong</p>
-<p class="text-[10px] text-on-surface-variant uppercase tracking-widest">Master Tea Sommelier</p>
-</div>
-<div class="w-10 h-10 rounded-xl bg-surface-container-highest flex items-center justify-center overflow-hidden border-2 border-secondary-container">
-<img alt="User Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAodGebrq67L67hDwA-PenVOD41WR8CcIq5GvZAhbi-6KsEX5wtM1YILW25HrEgNp14NHFLgVXn6lOAtL5Fndqsfi_YtyrcqMctyHC9I_cdSFl7-2Kn6TiYkjoE2sv2tQJjssK1Q7kPTr8jpsadDt_uzVw5WCaHjDgkLTeSfEdf_DsBYqOTd7w7FNXqebHS60uri_dO0dtC4D7UZ27lGLkkaENxbWxBt0dX3DnRZrIkwJqp6fB4SaSfK2kFIb2c1l0b6LcDwcOyEs33"/>
-</div>
-</div>
-</div>
-</header> -->
-<!-- Main Content Layout -->
-<main class="ml-72 mt-20 h-[calc(100vh-5rem)] flex ">
-<!-- Menu Grid Area -->
-<section class="flex-1 p-8 overflow-y-auto custom-scrollbar">
-<div class="max-w-5xl mx-auto">
-<header class="mb-10">
-<h2 class="font-headline text-5xl text-primary mb-2">In-shop Order</h2>
-<p class="text-on-surface-variant font-medium">Curated artisanal matcha selections for today's service.</p>
-</header>
-<!-- Category Section -->
-<div class="space-y-12">
-<div>
-<div class="flex items-center gap-4 mb-6">
-<h3 class="font-headline text-2xl text-secondary">Matcha Classics</h3>
-<div class="h-px flex-1 bg-surface-container-highest"></div>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-<!-- Menu Card 1 -->
-<button class="group bg-surface-container-lowest rounded-xl p-4 text-left transition-all hover:translate-y-[-4px] hover:shadow-[0_20px_40px_-15px_rgba(0,44,4,0.08)] flex flex-col h-full border border-transparent hover:border-secondary-container/30" onclick="toggleModal()">
-<div class="relative w-full aspect-[4/3] rounded-lg overflow-hidden mb-4 bg-surface-container-low">
-<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="A macro shot of a premium Matcha Latte in a handcrafted ceramic bowl, showing the vibrant green froth and creamy texture. The lighting is soft and natural, emphasizing the organic botanical vibe of a high-end tea atelier. The background features subtle textures of weathered wood and stone in a minimalist setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD38R8L4FSRfpaQOSPtDSgjQvkcfuDFOrwoBfBCaV2cBG9i_nLOsGkkGMkN6witrF9Swu_3vu9Xr3fjKgcprxoBdot5V8dIg-JGuWJk-z4ViK0oXsRlqTWJyyS7Mh-P9SX-FjI6VIw6JKpyvhjoLVn322qOPcSYO3IULjxLtzZ5Gr_yaEjetWdlqKSMh3fxLQ7tpKD_eB_H-CtD5JIickHbQZUFG9tshpZxPMQD4nzPnwgDQ8CLKZkQCLPTRy4Okn8qQR_GyezQGV53"/>
-<div class="absolute top-2 right-2 bg-secondary text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-widest shadow-lg">Popular</div>
-</div>
-<h4 class="font-headline text-xl text-primary mb-1">Ceremonial Grade Latte</h4>
-<p class="text-sm text-on-surface-variant line-clamp-2 mb-4">Stone-ground ceremonial grade matcha with silky oat milk.</p>
-<div class="mt-auto flex justify-between items-center">
-<span class="text-secondary font-bold text-lg">75.000 <span class="text-[10px] font-medium opacity-70">VND</span></span>
-<div class="w-8 h-8 rounded-full bg-secondary text-white flex items-center justify-center group-hover:scale-110 transition-transform">
-<span class="material-symbols-outlined text-sm">add</span>
-</div>
-</div>
-</button>
-<!-- Menu Card 2 -->
-<button class="group bg-surface-container-lowest rounded-xl p-4 text-left transition-all hover:translate-y-[-4px] hover:shadow-[0_20px_40px_-15px_rgba(0,44,4,0.08)] flex flex-col h-full border border-transparent hover:border-secondary-container/30" onclick="toggleModal()">
-<div class="relative w-full aspect-[4/3] rounded-lg overflow-hidden mb-4 bg-surface-container-low">
-<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="An iced Matcha cream cheese tea in a tall glass, featuring distinct layers of bright green matcha and thick white foam. Small pearls of condensation decorate the glass, suggesting refreshing coldness. The aesthetic is clean and editorial, using a palette of forest greens and parchment whites in a sophisticated boutique gallery style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB7lBG6XfDHs6N0iB1e-8JQV_Ih32BF-FEovTrKxMtBdKu4bu7fmgdcyr9viabl-zhXLQ1chV-Ylk8J4pE0zNIykr0wof2lhqY5ijypoZE0fWlzcI47DmgR5zubJvHYbUzYfQgyJ-O3Ub_gE-tVXDhZg_i-WSS6cb8gWmXGkHPQR9YBRCQJAKxstZM0XgNHffsKINPl-R6PM5lDie8twMHkoy4PvkEIZjkK7ss_uek3gVNdopNkTmhK0WzYF0hkTGklCel8nSOULiZq"/>
-</div>
-<h4 class="font-headline text-xl text-primary mb-1">Matcha Cream Cheese</h4>
-<p class="text-sm text-on-surface-variant line-clamp-2 mb-4">Deep forest matcha topped with sea salt savory cream.</p>
-<div class="mt-auto flex justify-between items-center">
-<span class="text-secondary font-bold text-lg">60.000 <span class="text-[10px] font-medium opacity-70">VND</span></span>
-<div class="w-8 h-8 rounded-full bg-secondary text-white flex items-center justify-center group-hover:scale-110 transition-transform">
-<span class="material-symbols-outlined text-sm">add</span>
-</div>
-</div>
-</button>
-<!-- Menu Card 3 -->
-<button class="group bg-surface-container-lowest rounded-xl p-4 text-left transition-all hover:translate-y-[-4px] hover:shadow-[0_20px_40px_-15px_rgba(0,44,4,0.08)] flex flex-col h-full border border-transparent hover:border-secondary-container/30" onclick="toggleModal()">
-<div class="relative w-full aspect-[4/3] rounded-lg overflow-hidden mb-4 bg-surface-container-low">
-<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="A vibrant green iced matcha drink with chewy tapioca pearls at the bottom of the glass. The background is a minimalist tea studio with soft lighting and neutral tones. The composition is artistic and asymmetric, highlighting the textures of the pearls and the rich color of the tea. Premium botanical aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXMdCiTSkhaCj2XfxmnfqhmF5G_8X40ouY3AjKrKU3XTxdUReASJKRkoGqWr3tPP0yhBN3VfsBvvcKWUTiN3aMxj2fzQUQpP_3DWteZjuZeWoq0w79RrgOlu7nTwzqobxpKe_ejKCFz1sa_Q5Jle_ydgcGYjHLR6BwCIGx-j7AO78qNJ16R97quwAqsxSreeKSWLrbWSobk4Tnv_Af64ujPIxdW9aoFwELng3jgbQGlgdsppF8oSzDU6SEkHcWnQGQm86WURWYuXSP"/>
-</div>
-<h4 class="font-headline text-xl text-primary mb-1">Matcha Pearl Blossom</h4>
-<p class="text-sm text-on-surface-variant line-clamp-2 mb-4">Traditional whisked tea served over house-made honey boba.</p>
-<div class="mt-auto flex justify-between items-center">
-<span class="text-secondary font-bold text-lg">55.000 <span class="text-[10px] font-medium opacity-70">VND</span></span>
-<div class="w-8 h-8 rounded-full bg-secondary text-white flex items-center justify-center group-hover:scale-110 transition-transform">
-<span class="material-symbols-outlined text-sm">add</span>
-</div>
-</div>
-</button>
-</div>
-</div>
-<div>
-<div class="flex items-center gap-4 mb-6">
-<h3 class="font-headline text-2xl text-secondary">Toasted Notes (Hojicha)</h3>
-<div class="h-px flex-1 bg-surface-container-highest"></div>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-<!-- Menu Card 4 -->
-<button class="group bg-surface-container-lowest rounded-xl p-4 text-left transition-all hover:translate-y-[-4px] hover:shadow-[0_20px_40px_-15px_rgba(0,44,4,0.08)] flex flex-col h-full border border-transparent hover:border-secondary-container/30" onclick="toggleModal()">
-<div class="relative w-full aspect-[4/3] rounded-lg overflow-hidden mb-4 bg-surface-container-low">
-<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="A warm, earthy Hojicha latte in an artisanal clay cup. The drink has a rich, roasted caramel color with a light foam. The setting is a cozy botanical workshop with shadows of leaves cast across the scene. The mood is calm, rustic, and sophisticated, emphasizing the artisanal nature of the tea." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2Kn97Sodrfnwct4UT7Ts_GB-NRMKDR12ubWNEysWSAk7jw9OSC1RNzBivZqIQHF6AQT3LzBazPvAvll5H0Q4OE2tPLIoaISi6rBA9i3VCQfH0grMiWzlAJGIpTIn0LLYQSwDsQD2fV3pcSEskfD2SXvwRXsrB1UFSPBV6Ko6GEW59Q8YbPMeRbP47CbKRmA3s6HcvuRyEij7S1l9qqDBCvcF5xWYPBdPMKMzT5_afcPIzho_yBOSlxhaeCbLSnqIVMQ079QcFqp-s"/>
-</div>
-<h4 class="font-headline text-xl text-primary mb-1">Roasted Hojicha</h4>
-<p class="text-sm text-on-surface-variant line-clamp-2 mb-4">Slow-roasted green tea with earthy, cocoa undertones.</p>
-<div class="mt-auto flex justify-between items-center">
-<span class="text-secondary font-bold text-lg">65.000 <span class="text-[10px] font-medium opacity-70">VND</span></span>
-<div class="w-8 h-8 rounded-full bg-secondary text-white flex items-center justify-center group-hover:scale-110 transition-transform">
-<span class="material-symbols-outlined text-sm">add</span>
-</div>
-</div>
-</button>
-</div>
-</div>
-</div>
-</div>
-</section>
-<!-- Right Side Panel (Cart Summary) -->
-<aside class="w-96 bg-surface-container-low border-l border-surface-container-highest flex flex-col relative z-30">
-<div class="p-6 pb-0">
-<div class="flex items-center justify-between mb-8">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-secondary">shopping_basket</span>
-<h3 class="font-headline text-2xl text-primary">Current Order</h3>
-</div>
-<span class="bg-primary text-white text-[10px] font-bold h-6 w-6 flex items-center justify-center rounded-full">3</span>
-</div>
-<div class="flex items-center gap-2 p-3 bg-surface-container-highest/50 rounded-xl mb-6">
-<span class="material-symbols-outlined text-on-surface-variant text-sm">confirmation_number</span>
-<p class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Order #ATR-0922</p>
-</div>
-</div>
-<div class="flex-1 overflow-y-auto custom-scrollbar px-6 space-y-4">
-<!-- Cart Item 1 -->
-<div class="group bg-surface-container-lowest p-4 rounded-2xl flex gap-4 transition-all hover:ring-1 hover:ring-secondary/20">
-<div class="w-16 h-16 rounded-xl overflow-hidden shrink-0">
-<img alt="Latte" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDz_aYIND_p9z6g99of5CYeDY12E0an_CsEd90g_oFQ-roRTvt7-8_GOCq5EtLHAUjebx_7sJaBct0VCbAZkOYAb1fksJA_PPcQBpgpc-pUs1zpataYUbMe7VLUU0N7V4gUOruHxWD3xnyrh6G4zumIjlYuVqdXtT4XItwp7DjChVnl4xDPVe5pI6Dp_ZtW1dnl2eZyGFPQ3a5jph-QrQ7xAer8951l7vAFW-hAWSIVaclUe9HLR-4rEs4MhnzMq0fzjylC7L9TgkuT"/>
-</div>
-<div class="flex-1">
-<div class="flex justify-between items-start mb-1">
-<h5 class="text-sm font-bold text-primary leading-tight">Matcha Latte</h5>
-<button class="text-on-surface-variant hover:text-error transition-colors">
-<span class="material-symbols-outlined text-lg">close</span>
-</button>
-</div>
-<p class="text-[10px] text-on-surface-variant font-medium mb-3">Hot, 50% Sugar, Oat Milk</p>
-<div class="flex items-center justify-between">
-<div class="flex items-center bg-surface-container rounded-full px-2 py-1">
-<button class="w-5 h-5 flex items-center justify-center text-primary-container"><span class="material-symbols-outlined text-sm">remove</span></button>
-<span class="mx-3 text-xs font-bold">1</span>
-<button class="w-5 h-5 flex items-center justify-center text-primary-container"><span class="material-symbols-outlined text-sm">add</span></button>
-</div>
-<span class="text-sm font-bold text-secondary">75.000</span>
-</div>
-</div>
-</div>
-<!-- Cart Item 2 -->
-<div class="group bg-surface-container-lowest p-4 rounded-2xl flex gap-4 transition-all hover:ring-1 hover:ring-secondary/20">
-<div class="w-16 h-16 rounded-xl overflow-hidden shrink-0">
-<img alt="Cream Cheese" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAooXvyLdXtpKJSvWNcFR27Ayj5IW5gvhRPp5MLZ0xyeCsWfqYg9LZnR0WpfoodEGwZ-DvQydj2SbS1Uu2eIlJB01nxvaCAVJZa4BIWwp9iaP5wxzPgvhZeIz2U-50iEshv2Z_YA3cMyrl6JvbeXZjWLmbEof7UJOn77tG1eEh6UlDJqIbB_k2x3cTOgiQSprU_uHqC5_IBddzRzNxp6hmAU7H7VwQJcdfGwepbUHteuodJmj1Gc5czzSyUQCQWsHoqIkBJtc2A_zvX"/>
-</div>
-<div class="flex-1">
-<div class="flex justify-between items-start mb-1">
-<h5 class="text-sm font-bold text-primary leading-tight">Matcha Cream Cheese</h5>
-<button class="text-on-surface-variant hover:text-error transition-colors">
-<span class="material-symbols-outlined text-lg">close</span>
-</button>
-</div>
-<p class="text-[10px] text-on-surface-variant font-medium mb-3">Iced, 100% Sugar, Extra Cream</p>
-<div class="flex items-center justify-between">
-<div class="flex items-center bg-surface-container rounded-full px-2 py-1">
-<button class="w-5 h-5 flex items-center justify-center text-primary-container"><span class="material-symbols-outlined text-sm">remove</span></button>
-<span class="mx-3 text-xs font-bold">2</span>
-<button class="w-5 h-5 flex items-center justify-center text-primary-container"><span class="material-symbols-outlined text-sm">add</span></button>
-</div>
-<span class="text-sm font-bold text-secondary">120.000</span>
-</div>
-</div>
-</div>
-</div>
-<div class="p-8 space-y-6">
-<div class="space-y-2">
-<div class="flex justify-between text-sm text-on-surface-variant">
-<span>Subtotal</span>
-<span class="font-bold">195.000</span>
-</div>
-<div class="flex justify-between text-sm text-on-surface-variant">
-<span>Tax (8%)</span>
-<span class="font-bold">15.600</span>
-</div>
-<div class="pt-4 border-t border-surface-container-highest flex justify-between items-center">
-<span class="font-headline text-2xl text-primary">Total</span>
-<span class="font-headline text-2xl text-secondary">210.600 <span class="text-xs uppercase font-body align-middle opacity-50">VND</span></span>
-</div>
-</div>
-<div class="grid grid-cols-2 gap-4">
-<button class="bg-surface-container-highest py-3 rounded-xl text-primary font-bold text-sm transition-transform active:scale-95 flex items-center justify-center gap-2">
-<span class="material-symbols-outlined text-lg">payments</span>
-                        Cash
-                    </button>
-<button class="bg-surface-container-highest py-3 rounded-xl text-primary font-bold text-sm transition-transform active:scale-95 flex items-center justify-center gap-2">
-<span class="material-symbols-outlined text-lg">qr_code_2</span>
-                        QR Pay
-                    </button>
-</div>
-<button class="w-full bg-secondary text-white py-5 rounded-2xl font-bold text-lg shadow-[0_16px_32px_-8px_rgba(0,110,8,0.3)] transition-all hover:bg-secondary/90 hover:translate-y-[-2px] active:scale-[0.98]">
-                    Complete Order
-                </button>
-</div>
-</aside>
-</main>
-<!-- Customization Modal (Hidden by Default) -->
-<div class="fixed inset-0 z-[100] hidden" id="custom-modal">
-<div class="absolute inset-0 bg-primary/40 backdrop-blur-sm" onclick="toggleModal()"></div>
-<div class="absolute right-0 top-0 h-full w-[480px] bg-surface flex flex-col shadow-2xl transition-transform duration-500 translate-x-full" id="modal-content">
-<header class="p-8 border-b border-surface-container-highest flex items-center justify-between">
-<div>
-<h3 class="font-headline text-3xl text-primary mb-1">Customize Order</h3>
-<p class="text-on-surface-variant font-medium">Ceremonial Grade Latte</p>
-</div>
-<button class="w-10 h-10 rounded-full hover:bg-surface-container flex items-center justify-center transition-colors" onclick="toggleModal()">
-<span class="material-symbols-outlined">close</span>
-</button>
-</header>
-<div class="flex-1 overflow-y-auto p-8 space-y-10 custom-scrollbar">
-<!-- Hot/Ice Selection -->
-<section>
-<h4 class="font-headline text-xl text-primary mb-4">Temperature</h4>
-<div class="grid grid-cols-2 gap-4">
-<label class="relative cursor-pointer group">
-<input checked="" class="peer sr-only" name="temp" type="radio"/>
-<div class="bg-surface-container p-6 rounded-2xl border-2 border-transparent peer-checked:border-secondary peer-checked:bg-secondary-container/10 transition-all text-center">
-<span class="material-symbols-outlined text-3xl text-primary mb-2">hot_tub</span>
-<p class="text-sm font-bold text-primary">Warm Soul</p>
-</div>
-</label>
-<label class="relative cursor-pointer group">
-<input class="peer sr-only" name="temp" type="radio"/>
-<div class="bg-surface-container p-6 rounded-2xl border-2 border-transparent peer-checked:border-secondary peer-checked:bg-secondary-container/10 transition-all text-center">
-<span class="material-symbols-outlined text-3xl text-primary mb-2">ac_unit</span>
-<p class="text-sm font-bold text-primary">Iced Botanical</p>
-</div>
-</label>
-</div>
-</section>
-<!-- Sugar Level -->
-<section>
-<h4 class="font-headline text-xl text-primary mb-4">Sweetness Balance</h4>
-<div class="flex justify-between items-center bg-surface-container-low p-2 rounded-full">
-<button class="w-12 h-12 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary">0%</button>
-<button class="w-12 h-12 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary">25%</button>
-<button class="w-12 h-12 rounded-full bg-primary text-white shadow-lg flex items-center justify-center font-bold">50%</button>
-<button class="w-12 h-12 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary">75%</button>
-<button class="w-12 h-12 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary">100%</button>
-</div>
-</section>
-<!-- Toppings -->
-<section>
-<h4 class="font-headline text-xl text-primary mb-4">Botanical Layers (Toppings)</h4>
-<div class="space-y-3">
-<label class="flex items-center justify-between p-4 bg-surface-container-lowest rounded-xl cursor-pointer hover:bg-surface-container transition-colors">
-<div class="flex items-center gap-3">
-<input class="w-5 h-5 rounded border-outline text-secondary focus:ring-secondary" type="checkbox"/>
-<span class="font-bold text-sm text-primary">Honey Boba</span>
-</div>
-<span class="text-sm text-secondary">+10k</span>
-</label>
-<label class="flex items-center justify-between p-4 bg-surface-container-lowest rounded-xl cursor-pointer hover:bg-surface-container transition-colors">
-<div class="flex items-center gap-3">
-<input class="w-5 h-5 rounded border-outline text-secondary focus:ring-secondary" type="checkbox"/>
-<span class="font-bold text-sm text-primary">Sea Salt Cream</span>
-</div>
-<span class="text-sm text-secondary">+15k</span>
-</label>
-<label class="flex items-center justify-between p-4 bg-surface-container-lowest rounded-xl cursor-pointer hover:bg-surface-container transition-colors">
-<div class="flex items-center gap-3">
-<input class="w-5 h-5 rounded border-outline text-secondary focus:ring-secondary" type="checkbox"/>
-<span class="font-bold text-sm text-primary">Matcha Jelly</span>
-</div>
-<span class="text-sm text-secondary">+10k</span>
-</label>
-</div>
-</section>
-<!-- Notes -->
-<section>
-<h4 class="font-headline text-xl text-primary mb-4">Artisan's Notes</h4>
-<textarea class="w-full bg-surface-container border-none rounded-2xl p-4 h-32 focus:ring-2 focus:ring-secondary/20 placeholder:text-on-surface-variant/40" placeholder="e.g., Extra hot, serve in glass..."></textarea>
-</section>
-</div>
-<footer class="p-8 bg-surface-container-low border-t border-surface-container-highest">
-<button class="w-full bg-primary text-white py-5 rounded-2xl font-bold text-lg transition-transform active:scale-95 shadow-xl" onclick="toggleModal()">
-                    Add to Atelier Order — 75.000
-                </button>
-</footer>
-</div>
-</div>
+  <header id="app-topbar"
+    class="fixed top-0 right-0 left-72 h-20 z-30 bg-[#f9f9f8]/80 dark:bg-[#191c1c]/80 backdrop-blur-2xl flex items-center justify-between px-10"></header>
+
+  <main class="ml-72 mt-20 h-[calc(100vh-5rem)] flex">
+    <section class="flex-1 p-8 overflow-y-auto custom-scrollbar">
+      <div class="max-w-6xl mx-auto">
+        <header class="mb-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h2 class="font-headline text-5xl text-primary mb-2">In-shop Order</h2>
+            <p class="text-on-surface-variant font-medium">Select an available item, customize it, then add it to the order.</p>
+          </div>
+          <div class="flex items-center gap-2 rounded-full bg-surface-container px-4 py-2 text-sm font-bold text-on-surface-variant">
+            <span class="material-symbols-outlined text-secondary text-lg">check_circle</span>
+            Available menu items only
+          </div>
+        </header>
+
+        <div class="space-y-12" id="posMenuSections"></div>
+      </div>
+    </section>
+
+    <aside class="hidden w-96 bg-surface-container-low border-l border-surface-container-highest flex-col relative z-30" id="posCartPanel">
+      <div class="p-6 pb-0">
+        <div class="flex items-center justify-between mb-8">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-secondary">shopping_basket</span>
+            <h3 class="font-headline text-2xl text-primary">Current Order</h3>
+          </div>
+          <span class="bg-primary text-white text-[10px] font-bold h-6 min-w-6 px-2 flex items-center justify-center rounded-full" id="posCartCount">0</span>
+        </div>
+        <div class="flex items-center gap-2 p-3 bg-surface-container-highest/50 rounded-xl mb-6">
+          <span class="material-symbols-outlined text-on-surface-variant text-sm">confirmation_number</span>
+          <p class="text-xs font-bold text-on-surface-variant uppercase tracking-widest" id="posOrderCode">Order #ATR-LOCAL</p>
+        </div>
+      </div>
+      <div class="flex-1 overflow-y-auto custom-scrollbar px-6 space-y-4" id="posCartItems"></div>
+      <div class="p-8 space-y-6">
+        <div class="space-y-2">
+          <div class="flex justify-between text-sm text-on-surface-variant">
+            <span>Subtotal</span>
+            <span class="font-bold" id="posCartSubtotal">0 VND</span>
+          </div>
+          <div class="pt-4 border-t border-surface-container-highest flex justify-between items-center">
+            <span class="font-headline text-2xl text-primary">Total</span>
+            <span class="font-headline text-2xl text-secondary" id="posCartTotal">0 VND</span>
+          </div>
+        </div>
+        <button class="w-full bg-secondary text-white py-5 rounded-2xl font-bold text-lg shadow-[0_16px_32px_-8px_rgba(0,110,8,0.3)] transition-all hover:bg-secondary/90 hover:translate-y-[-2px] active:scale-[0.98]" id="posCompleteOrderBtn" type="button">
+          Complete Order
+        </button>
+      </div>
+    </aside>
+  </main>
+
+  <div class="fixed inset-0 z-[100] hidden" id="custom-modal">
+    <div class="absolute inset-0 bg-primary/40 backdrop-blur-sm" id="posModalBackdrop"></div>
+    <div class="absolute right-0 top-0 h-full w-[480px] bg-surface flex flex-col shadow-2xl transition-transform duration-500 translate-x-full" id="modal-content">
+      <header class="p-8 border-b border-surface-container-highest flex items-center justify-between">
+        <div>
+          <h3 class="font-headline text-3xl text-primary mb-1">Customize Order</h3>
+          <p class="text-on-surface-variant font-medium" id="posModalProductName">Selected item</p>
+        </div>
+        <button class="w-10 h-10 rounded-full hover:bg-surface-container flex items-center justify-center transition-colors" id="posModalCloseBtn" type="button">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </header>
+      <form class="flex-1 flex flex-col min-h-0" id="posCustomizeForm">
+        <div class="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
+          <section>
+            <h4 class="font-headline text-xl text-primary mb-4">Temperature</h4>
+            <div class="grid grid-cols-2 gap-4">
+              <label class="relative cursor-pointer group">
+                <input checked="" class="peer sr-only" name="temperature" type="radio" value="Hot" />
+                <div class="bg-surface-container p-5 rounded-2xl border-2 border-transparent peer-checked:border-secondary peer-checked:bg-secondary-container/10 transition-all text-center">
+                  <span class="material-symbols-outlined text-3xl text-primary mb-2">local_fire_department</span>
+                  <p class="text-sm font-bold text-primary">Hot</p>
+                </div>
+              </label>
+              <label class="relative cursor-pointer group">
+                <input class="peer sr-only" name="temperature" type="radio" value="Iced" />
+                <div class="bg-surface-container p-5 rounded-2xl border-2 border-transparent peer-checked:border-secondary peer-checked:bg-secondary-container/10 transition-all text-center">
+                  <span class="material-symbols-outlined text-3xl text-primary mb-2">ac_unit</span>
+                  <p class="text-sm font-bold text-primary">Iced</p>
+                </div>
+              </label>
+            </div>
+          </section>
+
+          <section>
+            <label class="font-headline text-xl text-primary mb-4 block" for="posIceLevel">Ice level</label>
+            <select class="w-full bg-surface-container border-none rounded-2xl px-4 py-4 focus:ring-2 focus:ring-secondary/20" id="posIceLevel" name="iceLevel">
+              <option value="No Ice">No Ice</option>
+              <option value="30% Ice">30% Ice</option>
+              <option value="50% Ice" selected="">50% Ice</option>
+              <option value="70% Ice">70% Ice</option>
+              <option value="100% Ice">100% Ice</option>
+            </select>
+          </section>
+
+          <section>
+            <label class="font-headline text-xl text-primary mb-4 block" for="posSugarLevel">Sugar level</label>
+            <select class="w-full bg-surface-container border-none rounded-2xl px-4 py-4 focus:ring-2 focus:ring-secondary/20" id="posSugarLevel" name="sugarLevel">
+              <option value="0% Sugar">0% Sugar</option>
+              <option value="25% Sugar">25% Sugar</option>
+              <option value="50% Sugar" selected="">50% Sugar</option>
+              <option value="75% Sugar">75% Sugar</option>
+              <option value="100% Sugar">100% Sugar</option>
+            </select>
+          </section>
+
+          <section>
+            <h4 class="font-headline text-xl text-primary mb-4">Toppings</h4>
+            <div class="space-y-3" id="posToppingOptions"></div>
+          </section>
+
+          <section>
+            <label class="font-headline text-xl text-primary mb-4 block" for="posItemNote">Note</label>
+            <textarea class="w-full bg-surface-container border-none rounded-2xl p-4 h-28 focus:ring-2 focus:ring-secondary/20 placeholder:text-on-surface-variant/40" id="posItemNote" name="note" placeholder="e.g., less sweet, separate topping..."></textarea>
+          </section>
+        </div>
+        <footer class="p-8 bg-surface-container-low border-t border-surface-container-highest">
+          <button class="w-full bg-primary text-white py-5 rounded-2xl font-bold text-lg transition-transform active:scale-95 shadow-xl" id="posAddToCartBtn" type="submit">
+            Add to Order
+          </button>
+        </footer>
+      </form>
+    </div>
+  </div>
+
   <script src="../assets/js/layout.js?v=fm-20260530"></script>
   <script src="../assets/js/main.js?v=fm-20260530"></script>
-</body></html>
+</body>
+
+</html>
