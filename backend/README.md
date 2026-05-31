@@ -21,7 +21,7 @@ for each module.
 Recommended branch flow:
 
 ```text
-backend-base-schema
+backend
   feature/auth-rbac
   feature/products-inventory
   feature/orders-payments
