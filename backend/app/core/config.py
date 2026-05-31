@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     debug: bool = True
 
     database_url: str = (
-        "postgresql+asyncpg://matcha:matcha_secret@db:5432/matcha_shop"
+        "postgresql+asyncpg://admin:password@db:5432/matcha_management_system"
     )
 
     model_config = SettingsConfigDict(

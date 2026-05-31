@@ -11,12 +11,13 @@ This branch should focus on:
 - Initial PostgreSQL table structure.
 - Minimal FastAPI application skeleton.
 - Minimal database connection setup.
+- Mock API endpoints for early frontend integration.
 - Folder and file structure for all backend modules.
 - A stable base branch for feature branches.
 
-This branch should not contain large business features yet. Feature branches
-should branch from here to implement APIs, business logic, tests, and migrations
-for each module.
+This branch should not contain real business features yet. Feature branches
+should branch from here to replace mock API behavior with real APIs, business
+logic, tests, and migrations for each module.
 
 Recommended branch flow:
 
@@ -65,32 +66,77 @@ backend/
   requirements.txt
 ```
 
+## Environment Files
+
+This project uses two different `.env` files for two different purposes.
+
+### Root `.env`
+
+Location:
+
+```text
+MatchaShopSystem/.env
+```
+
+Used by `docker-compose.yml`.
+
+Current values:
+
+```env
+POSTGRES_USER=admin
+POSTGRES_PASSWORD=password
+POSTGRES_DB=matcha_management_system
+```
+
+This file controls the local Docker Postgres container. It does not configure
+the FastAPI app directly.
+
+Template:
+
+```text
+MatchaShopSystem/.env.example
+```
+
+### Backend `.env`
+
+Location:
+
+```text
+backend/.env
+```
+
+Used by the FastAPI backend container through `env_file`.
+
+Current local Docker database URL:
+
+```env
+DATABASE_URL=postgresql+asyncpg://admin:password@db:5432/matcha_management_system
+```
+
+For a PostgreSQL host shared through Tailscale, change only `DATABASE_URL`:
+
+```env
+DATABASE_URL=postgresql+asyncpg://DB_USER:DB_PASSWORD@100.93.151.127:5432/matcha_management_system
+```
+
+Template:
+
+```text
+backend/.env.example
+```
+
 ## Root Files
 
-### `.env.example`
+### Root `.env.example`
 
-Template for backend environment variables.
+Template for Docker Compose environment variables.
 
 Important values:
 
 ```text
-DATABASE_URL
-JWT_SECRET_KEY
 POSTGRES_USER
 POSTGRES_PASSWORD
 POSTGRES_DB
-```
-
-For local Docker database:
-
-```env
-DATABASE_URL=postgresql+asyncpg://matcha:matcha_secret@db:5432/matcha_shop
-```
-
-For a PostgreSQL host shared through Tailscale:
-
-```env
-DATABASE_URL=postgresql+asyncpg://user:password@100.x.x.x:5432/matcha_shop
 ```
 
 Do not commit real `.env` files.
@@ -168,6 +214,10 @@ GET /api/v1/status
 GET /api/v1/status/db
 ```
 
+Mock APIs are always registered in this base branch. The mock data is placed
+directly inside each route file with comments, so feature branches can replace
+the mock block with service calls in the same module.
+
 ## API Layer
 
 Folder:
@@ -221,6 +271,10 @@ deliveries.py    queue, trip, shipper, COD reconciliation APIs
 finance.py       expense and finance ledger APIs
 dashboard.py     dashboard/reporting APIs
 ```
+
+In this branch, these route files expose lightweight mock endpoints so the
+frontend can integrate early. Mock responses are static and do not write to the
+database.
 
 ## Core Layer
 
@@ -512,6 +566,19 @@ This folder contains raw SQL files mounted into the Postgres Docker container.
 Postgres runs these files only when the database volume is created for the first
 time.
 
+Important distinction:
+
+```text
+docker compose up creates tables automatically only for the Postgres container
+defined as the db service in docker-compose.yml, and only when its Docker volume
+is created for the first time.
+```
+
+If the backend connects to an existing PostgreSQL database hosted on Windows,
+Tailscale, pgAdmin, DBeaver, or another machine, Docker Compose will not create
+tables in that database automatically. In that case, run the SQL files manually
+with `db/apply-init.ps1`.
+
 The files are split by purpose and run in filename order.
 
 ### `001_extensions.sql`
@@ -618,6 +685,51 @@ financial_records.record_date
 
 Creates `updated_at` triggers for tables that have an `updated_at` column.
 
+## Apply SQL To An Existing PostgreSQL Host
+
+Use this when PostgreSQL already exists and only the database is empty.
+
+Script:
+
+```text
+backend/db/apply-init.ps1
+```
+
+If `psql` is installed on Windows:
+
+```powershell
+.\backend\db\apply-init.ps1 `
+  -DatabaseUrl "postgresql://admin:password@localhost:5432/matcha_management_system"
+```
+
+If `psql` is not installed, use Docker to run the `psql` client:
+
+```powershell
+.\backend\db\apply-init.ps1 `
+  -DatabaseUrl "postgresql://admin:password@host.docker.internal:5432/matcha_management_system" `
+  -UseDocker
+```
+
+For the shared Tailscale database:
+
+```powershell
+.\backend\db\apply-init.ps1 `
+  -DatabaseUrl "postgresql://DB_USER:DB_PASSWORD@100.93.151.127:5432/matcha_management_system" `
+  -UseDocker
+```
+
+Use `localhost` when running `psql` directly on Windows. Use
+`host.docker.internal` when the `psql` client runs inside Docker and needs to
+reach PostgreSQL on the Windows host.
+
+After applying the SQL, check tables with:
+
+```powershell
+psql "postgresql://admin:password@localhost:5432/matcha_management_system" -c "\dt"
+```
+
+or in a GUI tool such as DBeaver, pgAdmin, or DataGrip.
+
 ## Alembic
 
 Folder:
@@ -686,6 +798,37 @@ From the project root:
 docker compose up --build
 ```
 
+Before running, copy environment templates:
+
+```powershell
+Copy-Item .env.example .env
+Copy-Item backend/.env.example backend/.env
+```
+
+Then choose the database mode in `backend/.env`.
+
+For each teammate's local Docker database:
+
+```env
+DATABASE_URL=postgresql+asyncpg://admin:password@db:5432/matcha_management_system
+```
+
+For the shared PostgreSQL database through Tailscale:
+
+```env
+DATABASE_URL=postgresql+asyncpg://DB_USER:DB_PASSWORD@100.93.151.127:5432/matcha_management_system
+```
+
+Run mode:
+
+```powershell
+# Local database container + backend
+docker compose up --build
+
+# Backend only, when DATABASE_URL points to the shared Tailscale database
+docker compose up --build backend
+```
+
 Backend:
 
 ```text
@@ -728,13 +871,13 @@ Backend code does not need to change.
 Set `DATABASE_URL` in `backend/.env`:
 
 ```env
-DATABASE_URL=postgresql+asyncpg://user:password@100.x.x.x:5432/matcha_shop
+DATABASE_URL=postgresql+asyncpg://DB_USER:DB_PASSWORD@100.93.151.127:5432/matcha_management_system
 ```
 
 or with Tailscale MagicDNS:
 
 ```env
-DATABASE_URL=postgresql+asyncpg://user:password@db-host.tailnet-name.ts.net:5432/matcha_shop
+DATABASE_URL=postgresql+asyncpg://DB_USER:DB_PASSWORD@db-host.tailnet-name.ts.net:5432/matcha_management_system
 ```
 
 Make sure the PostgreSQL host allows connections from Tailscale:
@@ -745,6 +888,10 @@ pg_hba.conf allows the client
 Firewall allows port 5432
 Database user/password are correct
 ```
+
+The SQL bootstrap files will not run automatically on this remote database.
+Apply them with `backend/db/apply-init.ps1` or run the files manually in a DB
+GUI tool.
 
 ## How Frontend Connects
 
@@ -839,6 +986,7 @@ Health/status endpoints
 Async database connection setup
 Raw SQL bootstrap split by purpose
 Docker Postgres init mount
+Mock API endpoints for frontend integration
 Basic test folder structure
 ```
 
@@ -847,8 +995,8 @@ Not done yet:
 ```text
 Full ORM models
 Full Pydantic schemas
-Authentication
-Business APIs
+Real authentication
+Real business APIs
 Service implementations
 Repository implementations
 Alembic migration revisions
