@@ -114,7 +114,79 @@ function resetFlow() {
   window.location.reload();
 }
 
+const SHARED_LOGOUT_MODAL_HTML = `
+  <div class="logout-modal-root" id="logout-modal" aria-hidden="true">
+    <div class="logout-modal-card" role="dialog" aria-modal="true" aria-labelledby="logout-modal-title">
+      <h2 class="logout-modal-title" id="logout-modal-title">Confirm Logout</h2>
+      <p class="logout-modal-copy">Are you sure you want to log out?</p>
+      <div class="logout-modal-actions">
+        <button class="logout-cancel-btn" type="button" id="logout-cancel-btn">Cancel</button>
+        <button class="logout-confirm-btn" type="button" id="logout-confirm-btn">Yes</button>
+      </div>
+    </div>
+  </div>
+`;
+
+function initSharedLogoutConfirmation() {
+  if (!document.getElementById('logout-modal')) {
+    document.body.insertAdjacentHTML('beforeend', SHARED_LOGOUT_MODAL_HTML);
+  }
+
+  const modal = document.getElementById('logout-modal');
+  const cancelBtn = document.getElementById('logout-cancel-btn');
+  const confirmBtn = document.getElementById('logout-confirm-btn');
+  if (!modal || !cancelBtn || !confirmBtn) return;
+
+  const openModal = () => {
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+    cancelBtn.focus();
+  };
+
+  const closeModal = () => {
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+  };
+
+  document.querySelectorAll('a, button').forEach((element) => {
+    const text = element.textContent.trim().replace(/\s+/g, ' ').toLowerCase();
+    const isLogoutControl =
+      element.id === 'app-logout-link' || text === 'log out' || text === 'logout';
+    if (!isLogoutControl || element.dataset.logoutBound === 'true') return;
+
+    element.addEventListener('click', (event) => {
+      event.preventDefault();
+      openModal();
+    });
+    element.dataset.logoutBound = 'true';
+  });
+
+  if (modal.dataset.modalBound === 'true') return;
+
+  cancelBtn.addEventListener('click', closeModal);
+  modal.addEventListener('click', (event) => {
+    if (event.target === modal) closeModal();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && modal.classList.contains('is-open')) {
+      closeModal();
+    }
+  });
+  confirmBtn.addEventListener('click', () => {
+    window.location.href = 'login.html';
+  });
+  modal.dataset.modalBound = 'true';
+}
+
 function initLogin() {
+  const form = document.querySelector('body.page-login form');
+  if (form) {
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      window.location.href = 'dashboard.html';
+    });
+  }
+
   document.querySelectorAll('input').forEach((input) => {
     input.addEventListener('focus', () => {
       const label = input.parentElement?.parentElement?.querySelector('label');
@@ -269,6 +341,8 @@ Object.assign(window, {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+  initSharedLogoutConfirmation();
+
   const page = document.body.dataset.page;
   if (page && pageInits[page]) {
     pageInits[page]();

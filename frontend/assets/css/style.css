@@ -113,3 +113,448 @@ body.page-shipper .custom-scrollbar::-webkit-scrollbar-thumb {
 .tonal-layering-no-borders {
   border: none !important;
 }
+
+/* Shared management tables: Inventory, Customers, Employees */
+body.page-inventory-list,
+body.page-customer-list,
+body.page-employee-list,
+body.page-financial-management,
+body.page-settings {
+  background: #f9f9f8;
+}
+
+body.page-inventory-list table,
+body.page-customer-list table,
+body.page-employee-list table,
+body.page-financial-management table {
+  width: 100%;
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
+  color: #191c1c;
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+}
+
+body.page-inventory-list .management-table-card,
+body.page-customer-list .management-table-card,
+body.page-employee-list .management-table-card,
+body.page-financial-management .management-table-card,
+body.page-inventory-list main > div:has(> table),
+body.page-customer-list .ml-72 > div:has(table),
+body.page-employee-list .grid > .col-span-12.lg\:col-span-12 {
+  background: #ffffff;
+  border: 1px solid rgba(121, 129, 119, 0.16);
+  border-radius: 16px;
+  box-shadow: 0 20px 45px -28px rgba(0, 44, 4, 0.24);
+  overflow: hidden;
+}
+
+body.page-inventory-list .management-table-card,
+body.page-customer-list .management-table-card,
+body.page-employee-list .management-table-card,
+body.page-financial-management .management-table-card {
+  font-family: 'Manrope', sans-serif !important;
+}
+
+body.page-employee-list .grid > .col-span-12.lg\:col-span-12 {
+  padding: 0;
+}
+
+body.page-inventory-list thead tr,
+body.page-customer-list thead tr,
+body.page-employee-list thead tr,
+body.page-financial-management thead tr {
+  background: #eef3ec !important;
+  border-bottom: 1px solid rgba(121, 129, 119, 0.18);
+}
+
+body.page-inventory-list th,
+body.page-customer-list th,
+body.page-employee-list th,
+body.page-financial-management th {
+  padding: 16px 24px !important;
+  color: #496648 !important;
+  font-family: 'Manrope', sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1.4;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+body.page-inventory-list td,
+body.page-customer-list td,
+body.page-employee-list td,
+body.page-financial-management td {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(121, 129, 119, 0.1);
+  border-radius: 0 !important;
+  padding: 18px 24px !important;
+  color: #3f4940;
+  font-size: 14px;
+  line-height: 1.45;
+  vertical-align: middle;
+}
+
+body.page-inventory-list td *,
+body.page-customer-list td *,
+body.page-employee-list td *,
+body.page-financial-management td * {
+  letter-spacing: 0;
+}
+
+body.page-inventory-list tbody tr,
+body.page-customer-list tbody tr,
+body.page-employee-list tbody tr,
+body.page-financial-management tbody tr {
+  background: #ffffff;
+  transition: background-color 160ms ease;
+}
+
+body.page-inventory-list tbody tr:hover,
+body.page-customer-list tbody tr:hover,
+body.page-employee-list tbody tr:hover,
+body.page-financial-management tbody tr:hover {
+  background: #f3f7f1 !important;
+}
+
+body.page-inventory-list tbody tr:hover td,
+body.page-customer-list tbody tr:hover td,
+body.page-employee-list tbody tr:hover td,
+body.page-financial-management tbody tr:hover td {
+  background: transparent !important;
+}
+
+body.page-inventory-list tbody tr:last-child td,
+body.page-customer-list tbody tr:last-child td,
+body.page-employee-list tbody tr:last-child td,
+body.page-financial-management tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+body.page-inventory-list td:first-child a,
+body.page-customer-list td a p:first-child,
+body.page-employee-list td a {
+  color: #002c04 !important;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+body.page-inventory-list td p,
+body.page-customer-list td p,
+body.page-employee-list td div.text-xs,
+body.page-financial-management td p {
+  color: #6f786f !important;
+}
+
+body.page-customer-list td:last-child > div {
+  opacity: 1 !important;
+}
+
+body.page-inventory-list td:last-child button,
+body.page-customer-list td:last-child button,
+body.page-employee-list td:last-child button,
+body.page-financial-management td:last-child button {
+  min-height: 36px;
+  border-radius: 10px !important;
+  background: #eef3ec;
+  color: #496648 !important;
+  transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+body.page-inventory-list td:last-child button:hover,
+body.page-customer-list td:last-child button:hover,
+body.page-employee-list td:last-child button:hover,
+body.page-financial-management td:last-child button:hover {
+  background: #dce8d9;
+  color: #002c04 !important;
+  transform: translateY(-1px);
+}
+
+body.page-employee-list td:last-child button + button:hover {
+  color: #ba1a1a !important;
+}
+
+body.page-inventory-list button.bg-secondary,
+body.page-customer-list button.bg-secondary,
+body.page-employee-list button.bg-secondary,
+body.page-financial-management button.bg-secondary {
+  border-radius: 12px !important;
+  box-shadow: 0 14px 28px -18px rgba(0, 77, 9, 0.6) !important;
+}
+
+body.page-inventory-list .management-primary-action,
+body.page-customer-list .management-primary-action,
+body.page-employee-list .management-primary-action,
+body.page-financial-management .management-primary-action {
+  min-height: 44px;
+  padding: 0 20px !important;
+  border-radius: 12px !important;
+  font-family: 'Manrope', sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0 !important;
+}
+
+body.page-inventory-list .management-filter-bar,
+body.page-customer-list .management-filter-bar,
+body.page-employee-list .management-filter-bar,
+body.page-financial-management .management-filter-bar {
+  background: #ffffff !important;
+  border-color: rgba(121, 129, 119, 0.14) !important;
+  font-family: 'Manrope', sans-serif !important;
+}
+
+body.page-inventory-list .management-filter-bar *,
+body.page-customer-list .management-filter-bar *,
+body.page-employee-list .management-filter-bar *,
+body.page-financial-management .management-filter-bar * {
+  font-family: 'Manrope', sans-serif !important;
+  font-size: 13px !important;
+  letter-spacing: 0 !important;
+}
+
+body.page-inventory-list .management-filter-bar .material-symbols-outlined,
+body.page-customer-list .management-filter-bar .material-symbols-outlined,
+body.page-employee-list .management-filter-bar .material-symbols-outlined,
+body.page-financial-management .management-filter-bar .material-symbols-outlined {
+  font-family: 'Material Symbols Outlined' !important;
+  font-size: 18px !important;
+}
+
+body.page-inventory-list .management-filter-bar button,
+body.page-customer-list .management-filter-bar button,
+body.page-employee-list .management-filter-bar button,
+body.page-financial-management .management-filter-bar button,
+body.page-customer-list .management-filter-bar > div > div {
+  min-height: 36px;
+  border-radius: 10px !important;
+  font-weight: 700 !important;
+}
+
+body.page-inventory-list .management-table-footer,
+body.page-customer-list .management-table-footer,
+body.page-employee-list .management-table-footer,
+body.page-financial-management .management-table-footer {
+  margin-top: 0 !important;
+  padding: 16px 24px !important;
+  border-top: 1px solid rgba(121, 129, 119, 0.14) !important;
+  background: #f7faf6 !important;
+  font-family: 'Manrope', sans-serif !important;
+}
+
+body.page-employee-list .management-table-footer {
+  min-height: 64px !important;
+  align-items: center !important;
+}
+
+body.page-inventory-list .management-table-footer p,
+body.page-customer-list .management-table-footer p,
+body.page-employee-list .management-table-footer p,
+body.page-financial-management .management-table-footer p,
+body.page-inventory-list .management-table-footer span,
+body.page-customer-list .management-table-footer span,
+body.page-employee-list .management-table-footer span,
+body.page-financial-management .management-table-footer span {
+  color: #5f6b5f !important;
+  font-family: 'Manrope', sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.4 !important;
+}
+
+body.page-inventory-list .management-table-footer p span,
+body.page-customer-list .management-table-footer p span,
+body.page-employee-list .management-table-footer p span,
+body.page-financial-management .management-table-footer p span {
+  color: #002c04 !important;
+  font-weight: 800 !important;
+}
+
+body.page-inventory-list .management-table-footer .material-symbols-outlined,
+body.page-customer-list .management-table-footer .material-symbols-outlined,
+body.page-employee-list .management-table-footer .material-symbols-outlined,
+body.page-financial-management .management-table-footer .material-symbols-outlined {
+  color: inherit !important;
+  font-family: 'Material Symbols Outlined' !important;
+  font-size: 18px !important;
+  font-weight: 400 !important;
+}
+
+body.page-inventory-list .management-table-footer button,
+body.page-customer-list .management-table-footer button,
+body.page-employee-list .management-table-footer button,
+body.page-financial-management .management-table-footer button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 36px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 12px !important;
+  border: 1px solid rgba(121, 129, 119, 0.18) !important;
+  border-radius: 10px !important;
+  background: #ffffff !important;
+  color: #496648 !important;
+  font-family: 'Manrope', sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+body.page-employee-list .management-table-footer button {
+  width: 36px !important;
+  max-width: 36px !important;
+}
+
+body.page-inventory-list .management-table-footer button.bg-primary,
+body.page-customer-list .management-table-footer button.bg-primary,
+body.page-employee-list .management-table-footer button.bg-primary,
+body.page-financial-management .management-table-footer button.bg-primary {
+  border-color: #002c04 !important;
+  background: #002c04 !important;
+  color: #ffffff !important;
+}
+
+body.page-inventory-list .management-table-footer button:hover,
+body.page-customer-list .management-table-footer button:hover,
+body.page-employee-list .management-table-footer button:hover,
+body.page-financial-management .management-table-footer button:hover {
+  background: #eef3ec !important;
+  color: #002c04 !important;
+  transform: translateY(-1px);
+}
+
+.management-empty-state {
+  padding: 56px 24px;
+  text-align: center;
+  color: #6f786f;
+}
+
+.management-empty-state .material-symbols-outlined {
+  margin-bottom: 12px;
+  color: #8b9389;
+  font-size: 40px;
+}
+
+.management-empty-state h3 {
+  margin: 0 0 6px;
+  color: #002c04;
+  font-family: 'Manrope', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.management-empty-state p {
+  margin: 0;
+  font-size: 13px;
+}
+
+/* Shared logout modal */
+.logout-modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(25, 28, 28, 0.42);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+.logout-modal-root.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.logout-modal-card {
+  width: min(420px, 100%);
+  border: 1px solid rgba(121, 129, 119, 0.18);
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 32px 80px -28px rgba(0, 44, 4, 0.45);
+  padding: 28px;
+  transform: translateY(10px) scale(0.98);
+  transition: transform 180ms ease;
+}
+
+.logout-modal-root.is-open .logout-modal-card {
+  transform: translateY(0) scale(1);
+}
+
+.logout-modal-title {
+  margin: 0 0 8px;
+  color: #002c04;
+  font-family: 'Newsreader', serif;
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.logout-modal-copy {
+  margin: 0;
+  color: #566056;
+  font-size: 14px;
+}
+
+.logout-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.logout-modal-actions button {
+  min-width: 96px;
+  border-radius: 12px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.logout-cancel-btn {
+  border: 1px solid rgba(121, 129, 119, 0.24);
+  background: #ffffff;
+  color: #3f4940;
+}
+
+.logout-confirm-btn {
+  background: #002c04;
+  color: #ffffff;
+}
+
+.settings-panel {
+  border: 1px solid rgba(121, 129, 119, 0.16);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 20px 45px -28px rgba(0, 44, 4, 0.24);
+  overflow: hidden;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 22px 24px;
+  border-bottom: 1px solid rgba(121, 129, 119, 0.1);
+}
+
+.settings-row:last-child {
+  border-bottom: 0;
+}
+
+.settings-row-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 12px;
+  background: #eef3ec;
+  color: #002c04;
+}
