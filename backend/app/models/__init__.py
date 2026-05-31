@@ -1,20 +1,15 @@
-from app.models.ingredient import Ingredient, IngredientPurchase
-from app.models.product import Product, ProductIngredient
-from app.models.customer import Customer
+from app.models.ingredient import Ingredient, InventoryMovement, InventoryPurchase
 from app.models.order import Order, OrderItem, Payment
-from app.models.delivery import DeliveryBatch, DeliveryOrder
-from app.models.finance import OperationalCost
+from app.models.product import Product, ProductCategory, ProductRecipe
 
 __all__ = [
     "Ingredient",
-    "IngredientPurchase",
-    "Product",
-    "ProductIngredient",
-    "Customer",
+    "InventoryMovement",
+    "InventoryPurchase",
     "Order",
     "OrderItem",
     "Payment",
-    "DeliveryBatch",
-    "DeliveryOrder",
-    "OperationalCost",
+    "Product",
+    "ProductCategory",
+    "ProductRecipe",
 ]

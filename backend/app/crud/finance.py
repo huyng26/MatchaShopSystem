@@ -3,9 +3,8 @@ from sqlalchemy import select, func, extract
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.finance import OperationalCost
-from app.models.order import Order, OrderItem, Payment, OrderStatus
-from app.models.ingredient import IngredientPurchase
-from app.models.product import ProductIngredient
+from app.models.order import Order, Payment, OrderStatus
+from app.models.ingredient import InventoryPurchase
 from app.schemas.finance import OperationalCostCreate, OperationalCostUpdate, ProfitSummary
 
 
@@ -73,9 +72,9 @@ async def get_profit_summary(db: AsyncSession, month: int, year: int) -> ProfitS
 
     # COGS: ingredient purchase costs recorded in the period
     cogs_result = await db.execute(
-        select(func.coalesce(func.sum(IngredientPurchase.total_cost), 0)).where(
-            extract("month", IngredientPurchase.purchased_at) == month,
-            extract("year", IngredientPurchase.purchased_at) == year,
+        select(func.coalesce(func.sum(InventoryPurchase.total_cost), 0)).where(
+            extract("month", InventoryPurchase.purchased_at) == month,
+            extract("year", InventoryPurchase.purchased_at) == year,
         )
     )
     cogs = Decimal(str(cogs_result.scalar()))

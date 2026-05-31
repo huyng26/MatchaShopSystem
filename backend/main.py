@@ -1,8 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
+from app.api.v1 import ingredients, orders, payments, products
 from app.core.config import settings
-from app.api.v1 import inventory, products, pos, delivery, customers, finance
+from app.core.integration_contracts import SharedContractUnavailable
+from app.services.errors import DomainError
 
 app = FastAPI(
     title="Matcha Shop System",
@@ -20,12 +23,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(inventory.router, prefix="/api/v1/inventory", tags=["Inventory"])
-app.include_router(products.router, prefix="/api/v1/products", tags=["Products"])
-app.include_router(pos.router, prefix="/api/v1/pos", tags=["POS"])
-app.include_router(delivery.router, prefix="/api/v1/delivery", tags=["Delivery"])
-app.include_router(customers.router, prefix="/api/v1/customers", tags=["Customers"])
-app.include_router(finance.router, prefix="/api/v1/finance", tags=["Finance"])
+
+@app.exception_handler(DomainError)
+async def handle_domain_error(_: Request, exc: DomainError):
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.message})
+
+
+@app.exception_handler(SharedContractUnavailable)
+async def handle_shared_contract_unavailable(_: Request, exc: SharedContractUnavailable):
+    return JSONResponse(status_code=503, content={"detail": str(exc)})
+
+
+app.include_router(ingredients.router, prefix="/api/v1", tags=["Inventory"])
+app.include_router(products.router, prefix="/api/v1", tags=["Products"])
+app.include_router(orders.router, prefix="/api/v1", tags=["Orders"])
+app.include_router(payments.router, prefix="/api/v1", tags=["Payments"])
 
 
 @app.get("/", tags=["Health"])
@@ -36,3 +48,8 @@ async def root():
 @app.get("/health", tags=["Health"])
 async def health():
     return {"status": "healthy"}
+
+
+@app.get("/api/v1/status", tags=["Health"])
+async def api_status():
+    return {"status": "healthy", "api_version": "v1"}
