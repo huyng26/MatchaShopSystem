@@ -46,6 +46,9 @@ const SIDEBAR_HTML = `
     <a class="${_NAV_INACTIVE}" data-nav="employees" href="employee_list.html">
       <span class="material-symbols-outlined">badge</span><span>Employees</span>
     </a>
+    <a class="${_NAV_INACTIVE}" data-nav="account" href="account_list.html">
+      <span class="material-symbols-outlined">manage_accounts</span><span>Account</span>
+    </a>
   </nav>
   <div class="pt-6 border-t border-[#06440c]/80 space-y-1">
     <a class="${_NAV_INACTIVE}" data-nav="settings" href="settings.html">
@@ -103,6 +106,7 @@ const PAGE_CONFIG = {
   'product-detail':  { activeNav: 'menu',        searchPlaceholder: 'Search menu items...',               backUrl: 'menu.html' },
   'inventory-list':  { activeNav: 'inventory',   searchPlaceholder: 'Search inventory...',                backUrl: null },
   'inventory-detail':{ activeNav: 'inventory',   searchPlaceholder: 'Search inventory...',                backUrl: 'inventory_list.html' },
+  'account-list':    { activeNav: 'account',     searchPlaceholder: 'Search accounts...',                 backUrl: null },
   'customer-list':   { activeNav: 'customers',   searchPlaceholder: 'Search customers...',               backUrl: null },
   'customer-detail': { activeNav: 'customers',   searchPlaceholder: 'Search customers...',               backUrl: 'customer_list.html' },
   'employee-list':   { activeNav: 'employees',   searchPlaceholder: 'Search employees...',               backUrl: null },

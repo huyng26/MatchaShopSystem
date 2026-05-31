@@ -116,8 +116,9 @@ body.page-shipper .custom-scrollbar::-webkit-scrollbar-thumb {
   border: none !important;
 }
 
-/* Shared management tables: Inventory, Customers, Employees */
+/* Shared management tables: Inventory, Accounts, Customers, Employees */
 body.page-inventory-list,
+body.page-account-list,
 body.page-customer-list,
 body.page-employee-list,
 body.page-financial-management,
@@ -126,6 +127,7 @@ body.page-settings {
 }
 
 body.page-inventory-list table,
+body.page-account-list table,
 body.page-customer-list table,
 body.page-employee-list table,
 body.page-financial-management table {
@@ -138,6 +140,7 @@ body.page-financial-management table {
 }
 
 body.page-inventory-list .management-table-card,
+body.page-account-list .management-table-card,
 body.page-customer-list .management-table-card,
 body.page-employee-list .management-table-card,
 body.page-financial-management .management-table-card,
@@ -152,6 +155,7 @@ body.page-employee-list .grid > .col-span-12.lg\:col-span-12 {
 }
 
 body.page-inventory-list .management-table-card,
+body.page-account-list .management-table-card,
 body.page-customer-list .management-table-card,
 body.page-employee-list .management-table-card,
 body.page-financial-management .management-table-card {
@@ -163,6 +167,7 @@ body.page-employee-list .grid > .col-span-12.lg\:col-span-12 {
 }
 
 body.page-inventory-list thead tr,
+body.page-account-list thead tr,
 body.page-customer-list thead tr,
 body.page-employee-list thead tr,
 body.page-financial-management thead tr {
@@ -171,6 +176,7 @@ body.page-financial-management thead tr {
 }
 
 body.page-inventory-list th,
+body.page-account-list th,
 body.page-customer-list th,
 body.page-employee-list th,
 body.page-financial-management th {
@@ -187,6 +193,7 @@ body.page-financial-management th {
 }
 
 body.page-inventory-list td,
+body.page-account-list td,
 body.page-customer-list td,
 body.page-employee-list td,
 body.page-financial-management td {
@@ -201,6 +208,7 @@ body.page-financial-management td {
 }
 
 body.page-inventory-list td *,
+body.page-account-list td *,
 body.page-customer-list td *,
 body.page-employee-list td *,
 body.page-financial-management td * {
@@ -208,6 +216,7 @@ body.page-financial-management td * {
 }
 
 body.page-inventory-list tbody tr,
+body.page-account-list tbody tr,
 body.page-customer-list tbody tr,
 body.page-employee-list tbody tr,
 body.page-financial-management tbody tr {
@@ -216,6 +225,7 @@ body.page-financial-management tbody tr {
 }
 
 body.page-inventory-list tbody tr:hover,
+body.page-account-list tbody tr:hover,
 body.page-customer-list tbody tr:hover,
 body.page-employee-list tbody tr:hover,
 body.page-financial-management tbody tr:hover {
@@ -223,6 +233,7 @@ body.page-financial-management tbody tr:hover {
 }
 
 body.page-inventory-list tbody tr:hover td,
+body.page-account-list tbody tr:hover td,
 body.page-customer-list tbody tr:hover td,
 body.page-employee-list tbody tr:hover td,
 body.page-financial-management tbody tr:hover td {
@@ -230,6 +241,7 @@ body.page-financial-management tbody tr:hover td {
 }
 
 body.page-inventory-list tbody tr:last-child td,
+body.page-account-list tbody tr:last-child td,
 body.page-customer-list tbody tr:last-child td,
 body.page-employee-list tbody tr:last-child td,
 body.page-financial-management tbody tr:last-child td {
