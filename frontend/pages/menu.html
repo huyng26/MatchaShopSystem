@@ -49,7 +49,8 @@
                 </div>
             </div>
             <!-- Simplified Uniform Grid -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <div id="product-grid"
+                class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                 <!-- Add New Product Card -->
                 <div
                     id="open-new-product-modal"
@@ -367,6 +368,7 @@
         const form = document.getElementById('new-product-form');
         const addIngredientButton = document.getElementById('add-ingredient');
         const ingredientsContainer = document.getElementById('ingredients-container');
+        const productGrid = document.getElementById('product-grid');
 
         const openModal = () => {
             modal.classList.remove('hidden');
@@ -416,6 +418,65 @@
             ingredientsContainer.appendChild(row);
         };
 
+        const createProductCard = (productData) => {
+            const card = document.createElement('a');
+            card.className = 'group block product-card bg-surface rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1 cursor-pointer';
+            card.href = 'product_detail.html';
+
+            const imageWrapper = document.createElement('div');
+            imageWrapper.className = 'aspect-square relative overflow-hidden bg-surface-container';
+
+            if (productData.productImage?.previewUrl) {
+                const image = document.createElement('img');
+                image.className = 'w-full h-full object-cover transition-transform group-hover:scale-105';
+                image.src = productData.productImage.previewUrl;
+                image.alt = productData.productName;
+                imageWrapper.appendChild(image);
+            } else {
+                const placeholder = document.createElement('div');
+                placeholder.className = 'flex h-full w-full items-center justify-center bg-surface-container-high text-on-surface-variant';
+                placeholder.innerHTML = '<span class="material-symbols-outlined text-5xl" data-icon="restaurant">restaurant</span>';
+                imageWrapper.appendChild(placeholder);
+            }
+
+            const editButton = document.createElement('button');
+            editButton.type = 'button';
+            editButton.className = 'absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur shadow-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center';
+            editButton.innerHTML = '<span class="material-symbols-outlined text-sm" data-icon="edit">edit</span>';
+            imageWrapper.appendChild(editButton);
+
+            const content = document.createElement('div');
+            content.className = 'p-4 flex flex-col flex-1';
+
+            const label = document.createElement('p');
+            label.className = 'text-[10px] font-bold text-secondary uppercase tracking-widest mb-1';
+            label.textContent = 'New Item';
+
+            const name = document.createElement('h3');
+            name.className = 'font-bold text-on-surface text-sm mb-1 line-clamp-1';
+            name.textContent = productData.productName;
+
+            const meta = document.createElement('div');
+            meta.className = 'mt-auto flex justify-between items-baseline';
+
+            const category = document.createElement('span');
+            category.className = 'text-xs text-on-surface-variant';
+            category.textContent = productData.productCategory;
+
+            const price = document.createElement('span');
+            price.className = 'font-bold text-primary';
+            price.textContent = new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND',
+            }).format(productData.productPriceVnd);
+
+            meta.append(category, price);
+            content.append(label, name, meta);
+            card.append(imageWrapper, content);
+
+            return card;
+        };
+
         openModalButton.addEventListener('click', openModal);
         closeModalButton.addEventListener('click', closeModal);
         cancelButton.addEventListener('click', closeModal);
@@ -452,12 +513,14 @@
                         name: imageFile.name,
                         type: imageFile.type,
                         size: imageFile.size,
+                        previewUrl: URL.createObjectURL(imageFile),
                     }
                     : null,
                 recipe: document.getElementById('product-recipe').value.trim() || null,
             };
 
             console.log('New product:', productData);
+            productGrid.insertBefore(createProductCard(productData), openModalButton.nextSibling);
             form.reset();
             ingredientsContainer.innerHTML = '';
             closeModal();

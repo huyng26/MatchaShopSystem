@@ -231,7 +231,7 @@ function initForgotPassword2() {
       modal.classList.add('scale-100');
 
       setTimeout(() => {
-        window.location.reload();
+        window.location.href = 'login.html';
       }, 2500);
     }, 1000);
   });
