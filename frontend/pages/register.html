@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Register | The Matcha Atelier</title>
+<!-- Fonts: Newsreader for Serifs, Manrope for Sans-Serif -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&amp;family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script src="../assets/js/tailwind-config.js"></script>
+</head>
+<body class="page-register flex items-center justify-center min-h-screen bg-background p-6" data-page="register">
+<!-- Content Area (The Atelier Canvas) -->
+<main class="w-full max-w-md flex flex-col items-center animate-in fade-in duration-700 slide-in-from-bottom-4">
+<!-- Brand Identity Section -->
+<header class="text-center mb-10">
+<h1 class="serif-text text-5xl font-light text-primary tracking-tight">
+                The Matcha Atelier
+            </h1>
+<p class="font-body text-secondary mt-3 text-sm font-medium tracking-widest uppercase">
+                Admin Portal
+            </p>
+</header>
+<!-- Register Card -->
+<section class="w-full bg-surface-container-lowest rounded-xl shadow-[32px_0_32px_rgba(0,44,4,0.04)] p-10 relative overflow-hidden border border-outline-variant/10">
+<!-- Atmospheric Leaf Background (Subtle) -->
+<div class="absolute -right-12 -top-12 opacity-5 pointer-events-none">
+<span class="material-symbols-outlined text-[120px] text-primary">eco</span>
+</div>
+<h2 class="serif-text text-2xl text-on-surface font-medium mb-3">Create an account</h2>
+<p class="font-body text-on-surface-variant text-sm leading-relaxed mb-8">
+                Register a workspace account and select the role for this profile.
+            </p>
+<form action="#" class="space-y-5" id="registerForm" method="POST">
+<!-- Email Input -->
+<div class="space-y-2">
+<label class="font-label text-xs font-semibold text-on-surface-variant uppercase tracking-wider block" for="register-email">Email</label>
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline text-lg transition-colors group-focus-within:text-secondary" data-icon="mail">mail</span>
+</div>
+<input class="block w-full pl-11 pr-4 py-3.5 bg-surface-container-low border-none rounded-xl text-on-surface placeholder:text-outline/50 focus:ring-2 focus:ring-secondary/20 focus:bg-white transition-all font-body" id="register-email" name="email" placeholder="artisan@matcha.atelier" required="" type="email"/>
+</div>
+</div>
+<!-- Password Input -->
+<div class="space-y-2">
+<label class="font-label text-xs font-semibold text-on-surface-variant uppercase tracking-wider block" for="register-password">Password</label>
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline text-lg transition-colors group-focus-within:text-secondary" data-icon="lock">lock</span>
+</div>
+<input class="block w-full pl-11 pr-12 py-3.5 bg-surface-container-low border-none rounded-xl text-on-surface placeholder:text-outline/50 focus:ring-2 focus:ring-secondary/20 focus:bg-white transition-all font-body" id="register-password" name="password" placeholder="••••••••" required="" type="password"/>
+<button class="absolute inset-y-0 right-0 pr-4 flex items-center text-outline hover:text-on-surface-variant transition-colors" onclick="toggleVisibility('register-password')" type="button">
+<span class="material-symbols-outlined text-lg" id="register-password-icon">visibility</span>
+</button>
+</div>
+</div>
+<!-- Confirm Password Input -->
+<div class="space-y-2">
+<label class="font-label text-xs font-semibold text-on-surface-variant uppercase tracking-wider block" for="register-confirm-password">Confirm Password</label>
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline text-lg transition-colors group-focus-within:text-secondary" data-icon="verified_user">verified_user</span>
+</div>
+<input class="block w-full pl-11 pr-12 py-3.5 bg-surface-container-low border-none rounded-xl text-on-surface placeholder:text-outline/50 focus:ring-2 focus:ring-secondary/20 focus:bg-white transition-all font-body" id="register-confirm-password" name="confirmPassword" placeholder="••••••••" required="" type="password"/>
+<button class="absolute inset-y-0 right-0 pr-4 flex items-center text-outline hover:text-on-surface-variant transition-colors" onclick="toggleVisibility('register-confirm-password')" type="button">
+<span class="material-symbols-outlined text-lg" id="register-confirm-password-icon">visibility</span>
+</button>
+</div>
+</div>
+<!-- Role Select -->
+<div class="space-y-2">
+<label class="font-label text-xs font-semibold text-on-surface-variant uppercase tracking-wider block" for="register-role">Role</label>
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline text-lg transition-colors group-focus-within:text-secondary" data-icon="badge">badge</span>
+</div>
+<select class="block w-full pl-11 pr-10 py-3.5 bg-surface-container-low border-none rounded-xl text-on-surface focus:ring-2 focus:ring-secondary/20 focus:bg-white transition-all font-body" id="register-role" name="role" required="">
+<option value="" disabled="" selected="">Select a role</option>
+<option value="cashier">Cashier</option>
+<option value="inventory_manager">Inventory Manager</option>
+<option value="delivery_manager">Delivery Manager</option>
+<option value="shipper">Shipper</option>
+</select>
+</div>
+</div>
+<p class="hidden font-body text-sm text-red-600" id="registerError">Passwords do not match.</p>
+<!-- Register Button -->
+<div class="pt-2">
+<button class="w-full bg-primary text-on-primary py-4 rounded-full font-body font-bold text-sm tracking-widest uppercase hover:bg-primary-container shadow-sm btn-hover-effect transition-all flex items-center justify-center gap-2" type="submit">
+                        Register
+                        <span class="material-symbols-outlined text-base">arrow_forward</span>
+</button>
+</div>
+</form>
+<!-- Login Footer -->
+<div class="mt-10 pt-8 border-t border-surface-container-low text-center">
+<p class="font-body text-on-surface-variant text-sm">
+                    Already have an account?
+                    <a class="font-bold text-primary hover:text-secondary transition-colors ml-1" href="login.html">Back to Login</a>
+</p>
+</div>
+</section>
+<!-- Footer Decoration -->
+<footer class="mt-12 flex flex-col items-center opacity-40">
+<div class="flex gap-4 mb-4">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="eco">eco</span>
+<span class="material-symbols-outlined text-primary text-xl" data-icon="local_florist">local_florist</span>
+<span class="material-symbols-outlined text-primary text-xl" data-icon="grass">grass</span>
+</div>
+<p class="font-label text-[10px] uppercase tracking-[0.2em] text-on-surface-variant">© 2024 Botanical Atelier Systems</p>
+</footer>
+</main>
+<!-- Side Decoration (Visual Balance) -->
+<div class="fixed right-0 bottom-0 p-8 hidden lg:block opacity-60">
+<div class="flex flex-col items-end">
+<div class="w-16 h-16 rounded-full overflow-hidden mb-4 shadow-xl border-4 border-white">
+<img alt="Artisan Matcha Whisk" class="w-full h-full object-cover" data-alt="A macro photograph of a traditional bamboo matcha whisk resting on a textured handmade ceramic bowl. The lighting is soft, diffused window light that highlights the intricate bamboo bristles and the deep moss-green powder nearby. The background is a warm, cream-toned parchment texture, maintaining the high-end botanical and editorial aesthetic of the brand." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDdPJ0p-NQYj57I_sE2OguYYjqmkiz6f1EcSLacKZPkkvzP7sRp0cZNYvlifKyfntYbT39evLazFGysGhdtv9wWHEnP5P2SK_R8mkQO-Sp0pgKLpD-Cw5bpoYNufJEss5wGwIX4XU64CK5yi9D1WbUPKOmVq_a1gMw1S7jKAxcWqPDXIe5UKZQt6A9ZSrtabdNLH3Yr52ukBMbWeoAi_L5GJhdEYwxvIQSwcsUoZREflDxX6p6N4w_7O5QED9fV5t-UgdtWnm67oQ96"/>
+</div>
+<span class="serif-text italic text-primary text-sm">Handcrafted Precision</span>
+</div>
+</div>
+<!-- Success Modal (Hidden by default) -->
+<div class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-primary/20 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-500" id="registerSuccessOverlay">
+<div class="bg-surface-container-lowest p-8 rounded-2xl max-w-sm w-full text-center shadow-2xl scale-90 transition-transform duration-500" id="registerSuccessModal">
+<div class="w-16 h-16 bg-secondary/10 text-secondary rounded-full flex items-center justify-center mx-auto mb-6">
+<span class="material-symbols-outlined text-4xl">task_alt</span>
+</div>
+<h3 class="serif-text text-2xl text-on-surface mb-2">Registration Successful</h3>
+<p class="text-on-surface-variant font-body text-sm mb-6">Your account information has been printed to the console. Redirecting to login...</p>
+<div class="w-full bg-surface-container h-1 rounded-full overflow-hidden">
+<div class="bg-secondary h-full animate-[progress_2s_linear_forwards]" style="width: 0%;"></div>
+</div>
+</div>
+</div>
+  <script src="../assets/js/main.js?v=fm-20260530"></script>
+</body></html>

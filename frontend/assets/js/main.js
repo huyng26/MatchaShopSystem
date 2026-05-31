@@ -237,6 +237,51 @@ function initForgotPassword2() {
   });
 }
 
+function initRegister() {
+  const form = document.getElementById('registerForm');
+  const error = document.getElementById('registerError');
+  const overlay = document.getElementById('registerSuccessOverlay');
+  const modal = document.getElementById('registerSuccessModal');
+  if (!form || !error || !overlay || !modal) return;
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+
+    const formData = new FormData(form);
+    const registrationData = {
+      email: formData.get('email'),
+      password: formData.get('password'),
+      confirmPassword: formData.get('confirmPassword'),
+      role: formData.get('role'),
+    };
+
+    if (registrationData.password !== registrationData.confirmPassword) {
+      error.classList.remove('hidden');
+      return;
+    }
+
+    error.classList.add('hidden');
+    console.log('Register form data:', registrationData);
+
+    const btn = form.querySelector('button[type="submit"]');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML =
+        '<span class="material-symbols-outlined animate-spin">progress_activity</span> Registering...';
+    }
+
+    setTimeout(() => {
+      overlay.classList.remove('opacity-0', 'pointer-events-none');
+      modal.classList.remove('scale-90');
+      modal.classList.add('scale-100');
+
+      setTimeout(() => {
+        window.location.href = 'login.html';
+      }, 2500);
+    }, 500);
+  });
+}
+
 function initPosMenu() {
   const searchInput = document.querySelector('input[type="text"]');
   if (!searchInput?.parentElement) return;
@@ -324,6 +369,7 @@ const pageInits = {
   login: initLogin,
   'forgot-password-1': initForgotPassword1,
   'forgot-password-2': initForgotPassword2,
+  register: initRegister,
   'pos-menu': initPosMenu,
   'pos-payment': initPosPayment,
   'delivery-manage': initDeliveryManage,

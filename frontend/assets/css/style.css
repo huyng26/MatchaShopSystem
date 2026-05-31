@@ -28,7 +28,8 @@ h3,
 /* Login / auth variants */
 body.page-login .material-symbols-outlined,
 body.page-forgot-password-1 .material-symbols-outlined,
-body.page-forgot-password-2 .material-symbols-outlined {
+body.page-forgot-password-2 .material-symbols-outlined,
+body.page-register .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
 }
 
