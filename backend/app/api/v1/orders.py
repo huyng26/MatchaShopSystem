@@ -84,3 +84,16 @@ async def get_order(order_id: str) -> dict[str, Any]:
     if order is None:
         raise HTTPException(status_code=404, detail="order_not_found")
     return success_response(data=order)
+
+
+@router.post("/{order_id}/complete")
+async def complete_order(order_id: str) -> dict[str, Any]:
+    return success_response(
+        message="Mock order completed successfully",
+        data={
+            "id": order_id,
+            "status": "completed",
+            "inventory_deducted": True,
+            "financial_records_created": True,
+        },
+    )

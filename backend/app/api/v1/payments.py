@@ -1,6 +1,6 @@
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Body
 
 from app.core.responses import success_response
 
@@ -23,6 +23,20 @@ MOCK_PAYMENTS = [
 @router.get("")
 async def list_payments() -> dict[str, Any]:
     return success_response(data=MOCK_PAYMENTS)
+
+
+@router.post("")
+async def create_payment(
+    payload: dict[str, Any] = Body(default_factory=dict),
+) -> dict[str, Any]:
+    return success_response(
+        message="Mock payment recorded successfully",
+        data={
+            "id": "payment-mock-created",
+            "status": "success",
+            **payload,
+        },
+    )
 
 
 @router.get("/methods")

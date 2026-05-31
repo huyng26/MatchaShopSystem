@@ -1,6 +1,6 @@
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Body
 
 from app.core.responses import success_response
 
@@ -45,6 +45,16 @@ async def get_finance_summary() -> dict[str, Any]:
 @router.get("/expenses")
 async def list_expenses() -> dict[str, Any]:
     return success_response(data=MOCK_EXPENSES)
+
+
+@router.post("/expenses")
+async def create_expense(
+    payload: dict[str, Any] = Body(default_factory=dict),
+) -> dict[str, Any]:
+    return success_response(
+        message="Mock expense created successfully",
+        data={"id": "expense-mock-created", **payload},
+    )
 
 
 @router.get("/records")
