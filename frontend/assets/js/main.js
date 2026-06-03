@@ -178,14 +178,87 @@ function initSharedLogoutConfirmation() {
   modal.dataset.modalBound = 'true';
 }
 
+const MATCHA_API_BASE_URL =
+  window.MATCHA_API_BASE_URL || 'http://localhost:8000/api/v1';
+const LOGIN_EMAIL_NOT_FOUND_MESSAGE =
+  'No account was found for this email address.';
+
+async function requestMatchaApi(path, options = {}) {
+  const response = await fetch(`${MATCHA_API_BASE_URL}${path}`, options);
+
+  const payload = await response.json().catch(() => null);
+  if (!response.ok || payload?.success === false) {
+    throw new Error(payload?.message || 'Request failed');
+  }
+
+  return payload?.data ?? payload;
+}
+
 function initLogin() {
   const form = document.querySelector('body.page-login form');
+  const emailInput = document.getElementById('email');
+  const emailError = document.getElementById('loginEmailError');
+  const submitBtn = form?.querySelector('button[type="submit"]');
+  const originalSubmitHtml = submitBtn?.innerHTML;
+
   if (form) {
-    form.addEventListener('submit', (event) => {
+    form.addEventListener('submit', async (event) => {
       event.preventDefault();
-      window.location.href = 'dashboard.html';
+
+      if (!form.reportValidity()) return;
+
+      const email = String(emailInput?.value || '').trim().toLowerCase();
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML =
+          '<span class="material-symbols-outlined animate-spin">progress_activity</span> Connecting...';
+      }
+
+      try {
+        const accounts = await requestMatchaApi('/accounts');
+        if (!Array.isArray(accounts)) {
+          throw new Error('Accounts API returned an invalid response');
+        }
+
+        const user = accounts.find((item) => item.email === email);
+
+        if (!user) {
+          if (emailError) {
+            emailError.textContent = LOGIN_EMAIL_NOT_FOUND_MESSAGE;
+          }
+          emailError?.classList.remove('hidden');
+          emailInput?.focus();
+          return;
+        }
+
+        emailError?.classList.add('hidden');
+        localStorage.setItem('matcha_access_token', 'mock-access-token');
+        localStorage.setItem('matcha_refresh_token', 'mock-refresh-token');
+        localStorage.setItem('matcha_user', JSON.stringify(user));
+        window.location.href = 'dashboard.html';
+      } catch (error) {
+        console.error('Login failed:', error);
+        if (emailError) {
+          emailError.textContent =
+            'Cannot connect to the backend accounts API. Please check the backend server.';
+          emailError.classList.remove('hidden');
+        }
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalSubmitHtml;
+        }
+      }
     });
   }
+
+  emailInput?.addEventListener('input', () => {
+    if (emailError) {
+      emailError.textContent = LOGIN_EMAIL_NOT_FOUND_MESSAGE;
+    }
+    emailError?.classList.add('hidden');
+  });
 
   document.querySelectorAll('input').forEach((input) => {
     input.addEventListener('focus', () => {
