@@ -1,63 +1,62 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Any
 
-from app.core.database import get_db
-from app.crud import finance as crud
-from app.schemas.finance import (
-    OperationalCostCreate,
-    OperationalCostUpdate,
-    OperationalCostResponse,
-    ProfitSummary,
-)
+from fastapi import APIRouter, Body
+
+from app.core.responses import success_response
 
 router = APIRouter()
 
+# Temporary mock data for early frontend integration.
+# Replace this with finance_service calls when implementing real APIs.
+MOCK_EXPENSES = [
+    {
+        "id": "expense-1",
+        "category": "utilities",
+        "description": "Electricity bill",
+        "amount": 1200000,
+        "expense_month": "2026-06-01",
+    }
+]
 
-@router.get("/costs", response_model=list[OperationalCostResponse])
-async def list_costs(
-    month: int | None = None,
-    year: int | None = None,
-    skip: int = 0,
-    limit: int = 100,
-    db: AsyncSession = Depends(get_db),
-):
-    return await crud.get_operational_costs(db, month=month, year=year, skip=skip, limit=limit)
-
-
-@router.post("/costs", response_model=OperationalCostResponse, status_code=status.HTTP_201_CREATED)
-async def create_cost(data: OperationalCostCreate, db: AsyncSession = Depends(get_db)):
-    return await crud.create_operational_cost(db, data)
-
-
-@router.get("/costs/{cost_id}", response_model=OperationalCostResponse)
-async def get_cost(cost_id: int, db: AsyncSession = Depends(get_db)):
-    cost = await crud.get_operational_cost(db, cost_id)
-    if not cost:
-        raise HTTPException(status_code=404, detail="Operational cost not found")
-    return cost
-
-
-@router.patch("/costs/{cost_id}", response_model=OperationalCostResponse)
-async def update_cost(cost_id: int, data: OperationalCostUpdate, db: AsyncSession = Depends(get_db)):
-    cost = await crud.get_operational_cost(db, cost_id)
-    if not cost:
-        raise HTTPException(status_code=404, detail="Operational cost not found")
-    return await crud.update_operational_cost(db, cost, data)
+MOCK_FINANCIAL_RECORDS = [
+    {
+        "id": "finance-1",
+        "record_type": "revenue",
+        "source_type": "order",
+        "source_id": "order-1",
+        "amount": 55000,
+        "record_date": "2026-06-01",
+    }
+]
 
 
-@router.delete("/costs/{cost_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_cost(cost_id: int, db: AsyncSession = Depends(get_db)):
-    cost = await crud.get_operational_cost(db, cost_id)
-    if not cost:
-        raise HTTPException(status_code=404, detail="Operational cost not found")
-    await crud.delete_operational_cost(db, cost)
+@router.get("/summary")
+async def get_finance_summary() -> dict[str, Any]:
+    return success_response(
+        data={
+            "revenue": 55000,
+            "material_cost": 18000,
+            "operating_expense": 1200000,
+            "net_profit": -1163000,
+        }
+    )
 
 
-@router.get("/summary", response_model=ProfitSummary)
-async def profit_summary(
-    month: int = Query(..., ge=1, le=12, description="Month (1-12)"),
-    year: int = Query(..., ge=2020, description="Year"),
-    db: AsyncSession = Depends(get_db),
-):
-    """Compute revenue, COGS, operational costs, and net profit for a given month/year."""
-    return await crud.get_profit_summary(db, month=month, year=year)
+@router.get("/expenses")
+async def list_expenses() -> dict[str, Any]:
+    return success_response(data=MOCK_EXPENSES)
+
+
+@router.post("/expenses")
+async def create_expense(
+    payload: dict[str, Any] = Body(default_factory=dict),
+) -> dict[str, Any]:
+    return success_response(
+        message="Mock expense created successfully",
+        data={"id": "expense-mock-created", **payload},
+    )
+
+
+@router.get("/records")
+async def list_financial_records() -> dict[str, Any]:
+    return success_response(data=MOCK_FINANCIAL_RECORDS)

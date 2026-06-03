@@ -1,24 +1,24 @@
+from functools import lru_cache
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import List
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    app_name: str = "Matcha Shop Backend"
+    app_env: str = "development"
+    debug: bool = True
 
-    # Application
-    APP_NAME: str = "Matcha Shop System"
-    DEBUG: bool = False
-    SECRET_KEY: str = "change-me-in-production"
+    database_url: str = (
+        "postgresql+asyncpg://admin:password@db:5432/matcha_management_system"
+    )
 
-    # Database
-    DATABASE_URL: str = "postgresql+asyncpg://matcha:matcha_secret@localhost:5432/matcha_shop"
-
-    # CORS
-    ALLOWED_ORIGINS: List[str] = ["http://localhost:5173", "http://localhost:3000"]
-
-    # Pagination
-    DEFAULT_PAGE_SIZE: int = 20
-    MAX_PAGE_SIZE: int = 100
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
 
-settings = Settings()
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()

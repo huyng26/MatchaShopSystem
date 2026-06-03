@@ -1,42 +1,64 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Any
 
-from app.core.database import get_db
-from app.crud import customer as crud
-from app.schemas.customer import CustomerCreate, CustomerUpdate, CustomerResponse
+from fastapi import APIRouter, HTTPException
+
+from app.core.responses import success_response
 
 router = APIRouter()
 
+# Temporary mock data for early frontend integration.
+# Replace this with customer_service calls when implementing real APIs.
+MOCK_CUSTOMERS = [
+    {
+        "id": "customer-1",
+        "name": "Nguyen An",
+        "phone": "0912345678",
+        "address": "Quan 1, TP.HCM",
+        "loyalty_points": 120,
+    },
+    {
+        "id": "customer-2",
+        "name": "Tran Binh",
+        "phone": "0987654321",
+        "address": "Quan 3, TP.HCM",
+        "loyalty_points": 45,
+    },
+]
 
-@router.get("", response_model=list[CustomerResponse])
-async def list_customers(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
-    return await crud.get_customers(db, skip=skip, limit=limit)
+MOCK_ORDERS = [
+    {
+        "id": "order-1",
+        "order_code": "ORD-0001",
+        "customer_id": "customer-1",
+        "status": "completed",
+        "payment_status": "paid",
+        "total_amount": 55000,
+    },
+    {
+        "id": "order-2",
+        "order_code": "ORD-0002",
+        "customer_id": "customer-2",
+        "status": "ready_for_delivery",
+        "payment_status": "unpaid",
+        "total_amount": 65000,
+    },
+]
 
 
-@router.post("", response_model=CustomerResponse, status_code=status.HTTP_201_CREATED)
-async def create_customer(data: CustomerCreate, db: AsyncSession = Depends(get_db)):
-    return await crud.create_customer(db, data)
+@router.get("")
+async def list_customers() -> dict[str, Any]:
+    return success_response(data=MOCK_CUSTOMERS)
 
 
-@router.get("/{customer_id}", response_model=CustomerResponse)
-async def get_customer(customer_id: int, db: AsyncSession = Depends(get_db)):
-    customer = await crud.get_customer(db, customer_id)
-    if not customer:
-        raise HTTPException(status_code=404, detail="Customer not found")
-    return customer
+@router.get("/{customer_id}")
+async def get_customer(customer_id: str) -> dict[str, Any]:
+    customer = next((item for item in MOCK_CUSTOMERS if item["id"] == customer_id), None)
+    if customer is None:
+        raise HTTPException(status_code=404, detail="customer_not_found")
+    return success_response(data=customer)
 
 
-@router.patch("/{customer_id}", response_model=CustomerResponse)
-async def update_customer(customer_id: int, data: CustomerUpdate, db: AsyncSession = Depends(get_db)):
-    customer = await crud.get_customer(db, customer_id)
-    if not customer:
-        raise HTTPException(status_code=404, detail="Customer not found")
-    return await crud.update_customer(db, customer, data)
-
-
-@router.delete("/{customer_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_customer(customer_id: int, db: AsyncSession = Depends(get_db)):
-    customer = await crud.get_customer(db, customer_id)
-    if not customer:
-        raise HTTPException(status_code=404, detail="Customer not found")
-    await crud.delete_customer(db, customer)
+@router.get("/{customer_id}/orders")
+async def get_customer_orders(customer_id: str) -> dict[str, Any]:
+    orders = [item for item in MOCK_ORDERS if item.get("customer_id") == customer_id]
+    return success_response(data=orders)
