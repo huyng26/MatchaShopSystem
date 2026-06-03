@@ -1,6 +1,5 @@
 from typing import Any
 
-
 def success_response(
     data: Any = None,
     message: str = "Fetched successfully",
@@ -20,4 +19,14 @@ def error_response(
         "success": False,
         "message": message,
         "errors": errors or [],
+    }
+
+def created_response(
+    data: Any = None,
+    message: str = "Created successfully",
+) -> dict[str, Any]:
+    return {
+        "success": True,
+        "message": message,
+        "data": data,
     }
