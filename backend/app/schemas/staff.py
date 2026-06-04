@@ -1,1 +1,107 @@
-"""Staff schemas will live here."""
+from datetime import date, datetime
+from decimal import Decimal
+from uuid import UUID
+
+from pydantic import BaseModel, Field, field_validator
+
+from app.core.constants import StaffStatus, TaskPriority, TaskStatus, UserRole
+from app.schemas.common import ORMModel, normalize_email, validate_non_empty
+
+
+class StaffProfileCreate(BaseModel):
+    user_id: UUID | None = None
+    full_name: str = Field(min_length=1, max_length=255)
+    phone: str = Field(min_length=3, max_length=50)
+    email: str
+    role: UserRole
+    salary: Decimal | None = Field(default=None, ge=0)
+    date_joined: date
+    status: StaffStatus = StaffStatus.ACTIVE
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value: str) -> str:
+        return normalize_email(value)
+
+    @field_validator("full_name", "phone")
+    @classmethod
+    def validate_text(cls, value: str) -> str:
+        return validate_non_empty(value)
+
+
+class StaffProfileUpdate(BaseModel):
+    user_id: UUID | None = None
+    full_name: str | None = Field(default=None, min_length=1, max_length=255)
+    phone: str | None = Field(default=None, min_length=3, max_length=50)
+    email: str | None = None
+    role: UserRole | None = None
+    salary: Decimal | None = Field(default=None, ge=0)
+    date_joined: date | None = None
+    status: StaffStatus | None = None
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value: str | None) -> str | None:
+        return normalize_email(value) if value is not None else value
+
+    @field_validator("full_name", "phone")
+    @classmethod
+    def validate_text(cls, value: str | None) -> str | None:
+        return validate_non_empty(value) if value is not None else value
+
+
+class StaffProfileResponse(ORMModel):
+    id: UUID
+    user_id: UUID | None = None
+    full_name: str
+    phone: str
+    email: str
+    role: UserRole
+    salary: Decimal | None = None
+    date_joined: date
+    status: StaffStatus
+    created_at: datetime
+    updated_at: datetime
+    deleted_at: datetime | None = None
+
+
+class StaffTaskCreate(BaseModel):
+    staff_id: UUID
+    title: str = Field(min_length=1, max_length=255)
+    description: str | None = None
+    due_date: date
+    priority: TaskPriority
+    status: TaskStatus = TaskStatus.PENDING
+
+    @field_validator("title")
+    @classmethod
+    def validate_title(cls, value: str) -> str:
+        return validate_non_empty(value)
+
+
+class StaffTaskUpdate(BaseModel):
+    staff_id: UUID | None = None
+    title: str | None = Field(default=None, min_length=1, max_length=255)
+    description: str | None = None
+    due_date: date | None = None
+    priority: TaskPriority | None = None
+    status: TaskStatus | None = None
+
+    @field_validator("title")
+    @classmethod
+    def validate_title(cls, value: str | None) -> str | None:
+        return validate_non_empty(value) if value is not None else value
+
+
+class StaffTaskResponse(ORMModel):
+    id: UUID
+    staff_id: UUID
+    title: str
+    description: str | None = None
+    due_date: date
+    priority: TaskPriority
+    status: TaskStatus
+    created_by: UUID
+    created_at: datetime
+    updated_at: datetime
+    deleted_at: datetime | None = None
