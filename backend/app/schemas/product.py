@@ -5,40 +5,34 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
-class ProductCategoryCreate(BaseModel):
-    name: str = Field(..., min_length=1, max_length=255)
-    description: str | None = None
+class RecipeItemCreate(BaseModel):
+    ingredient_id: UUID
+    quantity_per_serving: Decimal = Field(..., gt=0, max_digits=12, decimal_places=3)
 
 
-class ProductCategoryUpdate(BaseModel):
-    name: str | None = Field(default=None, min_length=1, max_length=255)
-    description: str | None = None
-
-
-class ProductCategoryRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: UUID
-    name: str
-    description: str | None = None
+class ProductRecipeUpdate(BaseModel):
+    items: list[RecipeItemCreate] = Field(..., min_length=1)
 
 
 class ProductCreate(BaseModel):
-    category_id: UUID
+    category: str = Field(..., min_length=1, max_length=100)
     name: str = Field(..., min_length=1, max_length=255)
     description: str | None = None
     selling_price: Decimal = Field(..., gt=0, max_digits=12, decimal_places=2)
     is_available: bool = True
+    image_url: str | None = None
+    recipe: ProductRecipeUpdate | None = None
 
 
 class ProductUpdate(BaseModel):
-    category_id: UUID | None = None
+    category: str | None = Field(default=None, min_length=1, max_length=100)
     name: str | None = Field(default=None, min_length=1, max_length=255)
     description: str | None = None
     selling_price: Decimal | None = Field(
         default=None, gt=0, max_digits=12, decimal_places=2
     )
     is_available: bool | None = None
+    image_url: str | None = None
 
 
 class ProductAvailabilityUpdate(BaseModel):
@@ -49,16 +43,33 @@ class ProductRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
-    category_id: UUID
+    category: str
     name: str
     description: str | None = None
     selling_price: Decimal
     is_available: bool
+    has_image: bool = False
+    image_url: str | None = None
 
+    @model_validator(mode="before")
+    @classmethod
+    def populate_has_image(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            return {
+                **data,
+                "has_image": bool(data.get("image_url")),
+            }
 
-class RecipeItemCreate(BaseModel):
-    ingredient_id: UUID
-    quantity_per_serving: Decimal = Field(..., gt=0, max_digits=12, decimal_places=3)
+        return {
+            "id": getattr(data, "id", None),
+            "category": getattr(data, "category", None),
+            "name": getattr(data, "name", None),
+            "description": getattr(data, "description", None),
+            "selling_price": getattr(data, "selling_price", None),
+            "is_available": getattr(data, "is_available", None),
+            "has_image": bool(getattr(data, "image_url", None)),
+            "image_url": getattr(data, "image_url", None),
+        }
 
 
 class RecipeItemRead(BaseModel):
@@ -100,7 +111,3 @@ class ProductRecipeRead(BaseModel):
             "product_id": getattr(data, "id", getattr(data, "product_id", None)),
             "items": getattr(data, "recipe_rows", getattr(data, "items", [])),
         }
-
-
-class ProductRecipeUpdate(BaseModel):
-    items: list[RecipeItemCreate] = Field(..., min_length=1)

@@ -26,7 +26,7 @@ from app.models.order import (
     OrderType,
 )
 from app.models.payment import Payment, PaymentEventStatus, PaymentMethod
-from app.models.product import Product, ProductCategory
+from app.models.product import Product
 from app.models.staff import StaffProfile, StaffTask
 from app.models.user import User, UserRole, UserStatus
 
@@ -56,7 +56,6 @@ __all__ = [
     "PaymentEventStatus",
     "PaymentMethod",
     "Product",
-    "ProductCategory",
     "ProductRecipe",
     "StaffProfile",
     "StaffTask",
