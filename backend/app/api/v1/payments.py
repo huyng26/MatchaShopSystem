@@ -1,44 +1,59 @@
 from typing import Any
+from uuid import UUID
 
-from fastapi import APIRouter, Body
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.responses import success_response
+from app.api.v1.deps import (
+    created,
+    ok,
+    raise_service_error,
+    read_list,
+    read_one,
+    require_actor_user_id,
+)
+from app.core.database import get_db
+from app.models.payment import PaymentEventStatus, PaymentMethod
+from app.schemas.payment import PaymentCreate, PaymentRead
+from app.services import payment_service
+from app.services.errors import ServiceError
 
 router = APIRouter()
 
-# Temporary mock data for early frontend integration.
-# Replace this with payment_service calls when implementing real APIs.
-MOCK_PAYMENTS = [
-    {
-        "id": "payment-1",
-        "order_id": "order-1",
-        "method": "cash",
-        "status": "success",
-        "amount": 55000,
-        "paid_at": "2026-06-01T09:05:00",
-    }
-]
-
 
 @router.get("")
-async def list_payments() -> dict[str, Any]:
-    return success_response(data=MOCK_PAYMENTS)
+async def list_payments(
+    order_id: UUID | None = Query(default=None),
+    method: PaymentMethod | None = Query(default=None),
+    status: PaymentEventStatus | None = Query(default=None),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    payments = await payment_service.list_payments(
+        db,
+        order_id=order_id,
+        method=method,
+        status=status,
+    )
+    return ok(read_list(PaymentRead, payments))
 
 
 @router.post("")
 async def create_payment(
-    payload: dict[str, Any] = Body(default_factory=dict),
+    payload: PaymentCreate,
+    db: AsyncSession = Depends(get_db),
+    actor_user_id: UUID = Depends(require_actor_user_id),
 ) -> dict[str, Any]:
-    return success_response(
-        message="Mock payment recorded successfully",
-        data={
-            "id": "payment-mock-created",
-            "status": "success",
-            **payload,
-        },
-    )
+    try:
+        payment = await payment_service.create_payment(
+            db,
+            payload,
+            created_by=actor_user_id,
+        )
+        return created(read_one(PaymentRead, payment))
+    except ServiceError as error:
+        raise_service_error(error)
 
 
 @router.get("/methods")
 async def list_payment_methods() -> dict[str, Any]:
-    return success_response(data=["cash", "card", "bank_transfer", "cod"])
+    return ok([method.value for method in payment_service.list_payment_methods()])
