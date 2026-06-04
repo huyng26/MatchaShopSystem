@@ -212,11 +212,30 @@ Current endpoints:
 GET /health
 GET /api/v1/status
 GET /api/v1/status/db
+POST /api/v1/auth/login
+POST /api/v1/auth/token
+POST /api/v1/auth/refresh
+GET /api/v1/auth/me
+GET /api/v1/accounts
+POST /api/v1/accounts
+GET /api/v1/accounts/{user_id}
+PUT /api/v1/accounts/{user_id}
+DELETE /api/v1/accounts/{user_id}
+GET /api/v1/staff
+POST /api/v1/staff
+GET /api/v1/staff/{staff_id}
+PUT /api/v1/staff/{staff_id}
+DELETE /api/v1/staff/{staff_id}
+GET /api/v1/staff/tasks
+POST /api/v1/staff/tasks
+GET /api/v1/staff/tasks/{task_id}
+PUT /api/v1/staff/tasks/{task_id}
+DELETE /api/v1/staff/tasks/{task_id}
 ```
 
-Mock APIs are always registered in this base branch. The mock data is placed
-directly inside each route file with comments, so feature branches can replace
-the mock block with service calls in the same module.
+Auth, account, staff, and staff task APIs are backed by services and the
+database. Other domain modules may still expose lightweight mock endpoints until
+their feature phases replace them with service calls.
 
 ## API Layer
 
@@ -254,9 +273,9 @@ GET /api/v1/status/db
 `/status/db` calls the database ping function to confirm the backend can connect
 to PostgreSQL.
 
-### Route Placeholder Files
+### Route Files
 
-These files exist so every team member knows where to add module APIs:
+These files define the module API boundaries:
 
 ```text
 auth.py          login, refresh token, logout, current user
@@ -272,9 +291,8 @@ finance.py       expense and finance ledger APIs
 dashboard.py     dashboard/reporting APIs
 ```
 
-In this branch, these route files expose lightweight mock endpoints so the
-frontend can integrate early. Mock responses are static and do not write to the
-database.
+Person 1 modules (`auth.py`, `accounts.py`, `staff.py`) use real schemas,
+services, repositories, RBAC dependencies, and the standard response format.
 
 ## Core Layer
 
@@ -541,15 +559,19 @@ Reserved for local development seed data.
 
 ### `seed_data.py`
 
-Will later create basic demo data such as:
+Creates or reactivates a default admin account and matching staff profile for
+local development.
 
 ```text
-Admin account
-Sample staff
-Product categories
-Ingredients
-Products
-Recipes
+SEED_ADMIN_EMAIL=admin@matcha.local
+SEED_ADMIN_PASSWORD=Admin12345
+SEED_ADMIN_PHONE=0900000001
+```
+
+Run after the database tables exist:
+
+```bash
+docker compose run --rm backend python -m app.seed.seed_data
 ```
 
 Do not put production data here.
@@ -829,6 +851,12 @@ docker compose up --build
 docker compose up --build backend
 ```
 
+Create the first local admin account:
+
+```powershell
+docker compose run --rm backend python -m app.seed.seed_data
+```
+
 Backend:
 
 ```text
@@ -847,6 +875,13 @@ Basic checks:
 http://localhost:8000/health
 http://localhost:8000/api/v1/status
 http://localhost:8000/api/v1/status/db
+```
+
+Run backend checks:
+
+```powershell
+docker compose run --rm backend pytest
+docker compose run --rm backend ruff check .
 ```
 
 ## Recreate Local Database
@@ -970,7 +1005,7 @@ tests/integration/
 - Schemas validate request/response data.
 - ORM models must match database tables.
 - Frontend never connects directly to PostgreSQL.
-- Every protected route must check user role later.
+- Every protected route must check user role.
 - Every multi-table write must use one database transaction.
 - Important business records should use soft delete with `deleted_at`.
 - Schema changes after this base should use Alembic migrations.
@@ -986,20 +1021,28 @@ Health/status endpoints
 Async database connection setup
 Raw SQL bootstrap split by purpose
 Docker Postgres init mount
-Mock API endpoints for frontend integration
-Basic test folder structure
+Person 1 ORM models: users, staff_profiles, staff_tasks, audit_logs
+Person 1 Pydantic schemas
+JWT login, refresh token, current user dependency
+Password hashing with bcrypt
+Admin RBAC dependency
+Account CRUD APIs
+Staff profile CRUD APIs
+Staff task CRUD APIs
+Audit log writes for account/staff changes
+Standard API response and error handlers
+Alembic metadata wiring for implemented ORM models
+Admin seed script
+Focused unit tests for security and responses
 ```
 
 Not done yet:
 
 ```text
-Full ORM models
-Full Pydantic schemas
-Real authentication
-Real business APIs
-Service implementations
-Repository implementations
+Full ORM models for Person 2 and Person 3 domains
+Full Pydantic schemas for Person 2 and Person 3 domains
+Real business APIs outside auth/account/staff
 Alembic migration revisions
-Unit/integration tests
+Integration tests with a real PostgreSQL database
 Frontend integration
 ```

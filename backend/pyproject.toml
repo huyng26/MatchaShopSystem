@@ -10,3 +10,4 @@ project-includes = [
     "**/*.py*",
     "**/*.ipynb",
 ]
+pythonpath = ["."]
