@@ -455,6 +455,79 @@ async def test_mark_order_delivered_collects_cod_and_completes_order(monkeypatch
 
 
 @pytest.mark.asyncio
+async def test_mark_order_delivered_rejects_cod_for_prepaid_order(monkeypatch):
+    db = FakeDb()
+    shipper_user = make_user(UserRole.SHIPPER)
+    shipper = make_staff(shipper_user.id)
+    trip = SimpleNamespace(
+        id=uuid4(),
+        shipper_id=shipper.id,
+        status=DeliveryTripStatus.IN_TRANSIT,
+        completed_at=None,
+        updated_at=None,
+    )
+    order = make_order(
+        status=OrderStatus.READY_FOR_DELIVERY,
+        payment_status=OrderPaymentStatus.PAID,
+        total_amount=Decimal("65000.00"),
+    )
+    order.payments = [
+        SimpleNamespace(method=PaymentMethod.CARD, status=PaymentEventStatus.SUCCESS)
+    ]
+    trip_order = SimpleNamespace(
+        id=uuid4(),
+        trip_id=trip.id,
+        order_id=order.id,
+        order=order,
+        trip=trip,
+        status=DeliveryTripOrderStatus.ASSIGNED,
+        cod_collected=Decimal("0.00"),
+        delivered_at=None,
+        note=None,
+        updated_at=None,
+    )
+
+    async def get_trip_for_update(db, trip_id):
+        return trip
+
+    async def get_staff_profile_by_user_id(db, user_id):
+        return shipper
+
+    async def get_trip_order_detail(db, *, trip_id, order_id):
+        return trip_order
+
+    monkeypatch.setattr(
+        delivery_service.delivery_repo,
+        "get_trip_for_update",
+        get_trip_for_update,
+    )
+    monkeypatch.setattr(
+        delivery_service.staff_repo,
+        "get_staff_profile_by_user_id",
+        get_staff_profile_by_user_id,
+    )
+    monkeypatch.setattr(
+        delivery_service.delivery_repo,
+        "get_trip_order_detail",
+        get_trip_order_detail,
+    )
+
+    with pytest.raises(ServiceError) as error:
+        await delivery_service.mark_order_delivered(
+            db,
+            trip.id,
+            order.id,
+            DeliveryOrderDelivered(cod_collected=Decimal("1000.00")),
+            current_user=shipper_user,
+        )
+
+    assert error.value.code == "cod_not_expected_for_paid_order"
+    assert error.value.status_code == 409
+    assert db.commits == 0
+    assert db.rollbacks == 1
+
+
+@pytest.mark.asyncio
 async def test_reconcile_cod_requires_reason_when_amount_differs(monkeypatch):
     db = FakeDb()
     current_user = make_user(UserRole.DELIVERY_MANAGER)

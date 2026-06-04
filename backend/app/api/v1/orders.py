@@ -11,14 +11,16 @@ from app.api.v1.deps import (
     read_list,
     read_one,
 )
+from app.core.constants import UserRole
 from app.core.database import get_db
-from app.core.permissions import get_current_user
+from app.core.permissions import get_current_user, require_roles
 from app.models.user import User
 from app.models.order import OrderPaymentStatus, OrderStatus, OrderType
 from app.schemas.order import (
     OrderCreate,
     OrderDetailRead,
     OrderListFilters,
+    OrderReadyForDelivery,
     OrderRead,
 )
 from app.services import order_service
@@ -70,6 +72,48 @@ async def get_order(
     try:
         order = await order_service.get_order_detail(db, order_id)
         return ok(read_one(OrderDetailRead, order))
+    except ServiceError as error:
+        raise_service_error(error)
+
+
+@router.post("/{order_id}/start-processing")
+async def start_processing_order(
+    order_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(
+        require_roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.DELIVERY_MANAGER)
+    ),
+) -> dict[str, Any]:
+    try:
+        order = await order_service.start_processing(db, order_id)
+        return ok(
+            read_one(OrderDetailRead, order),
+            message="Order processing started successfully",
+        )
+    except ServiceError as error:
+        raise_service_error(error)
+
+
+@router.post("/{order_id}/ready-for-delivery")
+async def mark_order_ready_for_delivery(
+    order_id: UUID,
+    payload: OrderReadyForDelivery,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(
+        require_roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.DELIVERY_MANAGER)
+    ),
+) -> dict[str, Any]:
+    try:
+        order = await order_service.mark_ready_for_delivery(
+            db,
+            order_id,
+            payload,
+            actor_user_id=current_user.id,
+        )
+        return ok(
+            read_one(OrderDetailRead, order),
+            message="Order marked ready for delivery successfully",
+        )
     except ServiceError as error:
         raise_service_error(error)
 
