@@ -4,7 +4,10 @@ CREATE INDEX IF NOT EXISTS idx_staff_profiles_email ON staff_profiles (email);
 CREATE INDEX IF NOT EXISTS idx_staff_profiles_phone ON staff_profiles (phone);
 CREATE INDEX IF NOT EXISTS idx_customers_phone ON customers (phone);
 CREATE INDEX IF NOT EXISTS idx_products_name ON products (name);
-CREATE INDEX IF NOT EXISTS idx_products_category_id ON products (category_id);
+CREATE INDEX IF NOT EXISTS idx_products_category ON products (category);
+CREATE INDEX IF NOT EXISTS idx_products_category_available
+    ON products (category, is_available)
+    WHERE deleted_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_orders_customer_id ON orders (customer_id);
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders (status);
 CREATE INDEX IF NOT EXISTS idx_orders_payment_status ON orders (payment_status);

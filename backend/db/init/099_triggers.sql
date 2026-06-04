@@ -20,11 +20,6 @@ CREATE TRIGGER trg_customers_updated_at
 BEFORE UPDATE ON customers
 FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
-DROP TRIGGER IF EXISTS trg_product_categories_updated_at ON product_categories;
-CREATE TRIGGER trg_product_categories_updated_at
-BEFORE UPDATE ON product_categories
-FOR EACH ROW EXECUTE FUNCTION set_updated_at();
-
 DROP TRIGGER IF EXISTS trg_products_updated_at ON products;
 CREATE TRIGGER trg_products_updated_at
 BEFORE UPDATE ON products

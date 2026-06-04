@@ -10,105 +10,29 @@ from sqlalchemy.orm import selectinload
 from app.models.ingredients import Ingredient
 from app.models.inventory import ProductRecipe
 from app.models.order import OrderItem
-from app.models.product import Product, ProductCategory
+from app.models.product import Product
 
 
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
 
-async def list_categories(
-    db: AsyncSession,
-    *,
-    include_deleted: bool = False,
-) -> Sequence[ProductCategory]:
-    stmt = select(ProductCategory).order_by(ProductCategory.name)
-    if not include_deleted:
-        stmt = stmt.where(ProductCategory.deleted_at.is_(None))
-
-    result = await db.execute(stmt)
-    return result.scalars().all()
-
-
-async def get_category(
-    db: AsyncSession,
-    category_id: UUID,
-    *,
-    include_deleted: bool = False,
-) -> ProductCategory | None:
-    stmt = select(ProductCategory).where(ProductCategory.id == category_id)
-    if not include_deleted:
-        stmt = stmt.where(ProductCategory.deleted_at.is_(None))
-
-    result = await db.execute(stmt)
-    return result.scalar_one_or_none()
-
-
-async def create_category(
-    db: AsyncSession,
-    *,
-    name: str,
-    description: str | None = None,
-) -> ProductCategory:
-    category = ProductCategory(name=name, description=description)
-    db.add(category)
-    await db.flush()
-    await db.refresh(category)
-    return category
-
-
-async def update_category(
-    db: AsyncSession,
-    category: ProductCategory,
-    **values: object,
-) -> ProductCategory:
-    for field, value in values.items():
-        setattr(category, field, value)
-    category.updated_at = utc_now()
-
-    await db.flush()
-    await db.refresh(category)
-    return category
-
-
-async def soft_delete_category(
-    db: AsyncSession,
-    category: ProductCategory,
-) -> ProductCategory:
-    now = utc_now()
-    category.deleted_at = now
-    category.updated_at = now
-
-    await db.flush()
-    await db.refresh(category)
-    return category
-
-
-async def category_exists(db: AsyncSession, category_id: UUID) -> bool:
-    stmt = select(
-        exists().where(
-            ProductCategory.id == category_id,
-            ProductCategory.deleted_at.is_(None),
-        )
-    )
-    result = await db.execute(stmt)
-    return bool(result.scalar())
-
-
 async def list_products(
     db: AsyncSession,
     *,
     is_available: bool | None = None,
-    category_id: UUID | None = None,
+    category: str | None = None,
+    sort_by_category: bool = False,
     include_deleted: bool = False,
 ) -> Sequence[Product]:
-    stmt = select(Product).order_by(Product.name)
+    order_by = (Product.category, Product.name) if sort_by_category else (Product.name,)
+    stmt = select(Product).order_by(*order_by)
     if not include_deleted:
         stmt = stmt.where(Product.deleted_at.is_(None))
     if is_available is not None:
         stmt = stmt.where(Product.is_available.is_(is_available))
-    if category_id is not None:
-        stmt = stmt.where(Product.category_id == category_id)
+    if category is not None:
+        stmt = stmt.where(Product.category == category)
 
     result = await db.execute(stmt)
     return result.scalars().all()
@@ -119,13 +43,10 @@ async def get_product(
     product_id: UUID,
     *,
     include_deleted: bool = False,
-    load_category: bool = False,
 ) -> Product | None:
     stmt = select(Product).where(Product.id == product_id)
     if not include_deleted:
         stmt = stmt.where(Product.deleted_at.is_(None))
-    if load_category:
-        stmt = stmt.options(selectinload(Product.category))
 
     result = await db.execute(stmt)
     return result.scalar_one_or_none()
@@ -134,18 +55,20 @@ async def get_product(
 async def create_product(
     db: AsyncSession,
     *,
-    category_id: UUID,
+    category: str,
     name: str,
     selling_price: Decimal,
     description: str | None = None,
     is_available: bool = True,
+    image_url: str | None = None,
 ) -> Product:
     product = Product(
-        category_id=category_id,
+        category=category,
         name=name,
         description=description,
         selling_price=selling_price,
         is_available=is_available,
+        image_url=image_url,
     )
     db.add(product)
     await db.flush()
