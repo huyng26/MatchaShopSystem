@@ -6,6 +6,7 @@ alembic
 pydantic
 pydantic-settings
 python-jose[cryptography]
+cryptography
 bcrypt
 python-multipart
 pytest

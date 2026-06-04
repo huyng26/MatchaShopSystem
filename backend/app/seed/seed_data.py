@@ -1,6 +1,6 @@
 import asyncio
 import os
-from datetime import UTC, date, datetime
+from datetime import date, datetime, timezone
 
 from app.core.constants import StaffStatus, UserRole, UserStatus
 from app.core.database import AsyncSessionLocal, close_database
@@ -47,7 +47,7 @@ async def seed_admin() -> None:
 
         admin.deleted_at = None
         admin.status = UserStatus.ACTIVE
-        admin.updated_at = datetime.now(UTC)
+        admin.updated_at = datetime.now(timezone.utc)
         await db.commit()
 
 

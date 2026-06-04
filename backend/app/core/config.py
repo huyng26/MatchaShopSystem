@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
+    product_image_encryption_key: str = "griLWrQWk4knSGGNhmlmvt9EDT-Vh7pv_7hdsRvQY-M="
+    product_image_max_size_bytes: int = 2_097_152
+    product_image_allowed_content_types: str = "image/jpeg,image/png,image/webp"
 
     model_config = SettingsConfigDict(
         env_file=".env",

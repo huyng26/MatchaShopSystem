@@ -16,10 +16,17 @@ CREATE TABLE IF NOT EXISTS products (
     description text,
     selling_price numeric(12, 2) NOT NULL,
     is_available boolean NOT NULL DEFAULT true,
+    image bytea,
+    image_content_type varchar(100),
+    image_size_bytes integer,
+    image_updated_at timestamptz,
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now(),
     deleted_at timestamptz,
-    CONSTRAINT products_selling_price_positive CHECK (selling_price > 0)
+    CONSTRAINT products_selling_price_positive CHECK (selling_price > 0),
+    CONSTRAINT products_image_size_non_negative CHECK (
+        image_size_bytes IS NULL OR image_size_bytes >= 0
+    )
 );
 
 CREATE TABLE IF NOT EXISTS ingredients (

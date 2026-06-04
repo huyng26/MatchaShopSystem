@@ -3,6 +3,8 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKey,
+    Integer,
+    LargeBinary,
     Numeric,
     String,
     Text,
@@ -38,6 +40,10 @@ class Product(Base):
     __tablename__ = "products"
     __table_args__ = (
         CheckConstraint("selling_price > 0", name="products_selling_price_positive"),
+        CheckConstraint(
+            "image_size_bytes IS NULL OR image_size_bytes >= 0",
+            name="products_image_size_non_negative",
+        ),
     )
 
     id = Column(
@@ -50,6 +56,10 @@ class Product(Base):
     description = Column(Text)
     selling_price = Column(Numeric(12, 2), nullable=False)
     is_available = Column(Boolean, nullable=False, server_default=text("true"))
+    image = Column(LargeBinary)
+    image_content_type = Column(String(100))
+    image_size_bytes = Column(Integer)
+    image_updated_at = Column(DateTime(timezone=True))
     created_at = Column(
         DateTime(timezone=True), nullable=False, server_default=text("now()")
     )

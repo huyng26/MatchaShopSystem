@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 from uuid import UUID
 
@@ -28,7 +28,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def create_access_token(subject: UUID, role: str) -> str:
     settings = get_settings()
-    expires_at = datetime.now(UTC) + timedelta(
+    expires_at = datetime.now(timezone.utc) + timedelta(
         minutes=settings.access_token_expire_minutes
     )
     return _create_token(
@@ -41,7 +41,9 @@ def create_access_token(subject: UUID, role: str) -> str:
 
 def create_refresh_token(subject: UUID) -> str:
     settings = get_settings()
-    expires_at = datetime.now(UTC) + timedelta(days=settings.refresh_token_expire_days)
+    expires_at = datetime.now(timezone.utc) + timedelta(
+        days=settings.refresh_token_expire_days
+    )
     return _create_token(
         subject=subject,
         expires_at=expires_at,
@@ -77,7 +79,7 @@ def _create_token(
         "sub": str(subject),
         "type": token_type,
         "exp": expires_at,
-        "iat": datetime.now(UTC),
+        "iat": datetime.now(timezone.utc),
     }
     if extra_claims:
         payload.update(extra_claims)

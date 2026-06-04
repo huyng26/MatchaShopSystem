@@ -44,6 +44,20 @@ async def get_category(
     return result.scalar_one_or_none()
 
 
+async def get_category_by_name(
+    db: AsyncSession,
+    name: str,
+    *,
+    include_deleted: bool = False,
+) -> ProductCategory | None:
+    stmt = select(ProductCategory).where(ProductCategory.name == name)
+    if not include_deleted:
+        stmt = stmt.where(ProductCategory.deleted_at.is_(None))
+
+    result = await db.execute(stmt)
+    return result.scalar_one_or_none()
+
+
 async def create_category(
     db: AsyncSession,
     *,
@@ -100,15 +114,31 @@ async def list_products(
     *,
     is_available: bool | None = None,
     category_id: UUID | None = None,
+    category: str | None = None,
     include_deleted: bool = False,
+    load_category: bool = True,
+    sort_by_category: bool = False,
 ) -> Sequence[Product]:
-    stmt = select(Product).order_by(Product.name)
+    stmt = select(Product)
     if not include_deleted:
         stmt = stmt.where(Product.deleted_at.is_(None))
     if is_available is not None:
         stmt = stmt.where(Product.is_available.is_(is_available))
     if category_id is not None:
         stmt = stmt.where(Product.category_id == category_id)
+    if category is not None:
+        stmt = stmt.join(ProductCategory).where(
+            ProductCategory.name == category,
+            ProductCategory.deleted_at.is_(None),
+        )
+    if load_category:
+        stmt = stmt.options(selectinload(Product.category))
+    if sort_by_category:
+        if category is None:
+            stmt = stmt.join(ProductCategory)
+        stmt = stmt.order_by(ProductCategory.name, Product.name)
+    else:
+        stmt = stmt.order_by(Product.name)
 
     result = await db.execute(stmt)
     return result.scalars().all()
@@ -119,7 +149,7 @@ async def get_product(
     product_id: UUID,
     *,
     include_deleted: bool = False,
-    load_category: bool = False,
+    load_category: bool = True,
 ) -> Product | None:
     stmt = select(Product).where(Product.id == product_id)
     if not include_deleted:
@@ -161,6 +191,43 @@ async def update_product(
     for field, value in values.items():
         setattr(product, field, value)
     product.updated_at = utc_now()
+
+    await db.flush()
+    await db.refresh(product)
+    return product
+
+
+async def update_product_image(
+    db: AsyncSession,
+    product: Product,
+    *,
+    image: bytes,
+    image_content_type: str,
+    image_size_bytes: int,
+    image_updated_at: datetime,
+) -> Product:
+    product.image = image
+    product.image_content_type = image_content_type
+    product.image_size_bytes = image_size_bytes
+    product.image_updated_at = image_updated_at
+    product.updated_at = image_updated_at
+
+    await db.flush()
+    await db.refresh(product)
+    return product
+
+
+async def clear_product_image(
+    db: AsyncSession,
+    product: Product,
+    *,
+    image_updated_at: datetime,
+) -> Product:
+    product.image = None
+    product.image_content_type = None
+    product.image_size_bytes = None
+    product.image_updated_at = image_updated_at
+    product.updated_at = image_updated_at
 
     await db.flush()
     await db.refresh(product)
