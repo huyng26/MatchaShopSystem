@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -127,7 +127,7 @@ async def delete_account(
     user = await get_account(db, user_id)
     old_value = _user_audit_value(user)
     user.status = UserStatus.INACTIVE
-    user.deleted_at = datetime.now(timezone.utc)
+    user.deleted_at = datetime.now(UTC)
     _add_audit_log(
         db,
         actor_user_id,

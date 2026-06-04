@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,7 +25,7 @@ async def login(db: AsyncSession, payload: LoginRequest) -> TokenResponse:
     ):
         raise AuthenticationError("Invalid email or password")
 
-    user.last_login_at = datetime.now(timezone.utc)
+    user.last_login_at = datetime.now(UTC)
     await db.commit()
     await db.refresh(user)
 
