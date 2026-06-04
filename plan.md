@@ -86,6 +86,7 @@ matcha-backend/
 │   │       ├── orders.py
 │   │       ├── payments.py
 │   │       ├── deliveries.py
+│   │       ├── shipper.py
 │   │       ├── finance.py
 │   │       └── dashboard.py
 │   │
@@ -108,6 +109,7 @@ matcha-backend/
 │   │   ├── order.py
 │   │   ├── payment.py
 │   │   ├── delivery.py
+│   │   ├── shipper.py
 │   │   ├── finance.py
 │   │   └── audit.py
 │   │
@@ -134,6 +136,7 @@ matcha-backend/
 │   │   ├── order_service.py
 │   │   ├── payment_service.py
 │   │   ├── delivery_service.py
+│   │   ├── shipper_service.py
 │   │   ├── routing_service.py
 │   │   ├── finance_service.py
 │   │   └── dashboard_service.py
@@ -822,7 +825,9 @@ delivery_trip_orders
 - status enum not null default 'assigned'
 - cod_collected numeric(12,2) not null default 0
 - delivered_at timestamptz nullable
+- failed_at timestamptz nullable
 - failed_reason text nullable
+- note text nullable
 - created_at timestamptz
 - updated_at timestamptz
 ```
@@ -1294,7 +1299,8 @@ Allow cashier/admin to create and manage orders.
 GET    /api/v1/orders
 GET    /api/v1/orders/{order_id}
 POST   /api/v1/orders
-PATCH  /api/v1/orders/{order_id}/status
+POST   /api/v1/orders/{order_id}/start-processing
+POST   /api/v1/orders/{order_id}/ready-for-delivery
 POST   /api/v1/orders/{order_id}/cancel
 POST   /api/v1/orders/{order_id}/complete
 ```
@@ -1326,6 +1332,7 @@ Allowed transitions:
 
 ```text
 pending -> in_progress
+pending -> ready_for_delivery
 pending -> cancelled
 in_progress -> ready_for_delivery
 in_progress -> completed
@@ -1340,12 +1347,24 @@ For delivery orders:
 
 ```text
 pending -> in_progress -> ready_for_delivery -> completed
+pending -> ready_for_delivery is also allowed if ready conditions are satisfied.
 ```
 
 For in-store orders:
 
 ```text
 pending -> in_progress -> completed
+```
+
+Ready-for-delivery conditions:
+
+```text
+- order_type = delivery
+- order is not cancelled or completed
+- delivery customer/address/coordinates are present
+- order is not already assigned to an active delivery trip
+- prepaid orders must have successful card or bank_transfer payment
+- unpaid orders must have COD pending, or request payment_method = cod to create it
 ```
 
 ### Cancel Order Flow
@@ -1379,13 +1398,12 @@ Support cash, card, bank transfer, and COD payment records.
 ### Endpoints
 
 ```http
-POST /api/v1/orders/{order_id}/payments/cash
-POST /api/v1/orders/{order_id}/payments/card
-POST /api/v1/orders/{order_id}/payments/bank-transfer
-POST /api/v1/orders/{order_id}/payments/cod
-GET  /api/v1/payments/{payment_id}
-GET  /api/v1/orders/{order_id}/payments
+GET  /api/v1/payments
+POST /api/v1/payments
+GET  /api/v1/payments/methods
 ```
+
+Current implementation uses one generic `POST /api/v1/payments` endpoint with `method`.
 
 ### Cash Payment Flow
 
@@ -1440,6 +1458,16 @@ For delivery orders with COD:
 2. Do not mark payment paid immediately.
 3. COD is collected when shipper marks delivery as delivered.
 4. Payment becomes success after successful delivery/COD collection.
+```
+
+Payment method rules:
+
+```text
+- In-store orders allow cash, card, bank_transfer.
+- Delivery orders allow cod, card, bank_transfer.
+- cash is not allowed for delivery.
+- cod is not allowed for in-store.
+- COD stays pending until shipper marks the order delivered.
 ```
 
 ### Done when
@@ -1582,6 +1610,8 @@ Delivery flow:
 
 ### 10.2 Delivery Endpoints
 
+Manager/admin side:
+
 ```http
 GET  /api/v1/deliveries/queue
 POST /api/v1/deliveries/batch/suggest
@@ -1589,12 +1619,18 @@ POST /api/v1/deliveries/trips
 GET  /api/v1/deliveries/trips
 GET  /api/v1/deliveries/trips/{trip_id}
 POST /api/v1/deliveries/trips/{trip_id}/assign
-POST /api/v1/deliveries/trips/{trip_id}/start
-POST /api/v1/deliveries/trips/{trip_id}/location
-POST /api/v1/deliveries/trips/{trip_id}/orders/{order_id}/delivered
-POST /api/v1/deliveries/trips/{trip_id}/orders/{order_id}/failed
-POST /api/v1/deliveries/trips/{trip_id}/complete
 POST /api/v1/deliveries/trips/{trip_id}/reconcile
+```
+
+Shipper side:
+
+```http
+GET  /api/v1/shipper/trips
+GET  /api/v1/shipper/trips/{trip_id}
+POST /api/v1/shipper/trips/{trip_id}/start
+POST /api/v1/shipper/trips/{trip_id}/location
+POST /api/v1/shipper/trips/{trip_id}/orders/{order_id}/delivered
+POST /api/v1/shipper/trips/{trip_id}/orders/{order_id}/failed
 ```
 
 ### 10.3 Delivery Queue
@@ -1619,7 +1655,8 @@ delivery_latitude
 delivery_longitude
 total_amount
 payment_status
-COD amount
+payment_method
+amount_to_collect
 waiting_time
 created_at
 ```
@@ -1779,7 +1816,7 @@ Flow:
 ### 10.8 Start Trip Flow
 
 ```text
-1. Validate current user is assigned shipper or manager/admin.
+1. Validate current user is assigned shipper.
 2. Validate trip status = assigned.
 3. Set status = in_transit.
 4. Set started_at = now.
@@ -1791,7 +1828,7 @@ Flow:
 Endpoint:
 
 ```http
-POST /api/v1/deliveries/trips/{trip_id}/location
+POST /api/v1/shipper/trips/{trip_id}/location
 ```
 
 Request:
@@ -1826,13 +1863,16 @@ For version 1, REST location updates are enough. Real-time push can be added lat
    - require cod_collected == order.total_amount.
    - create/update payment with method = cod, status = success.
    - set order.payment_status = paid.
-6. Set delivery_trip_order.status = delivered.
-7. Set delivered_at = now.
-8. Add cod_collected.
-9. If all orders in trip are delivered or failed:
+6. If order is prepaid:
+   - require cod_collected = 0.
+7. Set delivery_trip_order.status = delivered.
+8. Set delivered_at = now.
+9. Add cod_collected and optional note.
+10. Complete the order transaction.
+11. If all orders in trip are delivered or failed:
    - set trip.status = completed.
    - set completed_at = now.
-10. Commit.
+12. Commit.
 ```
 
 Important:
@@ -1846,7 +1886,7 @@ For delivery COD orders, inventory and finance completion can happen after succe
 2. Validate trip status = in_transit.
 3. Validate order belongs to trip.
 4. Set delivery_trip_order.status = failed.
-5. Save failed_reason.
+5. Save failed_reason, failed_at, and optional note.
 6. Return order to delivery queue:
    - order.status = ready_for_delivery
    - order.payment_status remains unpaid if COD
@@ -2017,10 +2057,16 @@ Order:
 - Order total calculation
 - Invalid empty order rejected
 - Invalid status transition rejected
+- Delivery order cannot be marked ready without delivery info
+- Unpaid delivery order requires COD pending or payment_method = cod
+- Prepaid delivery order can be marked ready after card/bank payment
 
 Payment:
 - Cash payment calculates change
 - Cash payment rejects insufficient amount
+- Cash payment is rejected for delivery orders
+- COD payment is rejected for in-store orders
+- COD delivery payment is pending until delivery succeeds
 - Mock card approval works
 - Mock bank amount mismatch rejected
 
@@ -2043,6 +2089,8 @@ Delivery:
 - Nearest-neighbor route ordering
 - Trip creation validates order status
 - Failed delivery returns order to queue
+- Delivered COD order marks COD payment success
+- Delivered prepaid order requires cod_collected = 0
 - COD reconciliation discrepancy requires reason
 
 Finance:
@@ -2071,7 +2119,8 @@ Flow 2:
 
 ```text
 Create delivery order
-Mark ready_for_delivery
+Start processing
+Mark ready_for_delivery with COD pending or prepaid payment
 Create delivery trip
 Assign shipper
 Start trip

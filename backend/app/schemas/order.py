@@ -6,6 +6,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.models.order import OrderPaymentStatus, OrderStatus, OrderType
+from app.models.payment import PaymentMethod
 
 
 class OrderItemCreate(BaseModel):
@@ -92,6 +93,10 @@ class OrderListFilters(BaseModel):
     customer_id: UUID | None = None
     created_from: datetime | None = None
     created_to: datetime | None = None
+
+
+class OrderReadyForDelivery(BaseModel):
+    payment_method: PaymentMethod | None = None
 
 
 class OrderCancelResponse(BaseModel):
