@@ -1,6 +1,15 @@
 from app.models.audit import AuditLog
 from app.models.base import Base
 from app.models.customer import Customer
+from app.models.delivery import (
+    CodReconciliation,
+    CodReconciliationStatus,
+    DeliveryLocationLog,
+    DeliveryTrip,
+    DeliveryTripOrder,
+    DeliveryTripOrderStatus,
+    DeliveryTripStatus,
+)
 from app.models.finance import FinancialRecord, FinancialRecordType
 from app.models.ingredients import Ingredient
 from app.models.inventory import (
@@ -24,7 +33,14 @@ from app.models.user import User, UserRole, UserStatus
 __all__ = [
     "AuditLog",
     "Base",
+    "CodReconciliation",
+    "CodReconciliationStatus",
     "Customer",
+    "DeliveryLocationLog",
+    "DeliveryTrip",
+    "DeliveryTripOrder",
+    "DeliveryTripOrderStatus",
+    "DeliveryTripStatus",
     "FinancialRecord",
     "FinancialRecordType",
     "Ingredient",
