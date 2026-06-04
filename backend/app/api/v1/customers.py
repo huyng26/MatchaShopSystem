@@ -1,64 +1,98 @@
-from typing import Any
+from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.constants import UserRole
+from app.core.database import get_db
+from app.core.permissions import require_roles
 from app.core.responses import success_response
+from app.models.user import User
+from app.schemas.common import to_jsonable
+from app.schemas.customer import CustomerCreate, CustomerResponse, CustomerUpdate
+from app.schemas.order import OrderRead
+from app.services import customer_service
 
 router = APIRouter()
 
-# Temporary mock data for early frontend integration.
-# Replace this with customer_service calls when implementing real APIs.
-MOCK_CUSTOMERS = [
-    {
-        "id": "customer-1",
-        "name": "Nguyen An",
-        "phone": "0912345678",
-        "address": "Quan 1, TP.HCM",
-        "loyalty_points": 120,
-    },
-    {
-        "id": "customer-2",
-        "name": "Tran Binh",
-        "phone": "0987654321",
-        "address": "Quan 3, TP.HCM",
-        "loyalty_points": 45,
-    },
-]
-
-MOCK_ORDERS = [
-    {
-        "id": "order-1",
-        "order_code": "ORD-0001",
-        "customer_id": "customer-1",
-        "status": "completed",
-        "payment_status": "paid",
-        "total_amount": 55000,
-    },
-    {
-        "id": "order-2",
-        "order_code": "ORD-0002",
-        "customer_id": "customer-2",
-        "status": "ready_for_delivery",
-        "payment_status": "unpaid",
-        "total_amount": 65000,
-    },
+CustomerManager = Annotated[
+    User,
+    Depends(require_roles(UserRole.ADMIN, UserRole.CASHIER)),
 ]
 
 
 @router.get("")
-async def list_customers() -> dict[str, Any]:
-    return success_response(data=MOCK_CUSTOMERS)
+async def list_customers(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: CustomerManager,
+    q: Annotated[str | None, Query(max_length=255)] = None,
+) -> dict:
+    customers = await customer_service.list_customers(db, search=q)
+    return success_response(
+        data=to_jsonable(
+            [CustomerResponse.model_validate(customer) for customer in customers]
+        )
+    )
+
+
+@router.post("")
+async def create_customer(
+    payload: CustomerCreate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: CustomerManager,
+) -> dict:
+    customer = await customer_service.create_customer(db, payload)
+    return success_response(
+        message="Customer created successfully",
+        data=to_jsonable(CustomerResponse.model_validate(customer)),
+    )
 
 
 @router.get("/{customer_id}")
-async def get_customer(customer_id: str) -> dict[str, Any]:
-    customer = next((item for item in MOCK_CUSTOMERS if item["id"] == customer_id), None)
-    if customer is None:
-        raise HTTPException(status_code=404, detail="customer_not_found")
-    return success_response(data=customer)
+async def get_customer(
+    customer_id: UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: CustomerManager,
+) -> dict:
+    customer = await customer_service.get_customer(db, customer_id)
+    return success_response(data=to_jsonable(CustomerResponse.model_validate(customer)))
+
+
+@router.put("/{customer_id}")
+async def update_customer(
+    customer_id: UUID,
+    payload: CustomerUpdate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: CustomerManager,
+) -> dict:
+    customer = await customer_service.update_customer(db, customer_id, payload)
+    return success_response(
+        message="Customer updated successfully",
+        data=to_jsonable(CustomerResponse.model_validate(customer)),
+    )
+
+
+@router.delete("/{customer_id}")
+async def delete_customer(
+    customer_id: UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: CustomerManager,
+) -> dict:
+    customer = await customer_service.delete_customer(db, customer_id)
+    return success_response(
+        message="Customer deleted successfully",
+        data=to_jsonable(CustomerResponse.model_validate(customer)),
+    )
 
 
 @router.get("/{customer_id}/orders")
-async def get_customer_orders(customer_id: str) -> dict[str, Any]:
-    orders = [item for item in MOCK_ORDERS if item.get("customer_id") == customer_id]
-    return success_response(data=orders)
+async def get_customer_orders(
+    customer_id: UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: CustomerManager,
+) -> dict:
+    orders = await customer_service.list_customer_orders(db, customer_id)
+    return success_response(
+        data=to_jsonable([OrderRead.model_validate(order) for order in orders])
+    )
