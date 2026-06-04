@@ -60,6 +60,7 @@ async def get_low_stock_dashboard() -> dict[str, Any]:
     low_stock = [
         item
         for item in MOCK_INGREDIENTS
+        # pyrefly: ignore [unsupported-operation]
         if item["current_stock"] <= item["minimum_threshold"]
     ]
     return success_response(data=low_stock)
