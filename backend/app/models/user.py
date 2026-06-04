@@ -1,15 +1,21 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from sqlalchemy import DateTime, String, text
 from sqlalchemy.dialects.postgresql import ENUM as PgEnum
 from sqlalchemy.dialects.postgresql import UUID as PgUUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.constants import UserRole, UserStatus, enum_values
 from app.models.base import Base
+
+if TYPE_CHECKING:
+    from app.models.inventory import InventoryMovement, InventoryPurchase
+    from app.models.order import Order
+    from app.models.payment import Payment
 
 
 class User(Base):
@@ -53,3 +59,14 @@ class User(Base):
         server_default=text("now()"),
     )
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    orders: Mapped[list["Order"]] = relationship("Order", back_populates="creator")
+    payments: Mapped[list["Payment"]] = relationship("Payment", back_populates="creator")
+    inventory_purchases: Mapped[list["InventoryPurchase"]] = relationship(
+        "InventoryPurchase",
+        back_populates="creator",
+    )
+    inventory_movements: Mapped[list["InventoryMovement"]] = relationship(
+        "InventoryMovement",
+        back_populates="creator",
+    )
