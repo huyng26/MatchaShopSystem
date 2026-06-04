@@ -53,137 +53,18 @@
                   <th class="px-6 py-4">Full Name</th>
                   <th class="px-6 py-4">Role</th>
                   <th class="px-6 py-4">Status</th>
-                  <th class="px-6 py-4 text-right">Actions</th>
                 </tr>
             </thead>
-            <tbody>
-              <!-- Row 1 -->
-              <tr class="group hover:bg-surface-container-low transition-colors duration-200 cursor-pointer"
-                onclick="window.location='employee_detail.html'">
-                <td
-                  class="px-6 py-6 bg-surface-container-low rounded-l-xl font-mono text-sm font-semibold text-secondary">
-                  #NV-001</td>
-                <td class="px-6 py-6 bg-surface-container-low">
-                  <div class="flex items-center gap-4">
-                    <div
-                      class="w-10 h-10 rounded-full bg-primary-fixed-dim/20 flex items-center justify-center text-primary-container font-bold text-xs">
-                      NL</div>
-                    <div>
-                      <a class="font-bold text-on-surface hover:text-secondary" href="employee_detail.html">Nguyen
-                        Luong</a>
-                      <div class="text-xs text-outline">nguyen.luong@matcha.vn</div>
-                    </div>
-                  </div>
-                </td>
-                <td class="px-6 py-6 bg-surface-container-low">
-                  <span
-                    class="px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-xs font-bold uppercase tracking-tighter">Admin</span>
-                </td>
-                <td class="px-6 py-6 bg-surface-container-low">
-                  <div class="flex items-center gap-2 text-xs font-semibold text-[#006e08]">
-                    <div class="w-2 h-2 rounded-full bg-[#006e08] animate-pulse"></div>
-                    Working
-                  </div>
-                </td>
-                <td class="px-6 py-6 bg-surface-container-low rounded-r-xl text-right">
-                  <button class="p-2 text-outline hover:text-secondary transition-colors"><span
-                      class="material-symbols-outlined" data-icon="edit">edit</span></button>
-                  <button class="p-2 text-outline hover:text-error transition-colors ml-2"><span
-                      class="material-symbols-outlined" data-icon="delete">delete</span></button>
-                </td>
-              </tr>
-              <!-- Row 2 -->
-              <tr class="group hover:bg-surface-container-low transition-colors duration-200 cursor-pointer"
-                onclick="window.location='employee_detail.html'">
-                <td
-                  class="px-6 py-6 bg-surface-container-low rounded-l-xl font-mono text-sm font-semibold text-secondary">
-                  #NV-002</td>
-                <td class="px-6 py-6 bg-surface-container-low">
-                  <div class="flex items-center gap-4">
-                    <div
-                      class="w-10 h-10 rounded-full bg-secondary-container/20 flex items-center justify-center text-on-secondary-container font-bold text-xs">
-                      TB</div>
-                    <div>
-                      <a class="font-bold text-on-surface hover:text-secondary" href="employee_detail.html">Tran Thi
-                        B</a>
-                      <div class="text-xs text-outline">thi.b@matcha.vn</div>
-                    </div>
-                  </div>
-                </td>
-                <td class="px-6 py-6 bg-surface-container-low">
-                  <span
-                    class="px-3 py-1 bg-secondary-fixed-dim/20 text-on-secondary-fixed-variant rounded-full text-xs font-bold uppercase tracking-tighter">Cashier</span>
-                </td>
-                <td class="px-6 py-6 bg-surface-container-low">
-                    <div class="flex items-center gap-2 text-xs font-semibold text-[#006e08]">
-                    <div class="w-2 h-2 rounded-full bg-[#006e08]"></div>
-                    Working
-                  </div>
-                </td>
-                <td class="px-6 py-6 bg-surface-container-low rounded-r-xl text-right">
-                  <button class="p-2 text-outline hover:text-secondary transition-colors"><span
-                      class="material-symbols-outlined" data-icon="edit">edit</span></button>
-                  <button class="p-2 text-outline hover:text-error transition-colors ml-2"><span
-                      class="material-symbols-outlined" data-icon="delete">delete</span></button>
-                </td>
-              </tr>
-              <!-- Row 3 -->
-              <tr class="group hover:bg-surface-container-low transition-colors duration-200 cursor-pointer"
-                onclick="window.location='employee_detail.html'">
-                <td
-                  class="px-6 py-6 bg-surface-container-low rounded-l-xl font-mono text-sm font-semibold text-secondary">
-                  #NV-003</td>
-                <td class="px-6 py-6 bg-surface-container-low">
-                  <div class="flex items-center gap-4">
-                    <div
-                      class="w-10 h-10 rounded-full bg-outline-variant/20 flex items-center justify-center text-on-surface-variant font-bold text-xs">
-                      LC</div>
-                    <div>
-                      <a class="font-bold text-on-surface hover:text-secondary" href="employee_detail.html">Le Van C</a>
-                      <div class="text-xs text-outline">van.c@matcha.vn</div>
-                    </div>
-                  </div>
-                </td>
-                <td class="px-6 py-6 bg-surface-container-low">
-                  <span
-                    class="px-3 py-1 bg-primary-fixed/30 text-on-primary-fixed-variant rounded-full text-xs font-bold uppercase tracking-tighter">Barista</span>
-                </td>
-                <td class="px-6 py-6 bg-surface-container-low">
-                  <div class="flex items-center gap-2 text-xs font-semibold text-outline">
-                    <div class="w-2 h-2 rounded-full bg-outline"></div>
-                    On leave
-                  </div>
-                </td>
-                <td class="px-6 py-6 bg-surface-container-low rounded-r-xl text-right">
-                  <button class="p-2 text-outline hover:text-secondary transition-colors"><span
-                      class="material-symbols-outlined" data-icon="edit">edit</span></button>
-                  <button class="p-2 text-outline hover:text-error transition-colors ml-2"><span
-                      class="material-symbols-outlined" data-icon="delete">delete</span></button>
-                </td>
+            <tbody id="staff-table-body">
+              <tr>
+                <td class="px-6 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="4">Loading staff...</td>
               </tr>
             </tbody>
           </table>
         </div>
         <!-- Pagination/Footer of Table -->
-        <div class="management-table-footer px-6 py-4 border-t border-outline-variant/10 flex items-center justify-between">
-            <p class="text-xs text-on-surface-variant font-medium">Showing <span class="font-bold text-on-surface">3</span> of <span
-              class="font-bold text-on-surface">24</span> employees</p>
-          <div class="flex gap-2">
-            <button
-              class="w-8 h-8 rounded-lg flex items-center justify-center border border-outline-variant/20 text-on-surface-variant hover:bg-white transition-colors">
-              <span class="material-symbols-outlined text-sm" data-icon="chevron_left">chevron_left</span>
-            </button>
-            <button
-              class="w-8 h-8 rounded-lg flex items-center justify-center bg-primary text-white text-xs font-bold">1</button>
-            <button
-              class="w-8 h-8 rounded-lg flex items-center justify-center border border-outline-variant/20 text-on-surface-variant hover:bg-white text-xs font-bold transition-colors">2</button>
-            <button
-              class="w-8 h-8 rounded-lg flex items-center justify-center border border-outline-variant/20 text-on-surface-variant hover:bg-white text-xs font-bold transition-colors">3</button>
-            <button
-              class="w-8 h-8 rounded-lg flex items-center justify-center border border-outline-variant/20 text-on-surface-variant hover:bg-white transition-colors">
-              <span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
-            </button>
-          </div>
+        <div class="management-table-footer px-6 py-4 border-t border-outline-variant/10">
+            <p id="staff-table-count" class="text-xs text-on-surface-variant font-medium">Loading staff...</p>
         </div>
       </div>
       <!-- Stats/Insight Cards -->
@@ -191,7 +72,7 @@
         <div class="bg-primary-container text-on-primary-container p-6 rounded-xl relative overflow-hidden group">
           <div class="relative z-10">
             <p class="text-xs font-bold uppercase tracking-widest opacity-60 mb-1">Total Staff</p>
-            <h3 class="text-4xl font-serif">24</h3>
+            <h3 id="total-staff-count" class="text-4xl font-serif">0</h3>
             <p class="text-xs mt-4 flex items-center gap-1 font-medium"><span class="material-symbols-outlined text-sm"
                 data-icon="trending_up">trending_up</span> +2 since last month</p>
           </div>
@@ -201,7 +82,7 @@
         </div>
         <div class="bg-surface-container-high p-6 rounded-xl group">
           <p class="text-xs font-bold uppercase tracking-widest text-outline mb-1">Active Now</p>
-          <h3 class="text-4xl font-serif text-secondary">18</h3>
+          <h3 id="active-staff-count" class="text-4xl font-serif text-secondary">0</h3>
           <div class="flex mt-4 gap-1">
             <div class="h-1.5 w-1/4 rounded-full bg-secondary"></div>
             <div class="h-1.5 w-1/4 rounded-full bg-secondary"></div>
@@ -212,7 +93,7 @@
         <div class="bg-white p-6 rounded-xl shadow-sm border border-surface-variant/20 flex flex-col justify-between">
           <div>
             <p class="text-xs font-bold uppercase tracking-widest text-outline mb-1">Upcoming Shifts</p>
-            <p class="text-sm font-semibold text-on-surface">Next: Le Van C at 14:00</p>
+            <p id="next-shift-label" class="text-sm font-semibold text-on-surface">Loading staff...</p>
           </div>
           <a class="text-secondary text-xs font-bold flex items-center gap-1 hover:gap-2 transition-all" href="#">
             VIEW SCHEDULE <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
@@ -235,6 +116,154 @@
   </main>
   <script src="../assets/js/layout.js?v=fm-20260530"></script>
   <script src="../assets/js/main.js?v=fm-20260530"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const tableBody = document.getElementById('staff-table-body');
+      const tableCount = document.getElementById('staff-table-count');
+      const totalStaffCount = document.getElementById('total-staff-count');
+      const activeStaffCount = document.getElementById('active-staff-count');
+      const nextShiftLabel = document.getElementById('next-shift-label');
+      const API_BASE_URL = window.MATCHA_API_BASE_URL || 'http://localhost:8000/api/v1';
+
+      const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      }[character]));
+
+      const formatLabel = (value) => String(value || 'unknown')
+        .replace(/[_-]+/g, ' ')
+        .replace(/\b\w/g, (character) => character.toUpperCase());
+
+      const getInitials = (name, email) => {
+        const source = String(name || email || '').trim();
+        if (!source) {
+          return 'ST';
+        }
+
+        const words = source.split(/\s+/).filter(Boolean);
+        if (words.length === 1) {
+          return words[0].slice(0, 2).toUpperCase();
+        }
+
+        return `${words[0][0]}${words[words.length - 1][0]}`.toUpperCase();
+      };
+
+      const getRoleClass = (role) => {
+        const normalizedRole = String(role || '').toLowerCase();
+        return normalizedRole === 'admin'
+          ? 'bg-primary/5 text-primary'
+          : 'bg-secondary/10 text-secondary';
+      };
+
+      const getNormalizedStatus = (status) => (
+        String(status || '').toLowerCase() === 'active' ? 'active' : 'inactive'
+      );
+
+      const getStatusClass = (status) => {
+        const normalizedStatus = getNormalizedStatus(status);
+        return normalizedStatus === 'active'
+          ? 'bg-secondary-container/30 text-secondary'
+          : 'bg-error-container/30 text-error';
+      };
+
+      const fetchStaff = async () => {
+        const response = await fetch(`${API_BASE_URL}/staff`);
+        const payload = await response.json().catch(() => null);
+
+        if (!response.ok || payload?.success === false) {
+          throw new Error(payload?.message || 'Request failed');
+        }
+
+        return payload?.data ?? payload;
+      };
+
+      const renderStaff = (staff) => {
+        tableBody.innerHTML = '';
+        tableCount.textContent = `Showing ${staff.length} employee${staff.length === 1 ? '' : 's'}`;
+        totalStaffCount.textContent = staff.length;
+        activeStaffCount.textContent = staff.filter((employee) => getNormalizedStatus(employee.status) === 'active').length;
+        const nextEmployee = staff.find((employee) => getNormalizedStatus(employee.status) === 'active') || staff[0];
+        nextShiftLabel.textContent = nextEmployee
+          ? `Next: ${nextEmployee.full_name || nextEmployee.email || nextEmployee.id}`
+          : 'No upcoming shifts';
+
+        if (!staff.length) {
+          tableBody.innerHTML = `
+            <tr>
+              <td class="px-6 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="4">No staff found.</td>
+            </tr>
+          `;
+          return;
+        }
+
+        staff.forEach((employee, index) => {
+          const row = document.createElement('tr');
+          row.className = 'group hover:bg-surface-container-low transition-colors duration-200 cursor-pointer';
+          row.addEventListener('click', () => {
+            window.location.href = employee.id
+              ? `employee_detail.html?id=${encodeURIComponent(employee.id)}`
+              : 'employee_detail.html';
+          });
+
+          const avatarClass = index % 3 === 0
+            ? 'bg-primary-fixed-dim/20 text-primary-container'
+            : index % 3 === 1
+              ? 'bg-secondary-container/20 text-on-secondary-container'
+              : 'bg-outline-variant/20 text-on-surface-variant';
+          const normalizedStatus = getNormalizedStatus(employee.status);
+
+          row.innerHTML = `
+            <td class="px-6 py-6 bg-surface-container-low rounded-l-xl font-mono text-sm font-semibold text-secondary">
+              ${escapeHtml(employee.id)}
+            </td>
+            <td class="px-6 py-6 bg-surface-container-low">
+              <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-full ${avatarClass} flex items-center justify-center font-bold text-xs">
+                  ${escapeHtml(getInitials(employee.full_name, employee.email))}
+                </div>
+                <div>
+                  <a class="font-bold text-on-surface hover:text-secondary" href="employee_detail.html?id=${encodeURIComponent(employee.id || '')}">
+                    ${escapeHtml(employee.full_name || 'Unnamed Staff')}
+                  </a>
+                  <div class="text-xs text-outline">${escapeHtml(employee.email || employee.phone || 'No contact info')}</div>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-6 bg-surface-container-low">
+              <span class="px-3 py-1 ${getRoleClass(employee.role)} text-xs font-bold rounded-md">${escapeHtml(formatLabel(employee.role))}</span>
+            </td>
+            <td class="px-6 py-6 bg-surface-container-low rounded-r-xl">
+              <span class="px-3 py-1 ${getStatusClass(employee.status)} text-xs font-bold rounded-full">${escapeHtml(formatLabel(normalizedStatus))}</span>
+            </td>
+          `;
+          tableBody.appendChild(row);
+        });
+      };
+
+      const loadStaff = async () => {
+        try {
+          const staff = await fetchStaff();
+          renderStaff(Array.isArray(staff) ? staff : []);
+        } catch (error) {
+          console.error('Failed to load staff:', error);
+          tableCount.textContent = 'Cannot load staff';
+          totalStaffCount.textContent = '0';
+          activeStaffCount.textContent = '0';
+          nextShiftLabel.textContent = 'Cannot load staff';
+          tableBody.innerHTML = `
+            <tr>
+              <td class="px-6 py-8 text-center text-sm font-bold text-error" colspan="4">Cannot load staff from the mock API. Please check the backend server.</td>
+            </tr>
+          `;
+        }
+      };
+
+      loadStaff();
+    });
+  </script>
 </body>
 
 </html>

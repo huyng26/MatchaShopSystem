@@ -49,43 +49,12 @@
                         <th class="px-6 py-5 text-sm font-bold text-primary-container/60 uppercase tracking-wider">ID</th>
                         <th class="px-6 py-5 text-sm font-bold text-primary-container/60 uppercase tracking-wider">Email</th>
                         <th class="px-6 py-5 text-sm font-bold text-primary-container/60 uppercase tracking-wider">Role</th>
+                        <th class="px-6 py-5 text-sm font-bold text-primary-container/60 uppercase tracking-wider">Status</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-outline-variant/5">
-                    <tr class="hover:bg-surface-container-low transition-colors">
-                        <td class="px-6 py-5 text-sm font-bold text-primary">ACC-001</td>
-                        <td class="px-6 py-5 text-sm font-medium">admin@matcha.atelier</td>
-                        <td class="px-6 py-5">
-                            <span class="px-3 py-1 bg-primary/5 text-primary text-xs font-bold rounded-md">Admin</span>
-                        </td>
-                    </tr>
-                    <tr class="hover:bg-surface-container-low transition-colors">
-                        <td class="px-6 py-5 text-sm font-bold text-primary">ACC-002</td>
-                        <td class="px-6 py-5 text-sm font-medium">cashier@matcha.atelier</td>
-                        <td class="px-6 py-5">
-                            <span class="px-3 py-1 bg-secondary/10 text-secondary text-xs font-bold rounded-md">Cashier</span>
-                        </td>
-                    </tr>
-                    <tr class="hover:bg-surface-container-low transition-colors">
-                        <td class="px-6 py-5 text-sm font-bold text-primary">ACC-003</td>
-                        <td class="px-6 py-5 text-sm font-medium">inventory@matcha.atelier</td>
-                        <td class="px-6 py-5">
-                            <span class="px-3 py-1 bg-primary/5 text-primary text-xs font-bold rounded-md">Inventory Manager</span>
-                        </td>
-                    </tr>
-                    <tr class="hover:bg-surface-container-low transition-colors">
-                        <td class="px-6 py-5 text-sm font-bold text-primary">ACC-004</td>
-                        <td class="px-6 py-5 text-sm font-medium">delivery@matcha.atelier</td>
-                        <td class="px-6 py-5">
-                            <span class="px-3 py-1 bg-secondary/10 text-secondary text-xs font-bold rounded-md">Delivery Manager</span>
-                        </td>
-                    </tr>
-                    <tr class="hover:bg-surface-container-low transition-colors">
-                        <td class="px-6 py-5 text-sm font-bold text-primary">ACC-005</td>
-                        <td class="px-6 py-5 text-sm font-medium">shipper@matcha.atelier</td>
-                        <td class="px-6 py-5">
-                            <span class="px-3 py-1 bg-primary/5 text-primary text-xs font-bold rounded-md">Shipper</span>
-                        </td>
+                <tbody id="account-table-body" class="divide-y divide-outline-variant/5">
+                    <tr>
+                        <td class="px-6 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="4">Loading accounts...</td>
                     </tr>
                 </tbody>
             </table>
@@ -93,6 +62,98 @@
     </main>
   <script src="../assets/js/layout.js?v=fm-20260530"></script>
   <script src="../assets/js/main.js?v=fm-20260530"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const tableBody = document.getElementById('account-table-body');
+        const API_BASE_URL = window.MATCHA_API_BASE_URL || 'http://localhost:8000/api/v1';
+
+        const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+        }[character]));
+
+        const formatLabel = (value) => String(value || 'unknown')
+            .replace(/[_-]+/g, ' ')
+            .replace(/\b\w/g, (character) => character.toUpperCase());
+
+        const getRoleClass = (role) => {
+            const normalizedRole = String(role || '').toLowerCase();
+            return normalizedRole === 'admin'
+                ? 'bg-primary/5 text-primary'
+                : 'bg-secondary/10 text-secondary';
+        };
+
+        const getStatusClass = (status) => {
+            const normalizedStatus = String(status || '').toLowerCase();
+            if (normalizedStatus === 'active') {
+                return 'bg-secondary-container/30 text-secondary';
+            }
+            if (normalizedStatus === 'inactive' || normalizedStatus === 'disabled') {
+                return 'bg-error-container/30 text-error';
+            }
+            return 'bg-surface-container-high text-on-surface-variant';
+        };
+
+        const fetchAccounts = async () => {
+            const response = await fetch(`${API_BASE_URL}/accounts`);
+            const payload = await response.json().catch(() => null);
+
+            if (!response.ok || payload?.success === false) {
+                throw new Error(payload?.message || 'Request failed');
+            }
+
+            return payload?.data ?? payload;
+        };
+
+        const renderAccounts = (accounts) => {
+            tableBody.innerHTML = '';
+
+            if (!accounts.length) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td class="px-6 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="4">No accounts found.</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            accounts.forEach((account) => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-surface-container-low transition-colors';
+                row.innerHTML = `
+                    <td class="px-6 py-5 text-sm font-bold text-primary">${escapeHtml(account.id)}</td>
+                    <td class="px-6 py-5 text-sm font-medium">${escapeHtml(account.email)}</td>
+                    <td class="px-6 py-5">
+                        <span class="px-3 py-1 ${getRoleClass(account.role)} text-xs font-bold rounded-md">${escapeHtml(formatLabel(account.role))}</span>
+                    </td>
+                    <td class="px-6 py-5">
+                        <span class="px-3 py-1 ${getStatusClass(account.status)} text-xs font-bold rounded-full">${escapeHtml(formatLabel(account.status))}</span>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        };
+
+        const loadAccounts = async () => {
+            try {
+                const accounts = await fetchAccounts();
+                renderAccounts(Array.isArray(accounts) ? accounts : []);
+            } catch (error) {
+                console.error('Failed to load accounts:', error);
+                tableBody.innerHTML = `
+                    <tr>
+                        <td class="px-6 py-8 text-center text-sm font-bold text-error" colspan="4">Cannot load accounts from the mock API. Please check the backend server.</td>
+                    </tr>
+                `;
+            }
+        };
+
+        loadAccounts();
+    });
+  </script>
 </body>
 
 </html>

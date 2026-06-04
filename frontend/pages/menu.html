@@ -311,6 +311,13 @@
                             class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary"
                             placeholder="E.g. 45000" />
                     </label>
+
+                    <label class="space-y-2 md:col-span-2">
+                        <span class="text-sm font-bold text-on-surface">Product Description</span>
+                        <textarea id="product-description" name="productDescription" rows="3" required
+                            class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary"
+                            placeholder="Describe the product flavor, ingredients, or serving style"></textarea>
+                    </label>
                 </div>
 
                 <section class="space-y-3">
@@ -369,6 +376,53 @@
         const addIngredientButton = document.getElementById('add-ingredient');
         const ingredientsContainer = document.getElementById('ingredients-container');
         const productGrid = document.getElementById('product-grid');
+        const inventoryTableBody = document.querySelector('tbody');
+        let categoryLookup = {};
+
+        const API_BASE_URL = window.MATCHA_API_BASE_URL || 'http://localhost:8000/api/v1';
+        const fallbackProductImages = [
+            'https://lh3.googleusercontent.com/aida-public/AB6AXuAW2NW0iDcULEjrNB98sKSR27R0hDnIX3OAiNh965jYu4v9jK8j6RMGz8IGD9B27JN57XoiJsB-STI6bRJvV-BpsJaBUTgfCu7cn9fZ-oOQRdAyGzOa9pEecFRLAzP8kjMre6d9-_pm4bRYToUutckD092sTKJnqOVGh0mbOvhR2XOq8DsFwcHh0ENWZsmAsFrkTcGFqugQorqoXRy5j_FGePrWIGwrvgIZyVT0wt-0AbD8rSHOEgs80bV0trpvg5qLefqrXjcafD6a',
+            'https://lh3.googleusercontent.com/aida-public/AB6AXuBCyAL6ZImjuCMjggTCN8SELoSp2jrKhoSQxiQSb4_ernWfTuFrZgky-lfCCZ0Av7CABlhwYPZL_EyJb25P-vbdt_lezdq3UVYaQ_ftmn3XTn0ycwt5mTlawPUplxX1sT0VJOdgcU3h4s8BblwYnaIZKn7VFI_pTmwn9v1bOtvJ81Ta0M-NmU7p03yhCFPUGufa30ARH3DUM9B5OZzaojLdnKpAVg3Lb6h3TLA7RRoWme5I1XyjqcpchwQ_JEP_3FX2ZZjgzn5TiP1I',
+            'https://lh3.googleusercontent.com/aida-public/AB6AXuBEFwim6o9Gv3x5NhXKHZL7PihBCm1Fh2BhsNtwfMR1vzO9omaZ4I6_SgOyeyMKylremxegcf5XG3XtIBtPvHcEDDng_oyw-UdgX2tw92HUlbXZB93olbxqu9MP0dla5RzDhUyoEbBLO2oaCNKMRGsNQ_2EJ8dKkfgYtbk7Y_-rFlVBT9WQrXNdp5IYjRF5ImvC1lkbWKPCE22ORLW0HGHuz8CEEee2eo7zgotYpxVtvOlKGZRDyF-ClXOl1cUUg2jUbM0xfIueFuwt',
+        ];
+
+        const fetchApiData = async (path) => {
+            const response = await fetch(`${API_BASE_URL}${path}`);
+            const payload = await response.json().catch(() => null);
+
+            if (!response.ok || payload?.success === false) {
+                throw new Error(payload?.message || 'Request failed');
+            }
+
+            return payload?.data ?? payload;
+        };
+
+        const formatPrice = (value) => new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND',
+        }).format(Number(value) || 0);
+
+        const getProductName = (productData) => productData.name || productData.productName || 'Unnamed Product';
+        const getProductDescription = (productData) => productData.description || productData.productDescription || 'No description available.';
+        const getProductCategory = (productData) => (
+            productData.productCategory
+            || categoryLookup[productData.category_id]
+            || productData.category_id
+            || 'Uncategorized'
+        );
+        const getProductPrice = (productData) => productData.selling_price ?? productData.productPriceVnd ?? 0;
+        const getProductImageUrl = (productData, index = 0) => (
+            productData.productImage?.previewUrl
+            || productData.image_url
+            || fallbackProductImages[index % fallbackProductImages.length]
+        );
+        const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+        }[character]));
 
         const openModal = () => {
             modal.classList.remove('hidden');
@@ -418,19 +472,22 @@
             ingredientsContainer.appendChild(row);
         };
 
-        const createProductCard = (productData) => {
+        const createProductCard = (productData, index = 0) => {
             const card = document.createElement('a');
             card.className = 'group block product-card bg-surface rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1 cursor-pointer';
-            card.href = 'product_detail.html';
+            card.href = productData.id
+                ? `product_detail.html?id=${encodeURIComponent(productData.id)}`
+                : 'product_detail.html';
 
             const imageWrapper = document.createElement('div');
             imageWrapper.className = 'aspect-square relative overflow-hidden bg-surface-container';
 
-            if (productData.productImage?.previewUrl) {
+            const productImageUrl = getProductImageUrl(productData, index);
+            if (productImageUrl) {
                 const image = document.createElement('img');
                 image.className = 'w-full h-full object-cover transition-transform group-hover:scale-105';
-                image.src = productData.productImage.previewUrl;
-                image.alt = productData.productName;
+                image.src = productImageUrl;
+                image.alt = getProductName(productData);
                 imageWrapper.appendChild(image);
             } else {
                 const placeholder = document.createElement('div');
@@ -450,31 +507,116 @@
 
             const label = document.createElement('p');
             label.className = 'text-[10px] font-bold text-secondary uppercase tracking-widest mb-1';
-            label.textContent = 'New Item';
+            label.textContent = productData.is_available === false ? 'Unavailable' : 'Available';
 
             const name = document.createElement('h3');
             name.className = 'font-bold text-on-surface text-sm mb-1 line-clamp-1';
-            name.textContent = productData.productName;
+            name.textContent = getProductName(productData);
+
+            const description = document.createElement('p');
+            description.className = 'mb-3 text-xs text-on-surface-variant line-clamp-2';
+            description.textContent = getProductDescription(productData);
 
             const meta = document.createElement('div');
             meta.className = 'mt-auto flex justify-between items-baseline';
 
             const category = document.createElement('span');
             category.className = 'text-xs text-on-surface-variant';
-            category.textContent = productData.productCategory;
+            category.textContent = getProductCategory(productData);
 
             const price = document.createElement('span');
             price.className = 'font-bold text-primary';
-            price.textContent = new Intl.NumberFormat('vi-VN', {
-                style: 'currency',
-                currency: 'VND',
-            }).format(productData.productPriceVnd);
+            price.textContent = formatPrice(getProductPrice(productData));
 
             meta.append(category, price);
-            content.append(label, name, meta);
+            content.append(label, name, description, meta);
             card.append(imageWrapper, content);
 
             return card;
+        };
+
+        const createInventoryRow = (productData, index = 0) => {
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-surface-container-low transition-colors';
+
+            const statusLabel = productData.is_available === false ? 'INACTIVE' : 'ACTIVE';
+            const statusClass = productData.is_available === false
+                ? 'bg-error-container/30 text-error'
+                : 'bg-secondary-container/30 text-secondary';
+            const productHref = productData.id
+                ? `product_detail.html?id=${encodeURIComponent(productData.id)}`
+                : 'product_detail.html';
+            const productName = getProductName(productData);
+            const productImageUrl = getProductImageUrl(productData, index);
+
+            row.innerHTML = `
+                <td class="px-8 py-4">
+                    <a class="flex items-center gap-4" href="${productHref}">
+                        <div class="w-10 h-10 rounded-lg bg-surface-container overflow-hidden">
+                            <img class="w-full h-full object-cover" alt="${escapeHtml(productName)} thumbnail" src="${escapeHtml(productImageUrl)}" />
+                        </div>
+                        <div>
+                            <p class="font-bold text-sm text-on-surface">${escapeHtml(productName)}</p>
+                            <p class="text-[10px] text-on-surface-variant">${escapeHtml(productData.id || 'new-product')}</p>
+                        </div>
+                    </a>
+                </td>
+                <td class="px-8 py-4 text-sm text-on-surface-variant">${escapeHtml(getProductCategory(productData))}</td>
+                <td class="px-8 py-4 text-sm font-bold text-right text-on-surface">${escapeHtml(formatPrice(getProductPrice(productData)))}</td>
+                <td class="px-8 py-4 text-center">
+                    <span class="inline-block px-2.5 py-1 rounded-full ${statusClass} text-[10px] font-bold">${statusLabel}</span>
+                </td>
+                <td class="px-8 py-4 text-right">
+                    <button class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span></button>
+                </td>
+            `;
+
+            return row;
+        };
+
+        const renderProducts = (products) => {
+            productGrid.querySelectorAll('.product-card').forEach((card) => card.remove());
+            inventoryTableBody.innerHTML = '';
+
+            if (!products.length) {
+                const emptyState = document.createElement('div');
+                emptyState.className = 'product-card col-span-full rounded-2xl bg-surface-container-low p-8 text-center text-sm text-on-surface-variant';
+                emptyState.textContent = 'No products found.';
+                productGrid.appendChild(emptyState);
+                return;
+            }
+
+            products.forEach((product, index) => {
+                productGrid.appendChild(createProductCard(product, index));
+                inventoryTableBody.appendChild(createInventoryRow(product, index));
+            });
+        };
+
+        const loadProducts = async () => {
+            productGrid.querySelectorAll('.product-card').forEach((card) => card.remove());
+            inventoryTableBody.innerHTML = '';
+
+            const loadingCard = document.createElement('div');
+            loadingCard.className = 'product-card col-span-full rounded-2xl bg-surface-container-low p-8 text-center text-sm font-bold text-on-surface-variant';
+            loadingCard.textContent = 'Loading products...';
+            productGrid.appendChild(loadingCard);
+
+            try {
+                const [categories, products] = await Promise.all([
+                    fetchApiData('/products/categories'),
+                    fetchApiData('/products'),
+                ]);
+                categoryLookup = Object.fromEntries((categories || []).map((category) => [category.id, category.name]));
+                renderProducts(Array.isArray(products) ? products : []);
+            } catch (error) {
+                console.error('Failed to load products:', error);
+                productGrid.querySelectorAll('.product-card').forEach((card) => card.remove());
+
+                const errorCard = document.createElement('div');
+                errorCard.className = 'product-card col-span-full rounded-2xl bg-error-container/20 p-8 text-center text-sm font-bold text-error';
+                errorCard.textContent = 'Cannot load products from the mock API. Please check the backend server.';
+                productGrid.appendChild(errorCard);
+            }
         };
 
         openModalButton.addEventListener('click', openModal);
@@ -507,6 +649,7 @@
                 productName: document.getElementById('product-name').value.trim(),
                 productCategory: document.getElementById('product-category').value,
                 productPriceVnd: Number(document.getElementById('product-price').value),
+                productDescription: document.getElementById('product-description').value.trim(),
                 requiredIngredients: ingredients,
                 productImage: imageFile
                     ? {
@@ -525,6 +668,8 @@
             ingredientsContainer.innerHTML = '';
             closeModal();
         });
+
+        loadProducts();
     });
   </script>
 </body>

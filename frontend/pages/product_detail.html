@@ -32,7 +32,7 @@
             <!-- Gallery Cluster -->
             <div class="lg:col-span-7 grid grid-cols-4 gap-4">
                 <div class="col-span-4 h-[500px] rounded-xl overflow-hidden shadow-sm">
-                    <img alt="Matcha Cream Cheese Main"
+                    <img id="product-detail-main-image" alt="Matcha Cream Cheese Main"
                         class="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
                         data-alt="vibrant green matcha latte topped with thick white cream cheese foam in a clear glass on a rustic wooden table with scattered tea leaves"
                         src="https://lh3.googleusercontent.com/aida-public/AB6AXuAgfS9rC7i_LhWHaCUGYnye4Bo1cgSpqJrHQGI-OmUFwr4PWRdCQLwY-U_Q8RNmHY2TCHSt4w9zYwc9MM9lEm7wyajMUALi9nF3WcRRSvDgY8_-dfI1yc9mDcYmuJtSpWcIZj29mWHtxoduBsSb-vab-d6T5JszcPImPqs3w11ARzDhRv_dOqc1tDnbajjwQl6iqsuI8NtqfK7_HmOosYMd2Kz9GIAhtfZqncbBhpYd7M6hgXBNxwLLs6B6CupIfOxXTcoGvUtYvH2-" />
@@ -66,8 +66,8 @@
                 <div>
                     <span class="text-xs font-bold uppercase tracking-[0.2em] text-secondary mb-2 block">Product
                         Identity</span>
-                    <h1 class="text-5xl font-serif italic text-primary leading-tight">Matcha Cream Cheese</h1>
-                    <p class="text-on-surface-variant mt-4 leading-relaxed font-medium">A signature botanical blend
+                    <h1 id="product-detail-name" class="text-5xl font-serif italic text-primary leading-tight">Matcha Cream Cheese</h1>
+                    <p id="product-detail-description" class="text-on-surface-variant mt-4 leading-relaxed font-medium">A signature botanical blend
                         featuring ceremonial grade matcha topped with a velvety, savory-sweet cream cheese foam cloud.
                     </p>
                 </div>
@@ -78,7 +78,7 @@
                             Price</label>
                         <div class="flex items-baseline gap-1">
                             <span class="text-2xl font-serif text-primary">$</span>
-                            <input
+                            <input id="product-detail-price"
                                 class="text-3xl font-serif text-primary bg-transparent border-none p-0 w-24 focus:ring-0"
                                 type="text" value="6.50" />
                         </div>
@@ -86,7 +86,7 @@
                     <div class="p-6 bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/10">
                         <label
                             class="text-[10px] uppercase font-bold text-on-surface/40 tracking-widest block mb-2">Category</label>
-                        <select
+                        <select id="product-detail-category"
                             class="bg-transparent border-none p-0 w-full text-lg font-serif text-primary focus:ring-0 appearance-none">
                             <option>Signature Tea</option>
                             <option>Coffee</option>
@@ -97,7 +97,7 @@
                 <div class="space-y-4">
                     <div class="flex items-center justify-between">
                         <span class="text-sm font-bold text-primary">Availability</span>
-                        <div
+                        <div id="product-detail-availability"
                             class="flex items-center gap-2 bg-secondary/10 text-secondary px-3 py-1 rounded-full text-xs font-bold">
                             <span class="w-2 h-2 bg-secondary rounded-full"></span>
                             Active
@@ -272,6 +272,83 @@
     </main>
   <script src="../assets/js/layout.js?v=fm-20260530"></script>
   <script src="../assets/js/main.js?v=fm-20260530"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const API_BASE_URL = window.MATCHA_API_BASE_URL || 'http://localhost:8000/api/v1';
+        const fallbackImages = {
+            'product-matcha-latte': 'https://lh3.googleusercontent.com/aida-public/AB6AXuAW2NW0iDcULEjrNB98sKSR27R0hDnIX3OAiNh965jYu4v9jK8j6RMGz8IGD9B27JN57XoiJsB-STI6bRJvV-BpsJaBUTgfCu7cn9fZ-oOQRdAyGzOa9pEecFRLAzP8kjMre6d9-_pm4bRYToUutckD092sTKJnqOVGh0mbOvhR2XOq8DsFwcHh0ENWZsmAsFrkTcGFqugQorqoXRy5j_FGePrWIGwrvgIZyVT0wt-0AbD8rSHOEgs80bV0trpvg5qLefqrXjcafD6a',
+            'product-matcha-frappe': 'https://lh3.googleusercontent.com/aida-public/AB6AXuBCyAL6ZImjuCMjggTCN8SELoSp2jrKhoSQxiQSb4_ernWfTuFrZgky-lfCCZ0Av7CABlhwYPZL_EyJb25P-vbdt_lezdq3UVYaQ_ftmn3XTn0ycwt5mTlawPUplxX1sT0VJOdgcU3h4s8BblwYnaIZKn7VFI_pTmwn9v1bOtvJ81Ta0M-NmU7p03yhCFPUGufa30ARH3DUM9B5OZzaojLdnKpAVg3Lb6h3TLA7RRoWme5I1XyjqcpchwQ_JEP_3FX2ZZjgzn5TiP1I',
+        };
+
+        const fetchApiData = async (path) => {
+            const response = await fetch(`${API_BASE_URL}${path}`);
+            const payload = await response.json().catch(() => null);
+
+            if (!response.ok || payload?.success === false) {
+                throw new Error(payload?.message || 'Request failed');
+            }
+
+            return payload?.data ?? payload;
+        };
+
+        const formatPriceValue = (value) => new Intl.NumberFormat('vi-VN').format(Number(value) || 0);
+
+        const setAvailability = (isAvailable) => {
+            const availability = document.getElementById('product-detail-availability');
+            if (!availability || typeof isAvailable !== 'boolean') return;
+
+            const dotClass = isAvailable ? 'bg-secondary' : 'bg-error';
+            availability.className = isAvailable
+                ? 'flex items-center gap-2 bg-secondary/10 text-secondary px-3 py-1 rounded-full text-xs font-bold'
+                : 'flex items-center gap-2 bg-error-container/30 text-error px-3 py-1 rounded-full text-xs font-bold';
+            availability.innerHTML = `<span class="w-2 h-2 ${dotClass} rounded-full"></span>${isAvailable ? 'Active' : 'Inactive'}`;
+        };
+
+        const renderProductDetail = async () => {
+            const productId = new URLSearchParams(window.location.search).get('id');
+            if (!productId) return;
+
+            try {
+                const [categories, product] = await Promise.all([
+                    fetchApiData('/products/categories'),
+                    fetchApiData(`/products/${encodeURIComponent(productId)}`),
+                ]);
+                const categoryLookup = Object.fromEntries((categories || []).map((category) => [category.id, category.name]));
+
+                const name = product.name || product.productName || 'Unnamed Product';
+                const description = product.description || product.productDescription || 'No description available.';
+                const price = product.selling_price ?? product.productPriceVnd;
+                const category = product.productCategory || categoryLookup[product.category_id] || product.category_id || 'Uncategorized';
+
+                document.getElementById('product-detail-name').textContent = name;
+                document.getElementById('product-detail-description').textContent = description;
+                document.getElementById('product-detail-price').value = formatPriceValue(price);
+
+                const categorySelect = document.getElementById('product-detail-category');
+                categorySelect.innerHTML = '';
+                const option = document.createElement('option');
+                option.textContent = category;
+                option.value = product.category_id || category;
+                categorySelect.appendChild(option);
+
+                const mainImage = document.getElementById('product-detail-main-image');
+                if (mainImage && fallbackImages[product.id]) {
+                    mainImage.src = fallbackImages[product.id];
+                    mainImage.alt = name;
+                }
+
+                setAvailability(product.is_available);
+            } catch (error) {
+                console.error('Failed to load product detail:', error);
+                document.getElementById('product-detail-name').textContent = 'Product not found';
+                document.getElementById('product-detail-description').textContent =
+                    'Cannot load this product from the mock API. Please return to the menu and try again.';
+            }
+        };
+
+        renderProductDetail();
+    });
+  </script>
 </body>
 
 </html>
