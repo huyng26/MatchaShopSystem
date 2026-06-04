@@ -219,6 +219,87 @@ async def complete_order(db: AsyncSession, order_id: UUID) -> OrderCompleteRespo
         raise
 
 
+async def complete_order_without_commit(
+    db: AsyncSession,
+    order_id: UUID,
+) -> OrderCompleteResponse:
+    order = await order_repo.get_order_detail(db, order_id)
+    if order is None:
+        raise ServiceError("order_not_found", status_code=404)
+    if order.status == OrderStatus.CANCELLED:
+        raise ServiceError("cancelled_order_cannot_be_completed", status_code=409)
+    if order.status == OrderStatus.COMPLETED:
+        return OrderCompleteResponse(
+            id=order.id,
+            status=order.status,
+            inventory_deducted=False,
+            financial_records_created=False,
+            completed_at=order.completed_at,
+        )
+    if not _has_completion_payment(order):
+        raise ServiceError("order_payment_required", status_code=409)
+
+    required_quantities = await _calculate_required_ingredient_quantities(db, order)
+    locked_ingredients = await inventory_repo.lock_ingredients_by_ids(
+        db,
+        list(required_quantities),
+    )
+    ingredients_by_id = {
+        ingredient.id: ingredient for ingredient in locked_ingredients
+    }
+
+    insufficient = _find_insufficient_stock(required_quantities, ingredients_by_id)
+    if insufficient:
+        raise ServiceError(
+            "insufficient_stock",
+            status_code=409,
+            context={"ingredients": insufficient},
+        )
+
+    material_cost = Decimal("0")
+    for ingredient_id, required_quantity in required_quantities.items():
+        ingredient = ingredients_by_id[ingredient_id]
+        stock_before = ingredient.current_stock
+        stock_after = stock_before - required_quantity
+        material_cost += required_quantity * ingredient.cost_per_unit
+
+        ingredient.current_stock = stock_after
+        await inventory_repo.update_ingredient(db, ingredient)
+        await inventory_repo.create_movement(
+            db,
+            ingredient_id=ingredient.id,
+            movement_type=InventoryMovementType.SALE_DEDUCTION,
+            quantity_change=-required_quantity,
+            stock_before=stock_before,
+            stock_after=stock_after,
+            unit_cost=ingredient.cost_per_unit,
+            reference_type="order",
+            reference_id=order.id,
+            created_by=order.created_by,
+        )
+
+    completed_at = utc_now()
+    order = await order_repo.set_order_completed(
+        db,
+        order,
+        completed_at=completed_at,
+    )
+
+    await _create_completion_financial_records(
+        db,
+        order=order,
+        material_cost=material_cost.quantize(MONEY_QUANT),
+        record_date=completed_at.date(),
+    )
+    return OrderCompleteResponse(
+        id=order.id,
+        status=order.status,
+        inventory_deducted=True,
+        financial_records_created=True,
+        completed_at=order.completed_at,
+    )
+
+
 def _validate_delivery_fields(payload: OrderCreate) -> None:
     if payload.order_type != OrderType.DELIVERY:
         return

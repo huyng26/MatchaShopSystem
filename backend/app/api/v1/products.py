@@ -8,9 +8,6 @@ from app.api.v1.deps import created, ok, raise_service_error, read_list, read_on
 from app.core.database import get_db
 from app.schemas.product import (
     ProductAvailabilityUpdate,
-    ProductCategoryCreate,
-    ProductCategoryRead,
-    ProductCategoryUpdate,
     ProductCreate,
     ProductRead,
     ProductRecipeUpdate,
@@ -25,13 +22,13 @@ router = APIRouter()
 @router.get("")
 async def list_products(
     is_available: bool | None = Query(default=None),
-    category_id: UUID | None = Query(default=None),
+    category: str | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
     products = await product_service.list_products(
         db,
         is_available=is_available,
-        category_id=category_id,
+        category=category,
     )
     return ok(read_list(ProductRead, products))
 
@@ -48,51 +45,19 @@ async def create_product(
         raise_service_error(error)
 
 
-@router.get("/categories")
-async def list_categories(db: AsyncSession = Depends(get_db)) -> dict[str, Any]:
-    categories = await product_service.list_categories(db)
-    return ok(read_list(ProductCategoryRead, categories))
-
-
-@router.post("/categories")
-async def create_category(
-    payload: ProductCategoryCreate,
+@router.get("/category")
+async def list_products_by_category(
+    is_available: bool | None = Query(default=None),
+    category: str | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
-    try:
-        category = await product_service.create_category(db, payload)
-        return created(read_one(ProductCategoryRead, category))
-    except ServiceError as error:
-        raise_service_error(error)
-
-
-@router.put("/categories/{category_id}")
-async def update_category(
-    category_id: UUID,
-    payload: ProductCategoryUpdate,
-    db: AsyncSession = Depends(get_db),
-) -> dict[str, Any]:
-    try:
-        category = await product_service.update_category(db, category_id, payload)
-        return ok(
-            read_one(ProductCategoryRead, category), message="Updated successfully"
-        )
-    except ServiceError as error:
-        raise_service_error(error)
-
-
-@router.delete("/categories/{category_id}")
-async def delete_category(
-    category_id: UUID,
-    db: AsyncSession = Depends(get_db),
-) -> dict[str, Any]:
-    try:
-        category = await product_service.delete_category(db, category_id)
-        return ok(
-            read_one(ProductCategoryRead, category), message="Deleted successfully"
-        )
-    except ServiceError as error:
-        raise_service_error(error)
+    products = await product_service.list_products(
+        db,
+        is_available=is_available,
+        category=category,
+        sort_by_category=True,
+    )
+    return ok(read_list(ProductRead, products))
 
 
 @router.get("/{product_id}")
@@ -163,6 +128,19 @@ async def get_product_recipe(
 
 @router.put("/{product_id}/recipe")
 async def replace_product_recipe(
+    product_id: UUID,
+    payload: ProductRecipeUpdate,
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    try:
+        recipe = await product_service.replace_product_recipe(db, product_id, payload)
+        return ok(recipe, message="Updated successfully")
+    except ServiceError as error:
+        raise_service_error(error)
+
+
+@router.post("/{product_id}/recipe")
+async def create_or_replace_product_recipe(
     product_id: UUID,
     payload: ProductRecipeUpdate,
     db: AsyncSession = Depends(get_db),

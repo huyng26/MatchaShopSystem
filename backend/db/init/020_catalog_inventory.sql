@@ -1,17 +1,7 @@
 -- Product catalog, recipes, and inventory tables.
 
-CREATE TABLE IF NOT EXISTS product_categories (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    name varchar(255) UNIQUE NOT NULL,
-    description text,
-    created_at timestamptz NOT NULL DEFAULT now(),
-    updated_at timestamptz NOT NULL DEFAULT now(),
-    deleted_at timestamptz
-);
-
 CREATE TABLE IF NOT EXISTS products (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    category_id uuid NOT NULL REFERENCES product_categories (id),
     name varchar(255) NOT NULL,
     description text,
     selling_price numeric(12, 2) NOT NULL,
@@ -19,6 +9,11 @@ CREATE TABLE IF NOT EXISTS products (
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now(),
     deleted_at timestamptz,
+    category varchar(100) NOT NULL,
+    image_url text,
+    CONSTRAINT chk_products_category_not_empty CHECK (
+        length(trim(category)) > 0
+    ),
     CONSTRAINT products_selling_price_positive CHECK (selling_price > 0)
 );
 
