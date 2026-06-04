@@ -10,9 +10,10 @@ from app.api.v1.deps import (
     raise_service_error,
     read_list,
     read_one,
-    require_actor_user_id,
 )
 from app.core.database import get_db
+from app.core.permissions import get_current_user
+from app.models.user import User
 from app.models.order import OrderPaymentStatus, OrderStatus, OrderType
 from app.schemas.order import (
     OrderCreate,
@@ -48,13 +49,13 @@ async def list_orders(
 async def create_order(
     payload: OrderCreate,
     db: AsyncSession = Depends(get_db),
-    actor_user_id: UUID = Depends(require_actor_user_id),
+    current_user: User = Depends(get_current_user),
 ) -> dict[str, Any]:
     try:
         order = await order_service.create_order(
             db,
             payload,
-            created_by=actor_user_id,
+            created_by=current_user.id,
         )
         return created(read_one(OrderDetailRead, order))
     except ServiceError as error:

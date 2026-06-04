@@ -11,7 +11,13 @@ from app.models.ingredients import Ingredient
 from app.models.inventory import InventoryMovementType
 from app.models.order import Order, OrderPaymentStatus, OrderStatus, OrderType
 from app.models.payment import PaymentMethod
-from app.repositories import finance_repo, inventory_repo, order_repo, product_repo
+from app.repositories import (
+    customer_repo,
+    finance_repo,
+    inventory_repo,
+    order_repo,
+    product_repo,
+)
 from app.schemas.order import (
     OrderCancelResponse,
     OrderCompleteResponse,
@@ -42,6 +48,11 @@ async def create_order(
     created_by: UUID,
 ) -> Order:
     _validate_delivery_fields(payload)
+    if payload.customer_id is not None and not await customer_repo.customer_exists(
+        db,
+        payload.customer_id,
+    ):
+        raise ServiceError("customer_not_found", status_code=404)
 
     priced_items = await _price_order_items(db, payload)
     subtotal = sum((item.line_total for item in priced_items), Decimal("0")).quantize(
