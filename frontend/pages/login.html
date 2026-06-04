@@ -43,7 +43,7 @@
 	</div>
 	<input autocomplete="email" class="block w-full pl-11 pr-4 py-3.5 bg-surface-container-low border-none rounded-xl text-on-surface placeholder:text-outline/50 focus:ring-2 focus:ring-secondary/20 focus:bg-white transition-all font-body" id="email" name="email" placeholder="you@example.com" required="" type="email"/>
 	</div>
-	<p class="hidden text-xs font-body text-red-700" id="loginEmailError">No account was found for this email address.</p>
+	<p class="hidden text-xs font-body text-red-700" id="loginEmailError">Invalid email or password.</p>
 	</div>
 <!-- Password Input -->
 <div class="space-y-2">
@@ -55,7 +55,7 @@
 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
 <span class="material-symbols-outlined text-outline text-lg transition-colors group-focus-within:text-secondary" data-icon="lock">lock</span>
 </div>
-	<input autocomplete="current-password" class="block w-full pl-11 pr-12 py-3.5 bg-surface-container-low border-none rounded-xl text-on-surface placeholder:text-outline/50 focus:ring-2 focus:ring-secondary/20 focus:bg-white transition-all font-body" id="password" name="password" placeholder="••••••••" type="password"/>
+	<input autocomplete="current-password" class="block w-full pl-11 pr-12 py-3.5 bg-surface-container-low border-none rounded-xl text-on-surface placeholder:text-outline/50 focus:ring-2 focus:ring-secondary/20 focus:bg-white transition-all font-body" id="password" minlength="8" name="password" placeholder="••••••••" required="" type="password"/>
 <button class="absolute inset-y-0 right-0 pr-4 flex items-center text-outline hover:text-on-surface-variant transition-colors" onclick="togglePasswordVisibility()" type="button">
 <span class="material-symbols-outlined text-lg" data-icon="visibility" id="passwordToggleIcon">visibility</span>
 </button>
@@ -96,5 +96,5 @@
 <span class="serif-text italic text-primary text-sm">Handcrafted Precision</span>
 </div>
 </div>
-	  <script src="../assets/js/main.js?v=auth-email-mock-20260603"></script>
+	  <script src="../assets/js/main.js?v=auth-login-20260604"></script>
 </body></html>

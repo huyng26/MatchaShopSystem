@@ -173,6 +173,9 @@ function initSharedLogoutConfirmation() {
     }
   });
   confirmBtn.addEventListener('click', () => {
+    localStorage.removeItem('matcha_access_token');
+    localStorage.removeItem('matcha_refresh_token');
+    localStorage.removeItem('matcha_user');
     window.location.href = 'login.html';
   });
   modal.dataset.modalBound = 'true';
@@ -180,8 +183,7 @@ function initSharedLogoutConfirmation() {
 
 const MATCHA_API_BASE_URL =
   window.MATCHA_API_BASE_URL || 'http://localhost:8000/api/v1';
-const LOGIN_EMAIL_NOT_FOUND_MESSAGE =
-  'No account was found for this email address.';
+const LOGIN_ERROR_MESSAGE = 'Invalid email or password.';
 
 async function requestMatchaApi(path, options = {}) {
   const response = await fetch(`${MATCHA_API_BASE_URL}${path}`, options);
@@ -197,7 +199,8 @@ async function requestMatchaApi(path, options = {}) {
 function initLogin() {
   const form = document.querySelector('body.page-login form');
   const emailInput = document.getElementById('email');
-  const emailError = document.getElementById('loginEmailError');
+  const passwordInput = document.getElementById('password');
+  const loginError = document.getElementById('loginEmailError');
   const submitBtn = form?.querySelector('button[type="submit"]');
   const originalSubmitHtml = submitBtn?.innerHTML;
 
@@ -208,6 +211,7 @@ function initLogin() {
       if (!form.reportValidity()) return;
 
       const email = String(emailInput?.value || '').trim().toLowerCase();
+      const password = String(passwordInput?.value || '');
 
       if (submitBtn) {
         submitBtn.disabled = true;
@@ -216,33 +220,28 @@ function initLogin() {
       }
 
       try {
-        const accounts = await requestMatchaApi('/accounts');
-        if (!Array.isArray(accounts)) {
-          throw new Error('Accounts API returned an invalid response');
+        const auth = await requestMatchaApi('/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
+        });
+
+        if (!auth?.access_token || !auth?.refresh_token || !auth?.user) {
+          throw new Error('Login API returned an invalid response');
         }
 
-        const user = accounts.find((item) => item.email === email);
-
-        if (!user) {
-          if (emailError) {
-            emailError.textContent = LOGIN_EMAIL_NOT_FOUND_MESSAGE;
-          }
-          emailError?.classList.remove('hidden');
-          emailInput?.focus();
-          return;
-        }
-
-        emailError?.classList.add('hidden');
-        localStorage.setItem('matcha_access_token', 'mock-access-token');
-        localStorage.setItem('matcha_refresh_token', 'mock-refresh-token');
-        localStorage.setItem('matcha_user', JSON.stringify(user));
+        loginError?.classList.add('hidden');
+        localStorage.setItem('matcha_access_token', auth.access_token);
+        localStorage.setItem('matcha_refresh_token', auth.refresh_token);
+        localStorage.setItem('matcha_user', JSON.stringify(auth.user));
         window.location.href = 'dashboard.html';
       } catch (error) {
         console.error('Login failed:', error);
-        if (emailError) {
-          emailError.textContent =
-            'Cannot connect to the backend accounts API. Please check the backend server.';
-          emailError.classList.remove('hidden');
+        if (loginError) {
+          loginError.textContent = error.message || LOGIN_ERROR_MESSAGE;
+          loginError.classList.remove('hidden');
         }
       } finally {
         if (submitBtn) {
@@ -253,11 +252,13 @@ function initLogin() {
     });
   }
 
-  emailInput?.addEventListener('input', () => {
-    if (emailError) {
-      emailError.textContent = LOGIN_EMAIL_NOT_FOUND_MESSAGE;
-    }
-    emailError?.classList.add('hidden');
+  [emailInput, passwordInput].forEach((input) => {
+    input?.addEventListener('input', () => {
+      if (loginError) {
+        loginError.textContent = LOGIN_ERROR_MESSAGE;
+      }
+      loginError?.classList.add('hidden');
+    });
   });
 
   document.querySelectorAll('input').forEach((input) => {

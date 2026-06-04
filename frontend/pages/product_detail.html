@@ -104,14 +104,10 @@
                         </div>
                     </div>
                     <div class="p-1 bg-surface-container rounded-xl flex gap-1">
-                        <button
-                            class="flex-1 py-3 text-xs font-bold uppercase bg-surface-container-lowest text-primary rounded-lg shadow-sm">In
-                            Stock</button>
-                        <button
-                            class="flex-1 py-3 text-xs font-bold uppercase text-on-surface/40 hover:text-on-surface transition-colors">Out
-                            of Stock</button>
-                        <button
-                            class="flex-1 py-3 text-xs font-bold uppercase text-on-surface/40 hover:text-on-surface transition-colors">Hidden</button>
+                        <button type="button" data-availability="true"
+                            class="flex-1 py-3 text-xs font-bold uppercase bg-surface-container-lowest text-primary rounded-lg shadow-sm">Available</button>
+                        <button type="button" data-availability="false"
+                            class="flex-1 py-3 text-xs font-bold uppercase text-on-surface/40 hover:text-on-surface transition-colors">Unavailable</button>
                     </div>
                 </div>
             </div>
@@ -127,7 +123,7 @@
                         <span class="material-symbols-outlined">add</span>
                     </button>
                 </div>
-                <ul class="space-y-6">
+                <ul id="product-recipe-list" class="space-y-6">
                     <li class="flex items-center justify-between pb-4 border-b border-outline-variant/10">
                         <div>
                             <p class="text-sm font-bold text-primary">Ceremonial Matcha</p>
@@ -261,10 +257,13 @@
         </div>
         <!-- Footer Actions -->
         <div class="mt-12 pt-8 border-t border-outline-variant/20 flex justify-end gap-4">
-            <button
+            <button id="delete-product-detail" type="button"
+                class="px-10 py-4 text-error font-bold hover:bg-error-container/30 rounded-xl transition-all">Delete
+                Product</button>
+            <button id="discard-product-detail" type="button"
                 class="px-10 py-4 text-on-surface-variant font-bold hover:bg-surface-container rounded-xl transition-all">Discard
                 Changes</button>
-            <button
+            <button id="save-product-detail" type="button"
                 class="px-12 py-4 bg-secondary text-white font-bold rounded-xl shadow-lg shadow-secondary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">Save
                 Product Details</button>
         </div>
@@ -275,13 +274,25 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
         const API_BASE_URL = window.MATCHA_API_BASE_URL || 'http://localhost:8000/api/v1';
+        const productId = new URLSearchParams(window.location.search).get('id');
+        const nameElement = document.getElementById('product-detail-name');
+        const descriptionElement = document.getElementById('product-detail-description');
+        const priceInput = document.getElementById('product-detail-price');
+        const categorySelect = document.getElementById('product-detail-category');
+        const saveButton = document.getElementById('save-product-detail');
+        const discardButton = document.getElementById('discard-product-detail');
+        const deleteButton = document.getElementById('delete-product-detail');
+        const recipeList = document.getElementById('product-recipe-list');
+        let currentProduct = null;
+        let categoryLookup = {};
+
         const fallbackImages = {
             'product-matcha-latte': 'https://lh3.googleusercontent.com/aida-public/AB6AXuAW2NW0iDcULEjrNB98sKSR27R0hDnIX3OAiNh965jYu4v9jK8j6RMGz8IGD9B27JN57XoiJsB-STI6bRJvV-BpsJaBUTgfCu7cn9fZ-oOQRdAyGzOa9pEecFRLAzP8kjMre6d9-_pm4bRYToUutckD092sTKJnqOVGh0mbOvhR2XOq8DsFwcHh0ENWZsmAsFrkTcGFqugQorqoXRy5j_FGePrWIGwrvgIZyVT0wt-0AbD8rSHOEgs80bV0trpvg5qLefqrXjcafD6a',
             'product-matcha-frappe': 'https://lh3.googleusercontent.com/aida-public/AB6AXuBCyAL6ZImjuCMjggTCN8SELoSp2jrKhoSQxiQSb4_ernWfTuFrZgky-lfCCZ0Av7CABlhwYPZL_EyJb25P-vbdt_lezdq3UVYaQ_ftmn3XTn0ycwt5mTlawPUplxX1sT0VJOdgcU3h4s8BblwYnaIZKn7VFI_pTmwn9v1bOtvJ81Ta0M-NmU7p03yhCFPUGufa30ARH3DUM9B5OZzaojLdnKpAVg3Lb6h3TLA7RRoWme5I1XyjqcpchwQ_JEP_3FX2ZZjgzn5TiP1I',
         };
 
-        const fetchApiData = async (path) => {
-            const response = await fetch(`${API_BASE_URL}${path}`);
+        const fetchApiData = async (path, options = {}) => {
+            const response = await fetch(`${API_BASE_URL}${path}`, options);
             const payload = await response.json().catch(() => null);
 
             if (!response.ok || payload?.success === false) {
@@ -291,7 +302,34 @@
             return payload?.data ?? payload;
         };
 
+        const getListData = (data) => {
+            if (Array.isArray(data)) return data;
+            if (Array.isArray(data?.items)) return data.items;
+            return [];
+        };
+
         const formatPriceValue = (value) => new Intl.NumberFormat('vi-VN').format(Number(value) || 0);
+        const parsePriceValue = (value) => Number(String(value || '').replace(/[^\d.-]/g, '')) || 0;
+
+        const populateCategorySelect = (categories, selectedCategoryId) => {
+            categorySelect.innerHTML = '';
+
+            categories.forEach((category) => {
+                const option = document.createElement('option');
+                option.value = category.id;
+                option.textContent = category.name;
+                option.selected = category.id === selectedCategoryId;
+                categorySelect.appendChild(option);
+            });
+
+            if (!categories.length && selectedCategoryId) {
+                const option = document.createElement('option');
+                option.value = selectedCategoryId;
+                option.textContent = selectedCategoryId;
+                option.selected = true;
+                categorySelect.appendChild(option);
+            }
+        };
 
         const setAvailability = (isAvailable) => {
             const availability = document.getElementById('product-detail-availability');
@@ -302,49 +340,168 @@
                 ? 'flex items-center gap-2 bg-secondary/10 text-secondary px-3 py-1 rounded-full text-xs font-bold'
                 : 'flex items-center gap-2 bg-error-container/30 text-error px-3 py-1 rounded-full text-xs font-bold';
             availability.innerHTML = `<span class="w-2 h-2 ${dotClass} rounded-full"></span>${isAvailable ? 'Active' : 'Inactive'}`;
+
+            document.querySelectorAll('[data-availability]').forEach((button) => {
+                const buttonValue = button.dataset.availability === 'true';
+                const isSelected = buttonValue === isAvailable;
+                button.className = isSelected
+                    ? 'flex-1 py-3 text-xs font-bold uppercase bg-surface-container-lowest text-primary rounded-lg shadow-sm'
+                    : 'flex-1 py-3 text-xs font-bold uppercase text-on-surface/40 hover:text-on-surface transition-colors';
+            });
+        };
+
+        const renderRecipe = (recipe) => {
+            const items = Array.isArray(recipe?.items) ? recipe.items : [];
+            recipeList.innerHTML = '';
+
+            if (!items.length) {
+                recipeList.innerHTML = `
+                    <li class="rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">
+                        No recipe ingredients configured.
+                    </li>
+                `;
+                return;
+            }
+
+            items.forEach((item) => {
+                const row = document.createElement('li');
+                row.className = 'flex items-center justify-between pb-4 border-b border-outline-variant/10';
+                row.innerHTML = `
+                    <div>
+                        <p class="text-sm font-bold text-primary">${item.ingredient_name || item.ingredient_id}</p>
+                        <p class="text-[10px] text-on-surface-variant">${item.ingredient_id}</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm font-bold text-secondary">${formatPriceValue(item.quantity_per_serving)} ${item.unit || ''}</span>
+                    </div>
+                `;
+                recipeList.appendChild(row);
+            });
+        };
+
+        const renderProduct = (product) => {
+            currentProduct = product;
+            const name = product.name || 'Unnamed Product';
+            const description = product.description || 'No description available.';
+
+            nameElement.textContent = name;
+            descriptionElement.textContent = description;
+            priceInput.value = formatPriceValue(product.selling_price);
+            populateCategorySelect(Object.entries(categoryLookup).map(([id, name]) => ({ id, name })), product.category_id);
+
+            const mainImage = document.getElementById('product-detail-main-image');
+            if (mainImage) {
+                mainImage.src = fallbackImages[product.id] || mainImage.src;
+                mainImage.alt = name;
+            }
+
+            setAvailability(Boolean(product.is_available));
         };
 
         const renderProductDetail = async () => {
-            const productId = new URLSearchParams(window.location.search).get('id');
-            if (!productId) return;
+            if (!productId) {
+                nameElement.textContent = 'Product not found';
+                descriptionElement.textContent = 'Missing product id in the URL.';
+                return;
+            }
 
             try {
-                const [categories, product] = await Promise.all([
+                const [categoriesResponse, product, recipe] = await Promise.all([
                     fetchApiData('/products/categories'),
                     fetchApiData(`/products/${encodeURIComponent(productId)}`),
+                    fetchApiData(`/products/${encodeURIComponent(productId)}/recipe`).catch(() => ({ items: [] })),
                 ]);
-                const categoryLookup = Object.fromEntries((categories || []).map((category) => [category.id, category.name]));
-
-                const name = product.name || product.productName || 'Unnamed Product';
-                const description = product.description || product.productDescription || 'No description available.';
-                const price = product.selling_price ?? product.productPriceVnd;
-                const category = product.productCategory || categoryLookup[product.category_id] || product.category_id || 'Uncategorized';
-
-                document.getElementById('product-detail-name').textContent = name;
-                document.getElementById('product-detail-description').textContent = description;
-                document.getElementById('product-detail-price').value = formatPriceValue(price);
-
-                const categorySelect = document.getElementById('product-detail-category');
-                categorySelect.innerHTML = '';
-                const option = document.createElement('option');
-                option.textContent = category;
-                option.value = product.category_id || category;
-                categorySelect.appendChild(option);
-
-                const mainImage = document.getElementById('product-detail-main-image');
-                if (mainImage && fallbackImages[product.id]) {
-                    mainImage.src = fallbackImages[product.id];
-                    mainImage.alt = name;
-                }
-
-                setAvailability(product.is_available);
+                const categories = getListData(categoriesResponse);
+                categoryLookup = Object.fromEntries(categories.map((category) => [category.id, category.name]));
+                renderProduct(product);
+                renderRecipe(recipe);
             } catch (error) {
                 console.error('Failed to load product detail:', error);
-                document.getElementById('product-detail-name').textContent = 'Product not found';
-                document.getElementById('product-detail-description').textContent =
-                    'Cannot load this product from the mock API. Please return to the menu and try again.';
+                nameElement.textContent = 'Product not found';
+                descriptionElement.textContent =
+                    'Cannot load this product. Please return to the menu and check the backend server.';
             }
         };
+
+        const saveProduct = async () => {
+            if (!productId || !currentProduct) return;
+
+            const payload = {
+                category_id: categorySelect.value || currentProduct.category_id,
+                name: currentProduct.name,
+                description: currentProduct.description,
+                selling_price: parsePriceValue(priceInput.value),
+                is_available: Boolean(currentProduct.is_available),
+            };
+
+            saveButton.disabled = true;
+            saveButton.textContent = 'Saving...';
+
+            try {
+                const product = await fetchApiData(`/products/${encodeURIComponent(productId)}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                });
+                renderProduct(product);
+            } catch (error) {
+                console.error('Failed to save product:', error);
+                alert(error.message || 'Cannot save product. Please check the backend server.');
+            } finally {
+                saveButton.disabled = false;
+                saveButton.textContent = 'Save Product Details';
+            }
+        };
+
+        const updateAvailability = async (isAvailable) => {
+            if (!productId || !currentProduct) return;
+
+            try {
+                const product = await fetchApiData(`/products/${encodeURIComponent(productId)}/availability`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ is_available: isAvailable }),
+                });
+                renderProduct(product);
+            } catch (error) {
+                console.error('Failed to update product availability:', error);
+                alert(error.message || 'Cannot update product availability. Please check the backend server.');
+            }
+        };
+
+        const deleteProduct = async () => {
+            if (!productId || !currentProduct) return;
+            const confirmed = window.confirm(`Delete ${currentProduct.name || 'this product'}?`);
+            if (!confirmed) return;
+
+            deleteButton.disabled = true;
+            deleteButton.textContent = 'Deleting...';
+
+            try {
+                await fetchApiData(`/products/${encodeURIComponent(productId)}`, {
+                    method: 'DELETE',
+                });
+                window.location.href = 'menu.html';
+            } catch (error) {
+                console.error('Failed to delete product:', error);
+                alert(error.message || 'Cannot delete product. Please check the backend server.');
+                deleteButton.disabled = false;
+                deleteButton.textContent = 'Delete Product';
+            }
+        };
+
+        saveButton?.addEventListener('click', saveProduct);
+        discardButton?.addEventListener('click', renderProductDetail);
+        deleteButton?.addEventListener('click', deleteProduct);
+        document.querySelectorAll('[data-availability]').forEach((button) => {
+            button.addEventListener('click', () => {
+                updateAvailability(button.dataset.availability === 'true');
+            });
+        });
 
         renderProductDetail();
     });

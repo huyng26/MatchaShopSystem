@@ -98,14 +98,21 @@
         };
 
         const fetchAccounts = async () => {
-            const response = await fetch(`${API_BASE_URL}/accounts`);
+            const token = localStorage.getItem('matcha_access_token');
+            const response = await fetch(`${API_BASE_URL}/accounts`, {
+                headers: token ? { Authorization: `Bearer ${token}` } : {},
+            });
             const payload = await response.json().catch(() => null);
 
             if (!response.ok || payload?.success === false) {
                 throw new Error(payload?.message || 'Request failed');
             }
 
-            return payload?.data ?? payload;
+            const data = payload?.data ?? payload;
+            if (Array.isArray(data)) {
+                return data;
+            }
+            return Array.isArray(data?.items) ? data.items : [];
         };
 
         const renderAccounts = (accounts) => {
@@ -145,7 +152,7 @@
                 console.error('Failed to load accounts:', error);
                 tableBody.innerHTML = `
                     <tr>
-                        <td class="px-6 py-8 text-center text-sm font-bold text-error" colspan="4">Cannot load accounts from the mock API. Please check the backend server.</td>
+                        <td class="px-6 py-8 text-center text-sm font-bold text-error" colspan="4">Cannot load accounts. Please sign in with an admin account and check the backend server.</td>
                     </tr>
                 `;
             }
