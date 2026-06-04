@@ -12,6 +12,7 @@ from app.api.v1 import (
     orders,
     payments,
     products,
+    shipper,
     staff,
     status,
 )
@@ -37,6 +38,7 @@ api_router.include_router(
     prefix="/deliveries",
     tags=["deliveries"],
 )
+api_router.include_router(shipper.router, prefix="/shipper", tags=["shipper"])
 api_router.include_router(finance.router, prefix="/finance", tags=["finance"])
 api_router.include_router(
     dashboard.router,
