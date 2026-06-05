@@ -52,8 +52,21 @@ async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
 
 async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
     detail: Any = exc.detail
-    message = detail if isinstance(detail, str) else "Request failed"
-    errors = detail.get("errors", []) if isinstance(detail, dict) else []
+    if isinstance(detail, str):
+        message = detail
+        errors = []
+    elif isinstance(detail, dict):
+        message = str(detail.get("code", "Request failed"))
+        errors = [
+            {"field": str(field), "message": str(value)}
+            for field, value in detail.items()
+            if field not in {"code", "errors"}
+        ]
+        errors.extend(detail.get("errors", []))
+    else:
+        message = "Request failed"
+        errors = []
+
     return JSONResponse(
         status_code=exc.status_code,
         content=error_response(message=message, errors=errors),
