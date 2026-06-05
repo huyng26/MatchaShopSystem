@@ -1,3 +1,4 @@
+from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -80,6 +81,20 @@ async def count_staff_profiles(
     stmt = _apply_staff_filters(stmt, role, status, include_deleted)
     result = await db.execute(stmt)
     return int(result.scalar_one())
+
+
+async def sum_active_staff_salaries(db: AsyncSession) -> tuple[Decimal, int]:
+    stmt = select(
+        func.coalesce(func.sum(StaffProfile.salary), Decimal("0")),
+        func.count(StaffProfile.id),
+    ).where(
+        StaffProfile.status == StaffStatus.ACTIVE,
+        StaffProfile.deleted_at.is_(None),
+        StaffProfile.salary.is_not(None),
+    )
+    result = await db.execute(stmt)
+    total_salary, staff_count = result.one()
+    return Decimal(total_salary), int(staff_count)
 
 
 def add_staff_profile(db: AsyncSession, staff_profile: StaffProfile) -> StaffProfile:

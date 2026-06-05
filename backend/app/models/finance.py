@@ -1,6 +1,16 @@
 from enum import Enum
 
-from sqlalchemy import Boolean, CheckConstraint, Date, DateTime, Numeric, String, text
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    Date,
+    DateTime,
+    ForeignKey,
+    Numeric,
+    String,
+    Text,
+    text,
+)
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql.schema import Column
@@ -15,6 +25,30 @@ class FinancialRecordType(str, Enum):
     OPERATING_EXPENSE = "operating_expense"
     COD_RECONCILIATION = "cod_reconciliation"
     REFUND = "refund"
+
+
+class Expense(Base):
+    __tablename__ = "expenses"
+    __table_args__ = (
+        CheckConstraint("amount > 0", name="expenses_amount_positive"),
+    )
+
+    id = Column(
+        UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    category = Column(String(100), nullable=False)
+    description = Column(Text, nullable=False)
+    amount = Column(Numeric(12, 2), nullable=False)
+    expense_month = Column(Date, nullable=False)
+    invoice_photo_url = Column(Text)
+    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+    updated_at = Column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+    deleted_at = Column(DateTime(timezone=True))
 
 
 class FinancialRecord(Base):
