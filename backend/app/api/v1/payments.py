@@ -17,6 +17,8 @@ from app.models.payment import PaymentEventStatus, PaymentMethod
 from app.schemas.payment import PaymentCreate, PaymentRead
 from app.services import payment_service
 from app.services.errors import ServiceError
+from app.models.user import User
+from app.core.permissions import get_current_user
 
 router = APIRouter()
 
@@ -41,13 +43,13 @@ async def list_payments(
 async def create_payment(
     payload: PaymentCreate,
     db: AsyncSession = Depends(get_db),
-    actor_user_id: UUID = Depends(require_actor_user_id),
+    current_user: User= Depends(get_current_user),
 ) -> dict[str, Any]:
     try:
         payment = await payment_service.create_payment(
             db,
             payload,
-            created_by=actor_user_id,
+            created_by=current_user.id,
         )
         return created(read_one(PaymentRead, payment))
     except ServiceError as error:
