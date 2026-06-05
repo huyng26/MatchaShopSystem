@@ -26,12 +26,20 @@ router = APIRouter()
 @router.get("")
 async def list_staff(
     db: Annotated[AsyncSession, Depends(get_db)],
-    current_user: Annotated[User, Depends(require_roles(UserRole.ADMIN))],
+    current_user: Annotated[
+        User,
+        Depends(require_roles(UserRole.ADMIN, UserRole.DELIVERY_MANAGER)),
+    ],
     page: Annotated[int, Query(ge=1)] = 1,
     page_size: Annotated[int, Query(ge=1, le=100)] = 20,
     role: UserRole | None = None,
     status: StaffStatus | None = None,
 ) -> dict:
+    current_role = getattr(current_user.role, "value", current_user.role)
+    if current_role == UserRole.DELIVERY_MANAGER.value:
+        role = UserRole.SHIPPER
+        status = StaffStatus.ACTIVE
+
     staff_profiles, total = await staff_service.list_staff_profiles(
         db,
         page,

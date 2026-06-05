@@ -13,7 +13,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
     rel="stylesheet" />
-  <link rel="stylesheet" href="../assets/css/style.css?v=app-font-20260605" />
+  <link rel="stylesheet" href="../assets/css/style.css?v=header-subtitle-20260605" />
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <script src="../assets/js/tailwind-config.js"></script>
 </head>
@@ -28,164 +28,106 @@
     <section class="flex flex-wrap items-end justify-between gap-4">
       <div>
         <h2 class="font-serif text-4xl text-primary mb-2">Financial Management</h2>
-        <p class="text-on-surface-variant font-medium">Track revenue, COGS, operational costs, and net profit by period.</p>
+        <p class="page-header-subtitle">Track revenue, material cost, operating expenses, and net profit by month.</p>
       </div>
       <div class="flex items-center gap-3">
-        <button
-          class="management-primary-action bg-surface-container text-primary px-5 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-surface-container-high transition-colors">
+        <button id="finance-export-btn" class="management-primary-action bg-surface-container text-primary px-5 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-surface-container-high transition-colors" type="button">
           <span class="material-symbols-outlined">download</span>
-          Export Report
+          Export Current Data
         </button>
-        <button
-          class="management-primary-action bg-secondary text-on-secondary px-5 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-secondary/20">
+        <a href="#finance-expense-form" class="management-primary-action bg-secondary text-on-secondary px-5 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-secondary/20">
           <span class="material-symbols-outlined">add_card</span>
-          Add Cost
-        </button>
+          Add Expense
+        </a>
       </div>
     </section>
 
     <section class="management-filter-bar flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-outline-variant/10 bg-white p-5">
       <div class="flex flex-wrap items-center gap-3">
-        <label class="text-xs font-extrabold uppercase tracking-widest text-on-surface-variant" for="finance-month">Period</label>
-        <select id="finance-month"
-          class="h-10 rounded-lg border-outline-variant/30 bg-surface-container-low text-sm font-bold text-primary focus:border-secondary focus:ring-secondary/20">
-          <option>May</option>
-          <option>April</option>
-          <option>March</option>
-          <option>February</option>
-        </select>
-        <select
-          class="h-10 rounded-lg border-outline-variant/30 bg-surface-container-low text-sm font-bold text-primary focus:border-secondary focus:ring-secondary/20">
-          <option>2026</option>
-          <option>2025</option>
-          <option>2024</option>
-        </select>
-        <button class="h-10 rounded-lg bg-primary px-4 text-sm font-bold text-white">View Summary</button>
+        <label class="text-xs font-extrabold uppercase tracking-widest text-on-surface-variant" for="finance-period">Month</label>
+        <input id="finance-period" type="month" class="h-10 rounded-lg border-outline-variant/30 bg-surface-container-low text-sm font-bold text-primary focus:border-secondary focus:ring-secondary/20" />
+        <button id="finance-refresh-btn" class="h-10 rounded-lg bg-primary px-4 text-sm font-bold text-white" type="button">Load Finance</button>
       </div>
-      <div class="flex items-center gap-2 text-xs font-bold text-on-surface-variant">
-        <span class="material-symbols-outlined text-lg text-secondary">verified</span>
-        SRS-aligned: summary, cost records, category breakdown, report export
-      </div>
+      <p class="hidden text-xs font-bold" id="finance-status"></p>
     </section>
 
-    <section class="grid grid-cols-1 gap-6 xl:grid-cols-4">
+    <section class="grid grid-cols-1 gap-6 xl:grid-cols-4" id="finance-summary-cards">
       <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
-        <div class="flex items-start justify-between">
-          <div class="p-2 bg-secondary-container/30 rounded-lg">
-            <span class="material-symbols-outlined text-secondary">payments</span>
-          </div>
-          <span class="text-xs font-bold text-secondary">+15%</span>
+        <div class="p-2 bg-secondary-container/30 rounded-lg w-fit">
+          <span class="material-symbols-outlined text-secondary">payments</span>
         </div>
         <p class="mt-5 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Revenue</p>
-        <p class="mt-1 text-2xl font-extrabold text-primary">42,500,000 VND</p>
-        <p class="mt-2 text-xs text-outline">Completed paid orders</p>
+        <p class="mt-1 text-2xl font-extrabold text-primary" id="finance-revenue">0 VND</p>
+        <p class="mt-2 text-xs text-outline">Created when paid orders are completed</p>
       </div>
 
       <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
-        <div class="flex items-start justify-between">
-          <div class="p-2 bg-surface-container-high rounded-lg">
-            <span class="material-symbols-outlined text-on-surface-variant">inventory_2</span>
-          </div>
-          <span class="text-xs font-bold text-secondary">-2%</span>
+        <div class="p-2 bg-surface-container-high rounded-lg w-fit">
+          <span class="material-symbols-outlined text-on-surface-variant">inventory_2</span>
         </div>
-        <p class="mt-5 text-xs font-bold uppercase tracking-widest text-on-surface-variant">COGS</p>
-        <p class="mt-1 text-2xl font-extrabold text-primary">15,200,000 VND</p>
-        <p class="mt-2 text-xs text-outline">Ingredient purchase costs</p>
+        <p class="mt-5 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Material Cost</p>
+        <p class="mt-1 text-2xl font-extrabold text-primary" id="finance-material-cost">0 VND</p>
+        <p class="mt-2 text-xs text-outline">Ingredient costs recorded by order completion</p>
       </div>
 
       <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
-        <div class="flex items-start justify-between">
-          <div class="p-2 bg-error-container rounded-lg">
-            <span class="material-symbols-outlined text-error">receipt_long</span>
-          </div>
-          <span class="text-xs font-bold text-error">+5%</span>
+        <div class="p-2 bg-error-container rounded-lg w-fit">
+          <span class="material-symbols-outlined text-error">receipt_long</span>
         </div>
-        <p class="mt-5 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Operational Costs</p>
-        <p class="mt-1 text-2xl font-extrabold text-primary">12,800,000 VND</p>
-        <p class="mt-2 text-xs text-outline">Rent, staff, utilities, other</p>
+        <p class="mt-5 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Operating Expense</p>
+        <p class="mt-1 text-2xl font-extrabold text-primary" id="finance-operating-expense">0 VND</p>
+        <p class="mt-2 text-xs text-outline">Manual expenses and generated staff wages</p>
       </div>
 
       <div class="bg-primary text-on-primary p-6 rounded-xl shadow-sm">
-        <div class="flex items-start justify-between">
-          <div class="p-2 bg-white/15 rounded-lg">
-            <span class="material-symbols-outlined">account_balance_wallet</span>
-          </div>
-          <span class="text-xs font-bold text-secondary-fixed">+22%</span>
+        <div class="p-2 bg-white/15 rounded-lg w-fit">
+          <span class="material-symbols-outlined">account_balance_wallet</span>
         </div>
         <p class="mt-5 text-xs font-bold uppercase tracking-widest text-white/70">Net Profit</p>
-        <p class="mt-1 text-2xl font-extrabold">14,500,000 VND</p>
-        <p class="mt-2 text-xs text-white/60">Revenue - COGS - operational costs</p>
+        <p class="mt-1 text-2xl font-extrabold" id="finance-net-profit">0 VND</p>
+        <p class="mt-2 text-xs text-white/60">Revenue - material cost - operating expense</p>
       </div>
     </section>
 
     <section class="grid grid-cols-1 gap-8 xl:grid-cols-3">
-      <div class="xl:col-span-2 bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/10">
-        <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+      <div class="management-table-card xl:col-span-2 bg-white">
+        <div class="management-filter-bar flex flex-wrap items-center justify-between gap-4 border-b border-outline-variant/10 p-5">
           <div>
-            <h3 class="font-serif text-2xl text-primary">Financial Performance</h3>
-            <p class="mt-1 text-sm text-on-surface-variant">Revenue, costs, and profit across the latest six periods.</p>
+            <h3 class="font-serif text-2xl text-primary">Financial Records</h3>
+            <p class="mt-1 text-sm text-on-surface-variant">Immutable monthly records created from orders, expenses, COD reconciliation, and refunds.</p>
           </div>
-          <div class="flex items-center gap-4 text-xs font-bold text-on-surface-variant">
-            <span class="flex items-center gap-2"><i class="h-3 w-3 rounded-full bg-secondary"></i>Revenue</span>
-            <span class="flex items-center gap-2"><i class="h-3 w-3 rounded-full bg-surface-container-highest"></i>Costs</span>
-            <span class="flex items-center gap-2"><i class="h-1 w-5 rounded-full bg-primary"></i>Profit</span>
-          </div>
+          <div class="text-xs font-bold text-on-surface-variant" id="finance-record-count">0 records</div>
         </div>
-        <div class="relative h-72">
-          <svg class="absolute inset-0 h-full w-full pointer-events-none" preserveAspectRatio="none" viewBox="0 0 600 240">
-            <path d="M35 174 C120 132 165 150 235 118 C305 84 370 126 438 76 C492 36 548 48 575 30"
-              fill="none" stroke="#002c04" stroke-width="4" />
-          </svg>
-          <div class="flex h-full items-end justify-between gap-8 px-4">
-            <div class="flex flex-col items-center gap-3">
-              <div class="flex h-56 items-end gap-2"><span class="w-5 rounded-t bg-secondary h-[68%]"></span><span class="w-5 rounded-t bg-surface-container-highest h-[52%]"></span></div>
-              <span class="text-xs font-bold text-outline">Dec</span>
-            </div>
-            <div class="flex flex-col items-center gap-3">
-              <div class="flex h-56 items-end gap-2"><span class="w-5 rounded-t bg-secondary h-[74%]"></span><span class="w-5 rounded-t bg-surface-container-highest h-[48%]"></span></div>
-              <span class="text-xs font-bold text-outline">Jan</span>
-            </div>
-            <div class="flex flex-col items-center gap-3">
-              <div class="flex h-56 items-end gap-2"><span class="w-5 rounded-t bg-secondary h-[82%]"></span><span class="w-5 rounded-t bg-surface-container-highest h-[60%]"></span></div>
-              <span class="text-xs font-bold text-outline">Feb</span>
-            </div>
-            <div class="flex flex-col items-center gap-3">
-              <div class="flex h-56 items-end gap-2"><span class="w-5 rounded-t bg-secondary h-[78%]"></span><span class="w-5 rounded-t bg-surface-container-highest h-[51%]"></span></div>
-              <span class="text-xs font-bold text-outline">Mar</span>
-            </div>
-            <div class="flex flex-col items-center gap-3">
-              <div class="flex h-56 items-end gap-2"><span class="w-5 rounded-t bg-secondary h-[90%]"></span><span class="w-5 rounded-t bg-surface-container-highest h-[45%]"></span></div>
-              <span class="text-xs font-bold text-outline">Apr</span>
-            </div>
-            <div class="flex flex-col items-center gap-3">
-              <div class="flex h-56 items-end gap-2"><span class="w-5 rounded-t bg-secondary h-[96%]"></span><span class="w-5 rounded-t bg-surface-container-highest h-[38%]"></span></div>
-              <span class="text-xs font-bold text-outline">May</span>
-            </div>
-          </div>
+        <div class="overflow-x-auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Record ID</th>
+                <th>Type</th>
+                <th>Source</th>
+                <th class="text-right">Amount</th>
+                <th>Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="finance-records-body">
+              <tr>
+                <td class="px-6 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="6">Loading records...</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
       <div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/10">
-        <h3 class="font-serif text-2xl text-primary">Cost Breakdown</h3>
-        <p class="mt-1 text-sm text-on-surface-variant">Operational costs by SRS category.</p>
-        <div class="relative mx-auto my-8 h-48 w-48">
-          <svg class="h-full w-full -rotate-90" viewBox="0 0 36 36">
-            <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#eef3ec" stroke-width="4"></circle>
-            <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#002c04" stroke-dasharray="32 68" stroke-width="4"></circle>
-            <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#006e08" stroke-dasharray="26 74" stroke-dashoffset="-32" stroke-width="4"></circle>
-            <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#8efb7c" stroke-dasharray="18 82" stroke-dashoffset="-58" stroke-width="4"></circle>
-            <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#c9cfc7" stroke-dasharray="24 76" stroke-dashoffset="-76" stroke-width="4"></circle>
-          </svg>
-          <div class="absolute inset-0 flex flex-col items-center justify-center">
-            <span class="text-2xl font-extrabold text-primary">12.8M</span>
-            <span class="text-[10px] font-bold uppercase tracking-widest text-outline">Total VND</span>
-          </div>
+        <h3 class="font-serif text-2xl text-primary">Expense Breakdown</h3>
+        <p class="mt-1 text-sm text-on-surface-variant">Manual operating expenses grouped by category.</p>
+        <div class="my-8 rounded-2xl bg-surface-container-low p-6 text-center">
+          <p class="text-[10px] font-bold uppercase tracking-widest text-outline">Total Expense</p>
+          <p class="mt-2 text-2xl font-extrabold text-primary" id="finance-breakdown-total">0 VND</p>
         </div>
-        <div class="space-y-4">
-          <div class="flex items-center justify-between text-sm"><span class="flex items-center gap-2 text-on-surface-variant"><i class="h-2 w-2 rounded-full bg-primary"></i>Staff</span><b class="text-primary">32%</b></div>
-          <div class="flex items-center justify-between text-sm"><span class="flex items-center gap-2 text-on-surface-variant"><i class="h-2 w-2 rounded-full bg-secondary"></i>Rent</span><b class="text-primary">26%</b></div>
-          <div class="flex items-center justify-between text-sm"><span class="flex items-center gap-2 text-on-surface-variant"><i class="h-2 w-2 rounded-full bg-[#8efb7c]"></i>Electricity &amp; Water</span><b class="text-primary">18%</b></div>
-          <div class="flex items-center justify-between text-sm"><span class="flex items-center gap-2 text-on-surface-variant"><i class="h-2 w-2 rounded-full bg-outline-variant"></i>Other</span><b class="text-primary">24%</b></div>
+        <div class="space-y-4" id="finance-breakdown-list">
+          <p class="text-sm font-bold text-on-surface-variant">No expenses for this month.</p>
         </div>
       </div>
     </section>
@@ -194,119 +136,76 @@
       <div class="management-table-card xl:col-span-2 bg-white">
         <div class="management-filter-bar flex flex-wrap items-center justify-between gap-4 border-b border-outline-variant/10 p-5">
           <div>
-            <h3 class="font-serif text-2xl text-primary">Operational Cost Records</h3>
-            <p class="mt-1 text-sm text-on-surface-variant">CRUD-ready records for electricity, water, staff, rent, and other costs.</p>
+            <h3 class="font-serif text-2xl text-primary">Operating Expenses</h3>
+            <p class="mt-1 text-sm text-on-surface-variant">Expenses created with `/api/v1/finance/expenses` and generated staff wages.</p>
           </div>
-          <div class="text-xs font-bold text-on-surface-variant">Showing 1-5 of 18 records</div>
+          <div class="text-xs font-bold text-on-surface-variant" id="finance-expense-count">0 expenses</div>
         </div>
         <div class="overflow-x-auto">
           <table>
             <thead>
               <tr>
-                <th>Cost ID</th>
+                <th>Expense ID</th>
                 <th>Category</th>
                 <th>Description</th>
                 <th class="text-right">Amount</th>
-                <th>Period</th>
-                <th class="text-right">Actions</th>
+                <th>Month</th>
+                <th>Invoice</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="finance-expenses-body">
               <tr>
-                <td class="font-mono text-xs font-bold text-secondary">#COST-021</td>
-                <td><span class="rounded-full bg-primary/5 px-3 py-1 text-xs font-extrabold uppercase text-primary">Staff</span></td>
-                <td><b class="text-primary">May staff payroll</b><p class="text-xs text-on-surface-variant">Barista and cashier shifts</p></td>
-                <td class="text-right font-extrabold text-primary">4,100,000 VND</td>
-                <td>May 2026</td>
-                <td class="text-right"><button class="mr-2 px-3 py-2"><span class="material-symbols-outlined text-lg">edit</span></button><button class="px-3 py-2"><span class="material-symbols-outlined text-lg">delete</span></button></td>
-              </tr>
-              <tr>
-                <td class="font-mono text-xs font-bold text-secondary">#COST-020</td>
-                <td><span class="rounded-full bg-secondary/10 px-3 py-1 text-xs font-extrabold uppercase text-secondary">Rent</span></td>
-                <td><b class="text-primary">Store rent</b><p class="text-xs text-on-surface-variant">Monthly shop lease</p></td>
-                <td class="text-right font-extrabold text-primary">3,300,000 VND</td>
-                <td>May 2026</td>
-                <td class="text-right"><button class="mr-2 px-3 py-2"><span class="material-symbols-outlined text-lg">edit</span></button><button class="px-3 py-2"><span class="material-symbols-outlined text-lg">delete</span></button></td>
-              </tr>
-              <tr>
-                <td class="font-mono text-xs font-bold text-secondary">#COST-019</td>
-                <td><span class="rounded-full bg-surface-container px-3 py-1 text-xs font-extrabold uppercase text-on-surface-variant">Electricity</span></td>
-                <td><b class="text-primary">Electricity bill</b><p class="text-xs text-on-surface-variant">Cold storage and cafe equipment</p></td>
-                <td class="text-right font-extrabold text-primary">1,450,000 VND</td>
-                <td>May 2026</td>
-                <td class="text-right"><button class="mr-2 px-3 py-2"><span class="material-symbols-outlined text-lg">edit</span></button><button class="px-3 py-2"><span class="material-symbols-outlined text-lg">delete</span></button></td>
-              </tr>
-              <tr>
-                <td class="font-mono text-xs font-bold text-secondary">#COST-018</td>
-                <td><span class="rounded-full bg-surface-container px-3 py-1 text-xs font-extrabold uppercase text-on-surface-variant">Water</span></td>
-                <td><b class="text-primary">Water utility</b><p class="text-xs text-on-surface-variant">Cafe operations and cleaning</p></td>
-                <td class="text-right font-extrabold text-primary">680,000 VND</td>
-                <td>May 2026</td>
-                <td class="text-right"><button class="mr-2 px-3 py-2"><span class="material-symbols-outlined text-lg">edit</span></button><button class="px-3 py-2"><span class="material-symbols-outlined text-lg">delete</span></button></td>
-              </tr>
-              <tr>
-                <td class="font-mono text-xs font-bold text-secondary">#COST-017</td>
-                <td><span class="rounded-full bg-outline-variant/20 px-3 py-1 text-xs font-extrabold uppercase text-on-surface-variant">Other</span></td>
-                <td><b class="text-primary">Packaging service</b><p class="text-xs text-on-surface-variant">Receipt paper and shop supplies</p></td>
-                <td class="text-right font-extrabold text-primary">920,000 VND</td>
-                <td>May 2026</td>
-                <td class="text-right"><button class="mr-2 px-3 py-2"><span class="material-symbols-outlined text-lg">edit</span></button><button class="px-3 py-2"><span class="material-symbols-outlined text-lg">delete</span></button></td>
+                <td class="px-6 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="6">Loading expenses...</td>
               </tr>
             </tbody>
           </table>
         </div>
         <div class="management-table-footer flex items-center justify-between">
-          <p>Showing <span>5</span> of <span>18</span> operational costs</p>
-          <div class="flex gap-2">
-            <button><span class="material-symbols-outlined">chevron_left</span></button>
-            <button class="bg-primary">1</button>
-            <button>2</button>
-            <button>3</button>
-            <button><span class="material-symbols-outlined">chevron_right</span></button>
-          </div>
+          <p>Finance API currently supports create and list for expenses.</p>
+          <button id="finance-staff-wage-btn" class="bg-primary text-white" type="button">Generate Staff Wages</button>
         </div>
       </div>
 
-      <form class="bg-surface-container-lowest rounded-xl border border-outline-variant/10 p-6 shadow-sm">
-        <h3 class="font-serif text-2xl text-primary">Add Operational Cost</h3>
-        <p class="mt-1 text-sm text-on-surface-variant">Frontend demo form aligned with `/api/v1/finance/costs`.</p>
+      <form id="finance-expense-form" class="bg-surface-container-lowest rounded-xl border border-outline-variant/10 p-6 shadow-sm">
+        <h3 class="font-serif text-2xl text-primary">Add Expense</h3>
+        <p class="mt-1 text-sm text-on-surface-variant">Creates an operating expense and matching financial record.</p>
         <div class="mt-6 space-y-4">
           <div>
-            <label class="text-xs font-extrabold uppercase tracking-widest text-on-surface-variant">Category</label>
-            <select class="mt-2 w-full rounded-xl border-none bg-surface-container-low px-4 py-3 text-sm font-bold text-primary focus:ring-secondary/20">
-              <option>staff</option>
-              <option>rent</option>
-              <option>electricity</option>
-              <option>water</option>
-              <option>other</option>
+            <label class="text-xs font-extrabold uppercase tracking-widest text-on-surface-variant" for="finance-expense-category">Category</label>
+            <select id="finance-expense-category" name="category" class="mt-2 w-full rounded-xl border-none bg-surface-container-low px-4 py-3 text-sm font-bold text-primary focus:ring-secondary/20" required>
+              <option value="rent">Rent</option>
+              <option value="electricity">Electricity</option>
+              <option value="water">Water</option>
+              <option value="maintenance">Maintenance</option>
+              <option value="marketing">Marketing</option>
+              <option value="other">Other</option>
             </select>
           </div>
           <div>
-            <label class="text-xs font-extrabold uppercase tracking-widest text-on-surface-variant">Amount</label>
-            <input class="mt-2 w-full rounded-xl border-none bg-surface-container-low px-4 py-3 text-sm font-bold text-primary focus:ring-secondary/20" placeholder="1,000,000 VND" type="text" />
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="text-xs font-extrabold uppercase tracking-widest text-on-surface-variant">Month</label>
-              <input class="mt-2 w-full rounded-xl border-none bg-surface-container-low px-4 py-3 text-sm font-bold text-primary focus:ring-secondary/20" value="5" type="number" />
-            </div>
-            <div>
-              <label class="text-xs font-extrabold uppercase tracking-widest text-on-surface-variant">Year</label>
-              <input class="mt-2 w-full rounded-xl border-none bg-surface-container-low px-4 py-3 text-sm font-bold text-primary focus:ring-secondary/20" value="2026" type="number" />
-            </div>
+            <label class="text-xs font-extrabold uppercase tracking-widest text-on-surface-variant" for="finance-expense-amount">Amount</label>
+            <input id="finance-expense-amount" name="amount" class="mt-2 w-full rounded-xl border-none bg-surface-container-low px-4 py-3 text-sm font-bold text-primary focus:ring-secondary/20" min="1" step="0.01" placeholder="1000000" type="number" required />
           </div>
           <div>
-            <label class="text-xs font-extrabold uppercase tracking-widest text-on-surface-variant">Description</label>
-            <textarea class="mt-2 w-full rounded-xl border-none bg-surface-container-low px-4 py-3 text-sm font-bold text-primary focus:ring-secondary/20" placeholder="Cost description" rows="3"></textarea>
+            <label class="text-xs font-extrabold uppercase tracking-widest text-on-surface-variant" for="finance-expense-date">Expense Month</label>
+            <input id="finance-expense-date" name="expense_month" class="mt-2 w-full rounded-xl border-none bg-surface-container-low px-4 py-3 text-sm font-bold text-primary focus:ring-secondary/20" type="date" required />
           </div>
-          <button class="w-full rounded-xl bg-primary py-3 text-sm font-extrabold text-white" type="button">Save Cost</button>
+          <div>
+            <label class="text-xs font-extrabold uppercase tracking-widest text-on-surface-variant" for="finance-expense-invoice">Invoice Photo URL</label>
+            <input id="finance-expense-invoice" name="invoice_photo_url" class="mt-2 w-full rounded-xl border-none bg-surface-container-low px-4 py-3 text-sm font-bold text-primary focus:ring-secondary/20" placeholder="https://..." type="url" />
+          </div>
+          <div>
+            <label class="text-xs font-extrabold uppercase tracking-widest text-on-surface-variant" for="finance-expense-description">Description</label>
+            <textarea id="finance-expense-description" name="description" class="mt-2 w-full rounded-xl border-none bg-surface-container-low px-4 py-3 text-sm font-bold text-primary focus:ring-secondary/20" placeholder="Cost description" rows="3" required></textarea>
+          </div>
+          <p class="hidden text-sm font-bold" id="finance-form-status"></p>
+          <button id="finance-save-expense-btn" class="w-full rounded-xl bg-primary py-3 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-60" type="submit">Save Expense</button>
         </div>
       </form>
     </section>
   </main>
 
   <script src="../assets/js/layout.js?v=fm-20260530"></script>
-  <script src="../assets/js/main.js?v=fm-20260530"></script>
+  <script src="../assets/js/main.js?v=finance-api-20260605"></script>
 </body>
 
 </html>

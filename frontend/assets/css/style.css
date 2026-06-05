@@ -641,6 +641,23 @@ html body.page-forgot-password-2 h1:first-of-type {
   font-family: var(--page-header-font) !important;
 }
 
+html body.page-delivery-manage #delivery-management-title {
+  font-family: var(--page-header-font) !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+}
+
+html body .page-header-subtitle {
+  color: #41493e !important;
+  font-family: var(--app-font) !important;
+  font-size: 0.95rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.6 !important;
+  margin-top: 0.5rem !important;
+  max-width: 42rem;
+}
+
 html body.page-customer-detail :where(*):not(.material-symbols-outlined) {
   font-family: var(--app-font) !important;
 }

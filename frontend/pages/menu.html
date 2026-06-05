@@ -13,7 +13,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
         rel="stylesheet" />
-      <link rel="stylesheet" href="../assets/css/style.css?v=app-font-20260605" />
+      <link rel="stylesheet" href="../assets/css/style.css?v=header-subtitle-20260605" />
 </head>
 
 <body class="page-menu bg-background text-on-surface min-h-screen" data-page="menu">
@@ -32,7 +32,7 @@
             <div class="flex items-end justify-between mb-8">
                 <div>
                     <h1 class="font-serif text-4xl text-primary mb-4">Menu</h1>
-                    <p class="text-on-surface-variant max-w-md font-body">Manage your seasonal offerings. Adjust
+                    <p class="page-header-subtitle">Manage your seasonal offerings. Adjust
                         availability and basic details for the admin view.</p>
                 </div>
                 <div class="flex gap-3">
@@ -113,7 +113,7 @@
                 </button>
             </div>
 
-            <form id="new-product-form" class="space-y-6 px-8 py-7">
+            <form id="new-product-form" class="space-y-6 px-8 py-7" enctype="multipart/form-data">
                 <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                     <label class="space-y-2">
                         <span class="text-sm font-bold text-on-surface">Product Name</span>
@@ -145,7 +145,7 @@
 
                     <label class="space-y-2 md:col-span-2">
                         <span class="text-sm font-bold text-on-surface">Price (VND)</span>
-                        <input id="product-price" name="productPrice" type="number" min="1" step="1000" required
+                        <input id="product-price" name="productPrice" type="number" min="1" step="1" required
                             class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary"
                             placeholder="Enter price" />
                     </label>
@@ -162,7 +162,7 @@
                     <div class="flex items-center justify-between gap-4">
                         <div>
                             <h3 class="text-sm font-bold text-on-surface">Required Ingredients</h3>
-                            <p class="text-xs text-on-surface-variant">Click add to enter an ingredient name, quantity, and unit.</p>
+                            <p class="text-xs text-on-surface-variant">Click add to select an inventory ingredient and quantity.</p>
                         </div>
                         <button id="add-ingredient" type="button"
                             class="flex items-center gap-2 rounded-full bg-surface-container-high px-4 py-2 text-sm font-bold text-on-surface hover:bg-surface-container-highest">
@@ -176,7 +176,7 @@
                 <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                     <label class="space-y-2">
                         <span class="text-sm font-bold text-on-surface">Product Image (optional)</span>
-                        <input id="product-image" name="productImage" type="file" accept="image/*"
+                        <input id="product-image" name="productImage" type="file" accept="image/png,image/jpeg,image/webp"
                             class="w-full rounded-xl border border-outline bg-surface px-4 py-3 text-sm file:mr-4 file:rounded-full file:border-0 file:bg-surface-container-high file:px-4 file:py-2 file:text-sm file:font-bold file:text-on-surface hover:file:bg-surface-container-highest" />
                     </label>
 
@@ -222,6 +222,8 @@
         const productGrid = document.getElementById('product-grid');
         const inventoryTableBody = document.querySelector('tbody');
         let productCategories = [];
+        let inventoryIngredients = [];
+        let ingredientsLoaded = false;
 
         const API_BASE_URL = window.MATCHA_API_BASE_URL || 'http://localhost:8000/api/v1';
         const fetchApiData = async (path, options = {}) => {
@@ -330,27 +332,91 @@
             document.body.classList.remove('overflow-hidden');
         };
 
+        const populateIngredientSelect = (select, selectedId = '') => {
+            select.innerHTML = '';
+
+            const placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = inventoryIngredients.length
+                ? 'Select inventory ingredient'
+                : 'No inventory ingredients found';
+            placeholder.disabled = true;
+            placeholder.selected = true;
+            select.appendChild(placeholder);
+
+            inventoryIngredients.forEach((ingredient) => {
+                const option = document.createElement('option');
+                option.value = ingredient.id;
+                option.textContent = ingredient.name;
+                option.dataset.unit = ingredient.unit || '';
+                option.selected = ingredient.id === selectedId;
+                select.appendChild(option);
+            });
+
+            select.disabled = !inventoryIngredients.length;
+        };
+
+        const updateIngredientRowUnit = (row) => {
+            const select = row.querySelector('[name="ingredientId"]');
+            const unitInput = row.querySelector('[name="ingredientUnit"]');
+            const selectedOption = select?.selectedOptions?.[0];
+
+            if (unitInput) {
+                unitInput.value = selectedOption?.dataset?.unit || '';
+            }
+        };
+
+        const collectRecipeItems = () => {
+            const rows = [...ingredientsContainer.querySelectorAll('[data-ingredient-row]')];
+            if (!rows.length) return null;
+
+            const items = rows.map((row) => ({
+                ingredient_id: row.querySelector('[name="ingredientId"]').value,
+                quantity_per_serving: row.querySelector('[name="ingredientQuantity"]').value,
+            }));
+
+            const duplicateIngredientIds = items
+                .map((item) => item.ingredient_id)
+                .filter((ingredientId, index, ingredientIds) => ingredientIds.indexOf(ingredientId) !== index);
+            if (duplicateIngredientIds.length) {
+                throw new Error('Each ingredient can only be added once.');
+            }
+
+            return { items };
+        };
+
         const createIngredientRow = () => {
+            if (!ingredientsLoaded) {
+                setProductStatus('Loading inventory ingredients...');
+                return;
+            }
+
+            if (!inventoryIngredients.length) {
+                setProductStatus('Create inventory ingredients before adding a recipe item.', 'error');
+                return;
+            }
+
             const row = document.createElement('div');
+            row.dataset.ingredientRow = 'true';
             row.className = 'grid grid-cols-1 gap-3 rounded-2xl border border-outline-variant bg-surface-container-low p-4 md:grid-cols-[1fr_140px_140px_auto]';
             row.innerHTML = `
                 <label class="space-y-2">
-                    <span class="text-xs font-bold text-on-surface-variant">Ingredient Name</span>
-                    <input name="ingredientName" type="text" required
+                    <span class="text-xs font-bold text-on-surface-variant">Inventory Ingredient</span>
+                    <select name="ingredientId" required
                         class="w-full rounded-xl border-outline bg-surface px-3 py-2 text-sm focus:border-secondary focus:ring-secondary"
-                        placeholder="Enter ingredient name" />
+                    ></select>
                 </label>
                 <label class="space-y-2">
                     <span class="text-xs font-bold text-on-surface-variant">Quantity</span>
-                    <input name="ingredientQuantity" type="number" min="0" step="0.01" required
+                    <input name="ingredientQuantity" type="number" min="0.001" step="0.001" required
                         class="w-full rounded-xl border-outline bg-surface px-3 py-2 text-sm focus:border-secondary focus:ring-secondary"
                         placeholder="Enter quantity" />
                 </label>
                 <label class="space-y-2">
                     <span class="text-xs font-bold text-on-surface-variant">Unit</span>
-                    <input name="ingredientUnit" type="text" required
-                        class="w-full rounded-xl border-outline bg-surface px-3 py-2 text-sm focus:border-secondary focus:ring-secondary"
-                        placeholder="Enter unit" />
+                    <input name="ingredientUnit" type="text" readonly
+                        class="w-full rounded-xl border-outline bg-surface-container-high px-3 py-2 text-sm text-on-surface-variant"
+                        placeholder="Auto" />
                 </label>
                 <button type="button"
                     class="remove-ingredient mt-6 flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant hover:bg-error-container/30 hover:text-error"
@@ -362,6 +428,11 @@
             row.querySelector('.remove-ingredient').addEventListener('click', () => {
                 row.remove();
             });
+
+            const ingredientSelect = row.querySelector('[name="ingredientId"]');
+            populateIngredientSelect(ingredientSelect);
+            ingredientSelect.addEventListener('change', () => updateIngredientRowUnit(row));
+            updateIngredientRowUnit(row);
 
             ingredientsContainer.appendChild(row);
         };
@@ -515,6 +586,19 @@
             }
         };
 
+        const loadIngredients = async () => {
+            try {
+                inventoryIngredients = getListData(await fetchApiData('/ingredients'));
+                ingredientsLoaded = true;
+                addIngredientButton.classList.toggle('opacity-50', !inventoryIngredients.length);
+            } catch (error) {
+                console.error('Failed to load ingredients:', error);
+                inventoryIngredients = [];
+                ingredientsLoaded = true;
+                addIngredientButton.classList.add('opacity-50');
+            }
+        };
+
         openModalButton.addEventListener('click', openModal);
         closeModalButton.addEventListener('click', closeModal);
         cancelButton.addEventListener('click', closeModal);
@@ -564,13 +648,29 @@
 
             if (!form.reportValidity()) return;
 
-            const payload = {
-                category: categorySelect.value,
-                name: document.getElementById('product-name').value.trim(),
-                description: document.getElementById('product-description').value.trim() || null,
-                selling_price: Number(document.getElementById('product-price').value),
-                is_available: true,
-            };
+            let recipe = null;
+            try {
+                recipe = collectRecipeItems();
+            } catch (error) {
+                setProductStatus(error.message || 'Invalid recipe ingredients.', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('category', categorySelect.value);
+            formData.append('name', document.getElementById('product-name').value.trim());
+            formData.append('description', document.getElementById('product-description').value.trim());
+            formData.append('selling_price', document.getElementById('product-price').value);
+            formData.append('is_available', 'true');
+
+            if (recipe) {
+                formData.append('recipe', JSON.stringify(recipe));
+            }
+
+            const imageFile = document.getElementById('product-image')?.files?.[0];
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
 
             if (saveProductButton) {
                 saveProductButton.disabled = true;
@@ -581,10 +681,7 @@
             try {
                 await fetchApiData('/products', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(payload),
+                    body: formData,
                 });
 
                 form.reset();
@@ -602,7 +699,7 @@
             }
         });
 
-        loadProducts();
+        Promise.all([loadProducts(), loadIngredients()]);
     });
   </script>
 </body>

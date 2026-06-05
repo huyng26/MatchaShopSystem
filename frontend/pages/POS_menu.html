@@ -17,7 +17,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
     rel="stylesheet" />
-    <link rel="stylesheet" href="../assets/css/style.css?v=app-font-20260605" />
+      <link rel="stylesheet" href="../assets/css/style.css?v=header-subtitle-20260605" />
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script src="../assets/js/tailwind-config.js"></script>
 </head>
@@ -29,28 +29,32 @@
   <header id="app-topbar"
     class="fixed top-0 right-0 left-72 h-20 z-30 bg-[#f9f9f8]/80 dark:bg-[#191c1c]/80 backdrop-blur-2xl flex items-center justify-between px-10"></header>
 
-  <main class="ml-72 mt-20 h-[calc(100vh-5rem)] flex">
-    <section class="flex-1 p-8 overflow-y-auto custom-scrollbar">
-      <div class="max-w-6xl mx-auto">
+  <main class="ml-72 pt-24 p-10 space-y-8">
+    <section class="flex flex-wrap items-end justify-between gap-4">
+      <div class="max-w-6xl">
         <header class="mb-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h2 class="font-headline text-5xl text-primary mb-2">In-shop Order</h2>
-            <p class="text-on-surface-variant font-medium">Select an available item, customize it, then add it to the order.</p>
+            <h2 class="font-headline text-4xl text-primary mb-2" id="posOrderModeTitle">In-shop Order</h2>
+            <p class="page-header-subtitle" id="posOrderModeSubtitle">Select an available item, customize it, then add it to the order.</p>
           </div>
           <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div class="flex rounded-2xl bg-surface-container p-1" aria-label="Order type">
+              <button class="pos-order-type-button rounded-xl px-4 py-2 text-sm font-bold transition-colors" data-pos-order-type="instore" type="button">
+                In-shop
+              </button>
+              <button class="pos-order-type-button rounded-xl px-4 py-2 text-sm font-bold transition-colors" data-pos-order-type="delivery" type="button">
+                Delivery
+              </button>
+            </div>
             <label class="flex items-center gap-3 rounded-2xl bg-surface-container px-4 py-3" for="posCustomerSelect">
               <span class="material-symbols-outlined text-secondary">person</span>
               <div>
-                <p class="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">Customer</p>
+                <p class="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant" id="posCustomerSelectLabel">Customer</p>
                 <select class="w-56 bg-transparent border-none p-0 text-sm font-bold text-primary focus:ring-0" id="posCustomerSelect">
                   <option value="">Walk-in customer</option>
                 </select>
               </div>
             </label>
-            <div class="flex items-center gap-2 rounded-full bg-surface-container px-4 py-2 text-sm font-bold text-on-surface-variant">
-              <span class="material-symbols-outlined text-secondary text-lg">check_circle</span>
-              Available menu items only
-            </div>
           </div>
         </header>
         <p class="hidden mb-8 text-sm font-bold text-on-surface-variant" id="posCustomerStatus"></p>
@@ -64,7 +68,7 @@
         <div class="flex items-center justify-between mb-8">
           <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-secondary">shopping_basket</span>
-            <h3 class="font-headline text-2xl text-primary">Current Order</h3>
+            <h3 class="font-headline text-2xl text-primary" id="posCartTitle">Current Order</h3>
           </div>
           <span class="bg-primary text-white text-[10px] font-bold h-6 min-w-6 px-2 flex items-center justify-center rounded-full" id="posCartCount">0</span>
         </div>

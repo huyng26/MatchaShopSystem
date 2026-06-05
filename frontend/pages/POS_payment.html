@@ -17,7 +17,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
     rel="stylesheet" />
-  <link rel="stylesheet" href="../assets/css/style.css?v=app-font-20260605" />
+    <link rel="stylesheet" href="../assets/css/style.css?v=header-subtitle-20260605" />
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <script src="../assets/js/tailwind-config.js"></script>
 </head>
@@ -33,10 +33,12 @@
     <div class="max-w-7xl mx-auto">
       <header class="mb-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h2 class="serif-text text-5xl text-primary mb-2">Checkout</h2>
-          <p class="text-on-surface-variant font-medium">Review selected items and choose a payment method.</p>
+          <h2 class="serif-text text-5xl text-primary mb-2" id="paymentModeTitle">Checkout</h2>
+          <p class="page-header-subtitle" id="paymentModeSubtitle">Review selected items and choose a payment method.</p>
         </div>
         <div class="bg-surface-container-high px-4 py-3 rounded-xl text-right">
+          <p class="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">Order Type</p>
+          <p class="text-sm font-bold text-secondary" id="paymentOrderType">In-shop</p>
           <p class="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">Transaction ID</p>
           <p class="font-mono text-sm font-bold text-primary" id="paymentOrderCode">Generated on submit</p>
           <p class="mt-2 text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">Customer</p>
@@ -62,11 +64,63 @@
               </a>
             </div>
           </div>
+
+          <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/10 shadow-sm overflow-hidden" id="deliveryDetailsPanel">
+            <div class="px-6 py-5 border-b border-outline-variant/10">
+              <h3 class="font-headline text-2xl text-primary">Delivery Details</h3>
+              <p class="mt-1 text-sm text-on-surface-variant">Required for phone orders so the delivery manager can route the trip later.</p>
+            </div>
+            <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
+              <label class="space-y-2">
+                <span class="text-sm font-bold text-on-surface">Customer Name</span>
+                <input id="deliveryCustomerName" type="text" class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" placeholder="Enter customer name" />
+              </label>
+              <label class="space-y-2">
+                <span class="text-sm font-bold text-on-surface">Phone</span>
+                <input id="deliveryCustomerPhone" type="tel" class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" placeholder="Enter phone number" />
+              </label>
+              <label class="space-y-2 md:col-span-2">
+                <span class="text-sm font-bold text-on-surface">Delivery Address</span>
+                <textarea id="deliveryAddress" rows="3" class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" placeholder="Enter delivery address"></textarea>
+              </label>
+              <label class="space-y-2">
+                <span class="text-sm font-bold text-on-surface">Latitude</span>
+                <input id="deliveryLatitude" type="number" min="-90" max="90" step="0.0000001" class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" placeholder="10.7768890" />
+              </label>
+              <label class="space-y-2">
+                <span class="text-sm font-bold text-on-surface">Longitude</span>
+                <input id="deliveryLongitude" type="number" min="-180" max="180" step="0.0000001" class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" placeholder="106.7008060" />
+              </label>
+              <label class="space-y-2 md:col-span-2">
+                <span class="text-sm font-bold text-on-surface">Order Note</span>
+                <textarea id="deliveryOrderNote" rows="2" class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" placeholder="Gate code, delivery instruction, requested time..."></textarea>
+              </label>
+              <label class="md:col-span-2 flex items-start gap-3 rounded-xl bg-surface-container-low p-4">
+                <input id="deliveryReadyForQueue" type="checkbox" checked class="mt-1 rounded border-outline text-secondary focus:ring-secondary" />
+                <span>
+                  <span class="block text-sm font-bold text-primary">Send to delivery queue after checkout</span>
+                  <span class="block text-xs text-on-surface-variant">Turn this off if the order still needs preparation before delivery dispatch.</span>
+                </span>
+              </label>
+            </div>
+          </div>
         </section>
 
         <aside class="bg-surface-container-lowest rounded-2xl border border-outline-variant/10 shadow-sm p-8 h-fit sticky top-28">
           <h3 class="font-headline text-2xl text-primary mb-6">Payment Method</h3>
           <div class="space-y-4 mb-8" id="paymentMethodGroup">
+            <label class="relative block cursor-pointer group" data-payment-option="cod">
+              <input class="peer sr-only" name="payment" type="radio" value="cod" />
+              <div class="flex items-center gap-4 p-5 rounded-xl bg-surface-container-low border-2 border-transparent peer-checked:border-secondary peer-checked:bg-secondary-container/10 transition-all">
+                <div class="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
+                  <span class="material-symbols-outlined text-secondary">local_shipping</span>
+                </div>
+                <div class="flex-1">
+                  <p class="font-bold text-primary">COD</p>
+                  <p class="text-xs text-on-surface-variant">Shipper collects cash on delivery</p>
+                </div>
+              </div>
+            </label>
             <label class="relative block cursor-pointer group">
               <input checked="" class="peer sr-only" name="payment" type="radio" value="qr" />
               <div class="flex items-center gap-4 p-5 rounded-xl bg-surface-container-low border-2 border-transparent peer-checked:border-secondary peer-checked:bg-secondary-container/10 transition-all">
