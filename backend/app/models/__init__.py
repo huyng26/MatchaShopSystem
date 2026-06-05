@@ -10,7 +10,7 @@ from app.models.delivery import (
     DeliveryTripOrderStatus,
     DeliveryTripStatus,
 )
-from app.models.finance import FinancialRecord, FinancialRecordType
+from app.models.finance import Expense, FinancialRecord, FinancialRecordType
 from app.models.ingredients import Ingredient
 from app.models.inventory import (
     InventoryMovement,
@@ -41,6 +41,7 @@ __all__ = [
     "DeliveryTripOrder",
     "DeliveryTripOrderStatus",
     "DeliveryTripStatus",
+    "Expense",
     "FinancialRecord",
     "FinancialRecordType",
     "Ingredient",

@@ -116,6 +116,21 @@ async def mark_payment_success(
     return payment
 
 
+async def update_pending_cod_amount(
+    db: AsyncSession,
+    payment: Payment,
+    *,
+    amount: Decimal,
+) -> Payment:
+    payment.amount = amount
+    payment.amount_received = None
+    payment.change_amount = None
+    payment.updated_at = utc_now()
+    await db.flush()
+    await db.refresh(payment)
+    return payment
+
+
 async def sum_successful_payments_for_order(
     db: AsyncSession,
     order_id: UUID,

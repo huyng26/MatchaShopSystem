@@ -10,12 +10,14 @@ from app.models.finance import FinancialRecordType
 from app.models.ingredients import Ingredient
 from app.models.inventory import InventoryMovementType
 from app.models.order import Order, OrderPaymentStatus, OrderStatus, OrderType
-from app.models.payment import PaymentMethod
+from app.models.payment import PaymentEventStatus, PaymentMethod
 from app.repositories import (
     customer_repo,
+    delivery_repo,
     finance_repo,
     inventory_repo,
     order_repo,
+    payment_repo,
     product_repo,
 )
 from app.schemas.order import (
@@ -23,6 +25,7 @@ from app.schemas.order import (
     OrderCompleteResponse,
     OrderCreate,
     OrderListFilters,
+    OrderReadyForDelivery,
 )
 from app.services.errors import ServiceError
 
@@ -137,6 +140,65 @@ async def cancel_order(db: AsyncSession, order_id: UUID) -> OrderCancelResponse:
         order = await order_repo.set_order_cancelled(db, order)
         await db.commit()
         return OrderCancelResponse.model_validate(order)
+    except Exception:
+        await db.rollback()
+        raise
+
+
+async def start_processing(db: AsyncSession, order_id: UUID) -> Order:
+    try:
+        order = await order_repo.get_order_detail(db, order_id)
+        if order is None:
+            raise ServiceError("order_not_found", status_code=404)
+        if order.status != OrderStatus.PENDING:
+            raise ServiceError("order_not_pending", status_code=409)
+
+        order = await order_repo.update_order_status(
+            db,
+            order,
+            status=OrderStatus.IN_PROGRESS,
+        )
+        await db.commit()
+        detail = await order_repo.get_order_detail(db, order.id)
+        if detail is None:
+            raise ServiceError("order_not_found", status_code=404)
+        return detail
+    except Exception:
+        await db.rollback()
+        raise
+
+
+async def mark_ready_for_delivery(
+    db: AsyncSession,
+    order_id: UUID,
+    payload: OrderReadyForDelivery,
+    *,
+    actor_user_id: UUID,
+) -> Order:
+    try:
+        order = await order_repo.get_order_detail(db, order_id)
+        if order is None:
+            raise ServiceError("order_not_found", status_code=404)
+        await _validate_ready_for_delivery(db, order, payload)
+
+        if order.payment_status == OrderPaymentStatus.UNPAID:
+            await _ensure_order_has_pending_cod(
+                db,
+                order,
+                payload=payload,
+                actor_user_id=actor_user_id,
+            )
+
+        order = await order_repo.update_order_status(
+            db,
+            order,
+            status=OrderStatus.READY_FOR_DELIVERY,
+        )
+        await db.commit()
+        detail = await order_repo.get_order_detail(db, order.id)
+        if detail is None:
+            raise ServiceError("order_not_found", status_code=404)
+        return detail
     except Exception:
         await db.rollback()
         raise
@@ -314,6 +376,99 @@ def _validate_delivery_fields(payload: OrderCreate) -> None:
             "delivery_fields_required",
             context={"fields": missing},
         )
+
+
+async def _validate_ready_for_delivery(
+    db: AsyncSession,
+    order: Order,
+    payload: OrderReadyForDelivery,
+) -> None:
+    if order.order_type != OrderType.DELIVERY:
+        raise ServiceError("order_is_not_delivery", status_code=409)
+    if order.status not in (OrderStatus.PENDING, OrderStatus.IN_PROGRESS):
+        raise ServiceError("order_cannot_be_marked_ready_for_delivery", status_code=409)
+    missing = [
+        field
+        for field in (
+            "customer_name",
+            "customer_phone",
+            "delivery_address",
+            "delivery_latitude",
+            "delivery_longitude",
+        )
+        if getattr(order, field) is None or getattr(order, field) == ""
+    ]
+    if missing:
+        raise ServiceError(
+            "delivery_fields_required",
+            status_code=422,
+            context={"fields": missing},
+        )
+    if await delivery_repo.order_has_active_assignment(db, order.id):
+        raise ServiceError("order_already_assigned_to_active_trip", status_code=409)
+    if payload.payment_method not in (None, PaymentMethod.COD):
+        raise ServiceError(
+            "ready_for_delivery_only_accepts_cod_payment_method",
+            status_code=422,
+        )
+    if order.payment_status == OrderPaymentStatus.PAID:
+        if not _has_successful_prepaid_delivery_payment(order):
+            raise ServiceError(
+                "delivery_prepaid_payment_required",
+                status_code=409,
+            )
+    elif order.payment_status == OrderPaymentStatus.UNPAID:
+        if payload.payment_method is None and not _has_pending_cod_payment(order):
+            raise ServiceError(
+                "cod_payment_required_for_unpaid_delivery",
+                status_code=409,
+            )
+    else:
+        raise ServiceError("order_payment_status_not_supported", status_code=409)
+
+
+async def _ensure_order_has_pending_cod(
+    db: AsyncSession,
+    order: Order,
+    *,
+    payload: OrderReadyForDelivery,
+    actor_user_id: UUID,
+) -> None:
+    expected = order.total_amount.quantize(MONEY_QUANT)
+    pending_cod = await payment_repo.get_pending_cod_payment_for_order(db, order.id)
+    if pending_cod is not None:
+        await payment_repo.update_pending_cod_amount(
+            db,
+            pending_cod,
+            amount=expected,
+        )
+        return
+    if payload.payment_method != PaymentMethod.COD:
+        raise ServiceError("cod_payment_required_for_unpaid_delivery", status_code=409)
+    await payment_repo.create_payment_event(
+        db,
+        order_id=order.id,
+        method=PaymentMethod.COD,
+        status=PaymentEventStatus.PENDING,
+        amount=expected,
+        created_by=actor_user_id,
+    )
+
+
+def _has_successful_prepaid_delivery_payment(order: Order) -> bool:
+    return any(
+        payment.status == PaymentEventStatus.SUCCESS
+        and payment.method in (PaymentMethod.CARD, PaymentMethod.BANK_TRANSFER)
+        for payment in order.payments
+    )
+
+
+def _has_pending_cod_payment(order: Order) -> bool:
+    return any(
+        payment.status == PaymentEventStatus.PENDING
+        and payment.method == PaymentMethod.COD
+        for payment in order.payments
+    )
 
 
 async def _price_order_items(
