@@ -358,9 +358,11 @@ function initRegister() {
 
 const POS_CART_STORAGE_KEY = 'matcha_pos_cart';
 const POS_ORDER_CODE_STORAGE_KEY = 'matcha_pos_order_code';
+const POS_CUSTOMER_STORAGE_KEY = 'matcha_pos_customer';
 
 let POS_TOPPINGS = [];
 let POS_MENU_ITEMS = [];
+let POS_CUSTOMERS = [];
 
 const POS_FALLBACK_IMAGE =
   'https://images.unsplash.com/photo-1515823662972-da6a2e4d3002?auto=format&fit=crop&w=900&q=80';
@@ -459,13 +461,53 @@ function setPosCart(cart) {
   localStorage.setItem(POS_CART_STORAGE_KEY, JSON.stringify(cart));
 }
 
-function getPosOrderCode() {
-  let orderCode = localStorage.getItem(POS_ORDER_CODE_STORAGE_KEY);
-  if (!orderCode) {
-    orderCode = `#ATR-${Date.now().toString().slice(-6)}`;
-    localStorage.setItem(POS_ORDER_CODE_STORAGE_KEY, orderCode);
+function getStoredPosOrderCode() {
+  const orderCode = localStorage.getItem(POS_ORDER_CODE_STORAGE_KEY);
+  if (orderCode?.startsWith('#ATR-')) {
+    localStorage.removeItem(POS_ORDER_CODE_STORAGE_KEY);
+    return '';
   }
-  return orderCode;
+  return orderCode || '';
+}
+
+function getPosOrderCode() {
+  return getStoredPosOrderCode() || 'Generated on submit';
+}
+
+function getSelectedPosCustomer() {
+  try {
+    return JSON.parse(localStorage.getItem(POS_CUSTOMER_STORAGE_KEY)) || null;
+  } catch {
+    return null;
+  }
+}
+
+function setSelectedPosCustomer(customer) {
+  if (!customer?.id) {
+    localStorage.removeItem(POS_CUSTOMER_STORAGE_KEY);
+    return;
+  }
+
+  localStorage.setItem(
+    POS_CUSTOMER_STORAGE_KEY,
+    JSON.stringify({
+      id: String(customer.id),
+      name: customer.name || 'Unnamed Customer',
+      phone: customer.phone || '',
+    })
+  );
+}
+
+function setPosCustomerStatus(message = '', type = 'info') {
+  const status = document.getElementById('posCustomerStatus');
+  if (!status) return;
+
+  status.textContent = message;
+  status.classList.toggle('hidden', !message);
+  status.classList.remove('text-error', 'text-secondary', 'text-on-surface-variant');
+  status.classList.add(
+    type === 'error' ? 'text-error' : type === 'success' ? 'text-secondary' : 'text-on-surface-variant'
+  );
 }
 
 function getCartTotal(cart) {
@@ -556,6 +598,15 @@ async function submitPosInstoreOrder(selectedPayment) {
     body: JSON.stringify({
       order_type: 'instore',
       discount_amount: 0,
+      ...(() => {
+        const customer = getSelectedPosCustomer();
+        if (!customer?.id) return {};
+        return {
+          customer_id: customer.id,
+          customer_name: customer.name,
+          customer_phone: customer.phone || null,
+        };
+      })(),
       note: buildPosOrderNote(cart),
       items,
     }),
@@ -674,6 +725,56 @@ async function loadPosMenuProducts() {
   renderPosToppingOptions();
 }
 
+function renderPosCustomerOptions() {
+  const select = document.getElementById('posCustomerSelect');
+  if (!select) return;
+
+  const selectedCustomer = getSelectedPosCustomer();
+  select.innerHTML = `
+    <option value="">Walk-in customer</option>
+    ${POS_CUSTOMERS.map(
+      (customer) => `
+        <option value="${customer.id}">${escapeHtml(customer.name)}${customer.phone ? ` - ${escapeHtml(customer.phone)}` : ''}</option>
+      `
+    ).join('')}
+  `;
+
+  if (selectedCustomer?.id && POS_CUSTOMERS.some((customer) => customer.id === selectedCustomer.id)) {
+    select.value = selectedCustomer.id;
+    setPosCustomerStatus(`Selected customer: ${selectedCustomer.name}`, 'success');
+  } else {
+    localStorage.removeItem(POS_CUSTOMER_STORAGE_KEY);
+    select.value = '';
+    setPosCustomerStatus('');
+  }
+}
+
+async function loadPosCustomers() {
+  const select = document.getElementById('posCustomerSelect');
+  if (!select) return;
+
+  select.disabled = true;
+  setPosCustomerStatus('Loading customers...');
+
+  try {
+    const customers = getApiListData(await fetchMatchaApi('/customers'));
+    POS_CUSTOMERS = customers.map((customer) => ({
+      id: String(customer.id),
+      name: customer.name || 'Unnamed Customer',
+      phone: customer.phone || '',
+    }));
+    renderPosCustomerOptions();
+  } catch (error) {
+    console.error('Failed to load POS customers:', error);
+    POS_CUSTOMERS = [];
+    localStorage.removeItem(POS_CUSTOMER_STORAGE_KEY);
+    renderPosCustomerOptions();
+    setPosCustomerStatus('Cannot load customers. You can still continue as a walk-in customer.', 'error');
+  } finally {
+    select.disabled = false;
+  }
+}
+
 function openPosCustomizeModal(itemId) {
   const item = POS_MENU_ITEMS.find((menuItem) => menuItem.id === itemId);
   const modal = document.getElementById('custom-modal');
@@ -726,7 +827,8 @@ function renderPosCart() {
   count.textContent = String(cart.length);
   subtotal.textContent = formatVnd(totalAmount);
   total.textContent = formatVnd(totalAmount);
-  orderCode.textContent = `Order ${getPosOrderCode()}`;
+  const storedOrderCode = getStoredPosOrderCode();
+  orderCode.textContent = storedOrderCode ? `Order ${storedOrderCode}` : 'Order Draft';
 
   itemList.innerHTML = cart
     .map(
@@ -762,6 +864,7 @@ async function initPosMenu() {
     renderPosMenuState('Cannot load products for Point of Sale. Please check the backend server.', 'error');
   }
 
+  await loadPosCustomers();
   renderPosCart();
 
   const menuContainer = document.getElementById('posMenuSections');
@@ -771,6 +874,7 @@ async function initPosMenu() {
   const cartItems = document.getElementById('posCartItems');
   const completeBtn = document.getElementById('posCompleteOrderBtn');
   const searchInput = document.getElementById('topbar-search');
+  const customerSelect = document.getElementById('posCustomerSelect');
 
   menuContainer?.addEventListener('click', (event) => {
     if (!(event.target instanceof Element)) return;
@@ -810,7 +914,6 @@ async function initPosMenu() {
     const cart = getPosCart();
     cart.push(cartItem);
     setPosCart(cart);
-    getPosOrderCode();
     renderPosCart();
     closePosCustomizeModal();
   });
@@ -831,6 +934,12 @@ async function initPosMenu() {
     window.location.href = 'POS_payment.html';
   });
 
+  customerSelect?.addEventListener('change', () => {
+    const customer = POS_CUSTOMERS.find((item) => item.id === customerSelect.value);
+    setSelectedPosCustomer(customer);
+    setPosCustomerStatus(customer ? `Selected customer: ${customer.name}` : '');
+  });
+
   if (searchInput?.parentElement) {
     searchInput.addEventListener('focus', () => {
       searchInput.parentElement.classList.add('scale-[1.02]');
@@ -848,11 +957,18 @@ function renderPosPaymentOrder() {
   const subtotal = document.getElementById('paymentSubtotal');
   const total = document.getElementById('paymentTotal');
   const orderCode = document.getElementById('paymentOrderCode');
+  const customerName = document.getElementById('paymentCustomerName');
   const payBtn = document.getElementById('payBtn');
   if (!itemList || !emptyState || !subtotal || !total || !orderCode || !payBtn) return;
 
   const totalAmount = getCartTotal(cart);
   orderCode.textContent = getPosOrderCode();
+  const selectedCustomer = getSelectedPosCustomer();
+  if (customerName) {
+    customerName.textContent = selectedCustomer
+      ? `${selectedCustomer.name}${selectedCustomer.phone ? ` - ${selectedCustomer.phone}` : ''}`
+      : 'Walk-in customer';
+  }
   subtotal.textContent = formatVnd(totalAmount);
   total.textContent = formatVnd(totalAmount);
   payBtn.disabled = !cart.length;
@@ -938,6 +1054,7 @@ function initPosPayment() {
   newOrderBtn?.addEventListener('click', () => {
     localStorage.removeItem(POS_CART_STORAGE_KEY);
     localStorage.removeItem(POS_ORDER_CODE_STORAGE_KEY);
+    localStorage.removeItem(POS_CUSTOMER_STORAGE_KEY);
     window.location.href = 'POS_menu.html';
   });
 }

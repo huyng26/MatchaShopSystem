@@ -17,7 +17,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
     rel="stylesheet" />
-    <link rel="stylesheet" href="../assets/css/style.css" />
+    <link rel="stylesheet" href="../assets/css/style.css?v=app-font-20260605" />
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script src="../assets/js/tailwind-config.js"></script>
 </head>
@@ -37,11 +37,23 @@
             <h2 class="font-headline text-5xl text-primary mb-2">In-shop Order</h2>
             <p class="text-on-surface-variant font-medium">Select an available item, customize it, then add it to the order.</p>
           </div>
-          <div class="flex items-center gap-2 rounded-full bg-surface-container px-4 py-2 text-sm font-bold text-on-surface-variant">
-            <span class="material-symbols-outlined text-secondary text-lg">check_circle</span>
-            Available menu items only
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <label class="flex items-center gap-3 rounded-2xl bg-surface-container px-4 py-3" for="posCustomerSelect">
+              <span class="material-symbols-outlined text-secondary">person</span>
+              <div>
+                <p class="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">Customer</p>
+                <select class="w-56 bg-transparent border-none p-0 text-sm font-bold text-primary focus:ring-0" id="posCustomerSelect">
+                  <option value="">Walk-in customer</option>
+                </select>
+              </div>
+            </label>
+            <div class="flex items-center gap-2 rounded-full bg-surface-container px-4 py-2 text-sm font-bold text-on-surface-variant">
+              <span class="material-symbols-outlined text-secondary text-lg">check_circle</span>
+              Available menu items only
+            </div>
           </div>
         </header>
+        <p class="hidden mb-8 text-sm font-bold text-on-surface-variant" id="posCustomerStatus"></p>
 
         <div class="space-y-12" id="posMenuSections"></div>
       </div>
@@ -58,7 +70,7 @@
         </div>
         <div class="flex items-center gap-2 p-3 bg-surface-container-highest/50 rounded-xl mb-6">
           <span class="material-symbols-outlined text-on-surface-variant text-sm">confirmation_number</span>
-          <p class="text-xs font-bold text-on-surface-variant uppercase tracking-widest" id="posOrderCode">Order #ATR-LOCAL</p>
+          <p class="text-xs font-bold text-on-surface-variant uppercase tracking-widest" id="posOrderCode">Order Draft</p>
         </div>
       </div>
       <div class="flex-1 overflow-y-auto custom-scrollbar px-6 space-y-4" id="posCartItems"></div>
@@ -156,7 +168,7 @@
   </div>
 
   <script src="../assets/js/layout.js?v=fm-20260530"></script>
-  <script src="../assets/js/main.js?v=fm-20260530"></script>
+  <script src="../assets/js/main.js?v=pos-orders-20260605"></script>
 </body>
 
 </html>
