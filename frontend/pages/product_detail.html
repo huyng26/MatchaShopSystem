@@ -17,7 +17,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
         rel="stylesheet" />
-      <link rel="stylesheet" href="../assets/css/style.css" />
+      <link rel="stylesheet" href="../assets/css/style.css?v=app-font-20260605" />
 </head>
 
 <body class="page-product-detail bg-background text-on-surface flex min-h-screen" data-page="product-detail">
@@ -26,12 +26,12 @@
     <!-- TopAppBar -->
     <header id="app-topbar" class="fixed top-0 right-0 left-72 h-20 z-30 bg-[#f9f9f8]/80 dark:bg-[#191c1c]/80 backdrop-blur-2xl flex items-center justify-between px-10"></header>
     <!-- Product Detail Content -->
-    <div class="ml-72 pt-20 p-10 space-y-8">
+    <main class="ml-72 min-h-screen w-[calc(100%-18rem)] pt-20 p-10 space-y-8">
         <!-- Hero Header Section (Asymmetric) -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start mb-16">
-            <!-- Gallery Cluster -->
-            <div class="lg:col-span-7 grid grid-cols-4 gap-4">
-                <div class="col-span-4 h-[500px] rounded-xl overflow-hidden shadow-sm bg-surface-container">
+            <!-- Product Image -->
+            <div class="lg:col-span-5">
+                <div class="h-[520px] rounded-xl overflow-hidden shadow-sm bg-surface-container">
                     <img id="product-detail-main-image" alt=""
                         class="hidden w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
                     <div id="product-detail-image-placeholder"
@@ -39,33 +39,19 @@
                         <span class="material-symbols-outlined text-7xl">restaurant</span>
                     </div>
                 </div>
-                <div
-                    class="col-span-1 h-32 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant border-2 border-outline-variant/30">
-                    <span class="material-symbols-outlined">image</span>
-                </div>
-                <div
-                    class="col-span-1 h-32 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant border-2 border-outline-variant/30">
-                    <span class="material-symbols-outlined">image</span>
-                </div>
-                <div
-                    class="col-span-1 h-32 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant border-2 border-outline-variant/30">
-                    <span class="material-symbols-outlined">image</span>
-                </div>
-                <div
-                    class="col-span-1 h-32 rounded-lg bg-surface-container flex flex-col items-center justify-center text-secondary hover:bg-surface-container-high transition-colors cursor-pointer border-2 border-dashed border-outline-variant">
-                    <span class="material-symbols-outlined">add_a_photo</span>
-                    <span class="text-[10px] font-bold uppercase mt-1">Add Image</span>
-                </div>
             </div>
             <!-- Primary Meta Fields -->
-            <div class="lg:col-span-5 space-y-8">
+            <div class="lg:col-span-7 space-y-8">
                 <div>
                     <span class="text-xs font-bold uppercase tracking-[0.2em] text-secondary mb-2 block">Product
                         Identity</span>
-                    <h1 id="product-detail-name" class="text-5xl font-serif italic text-primary leading-tight">Loading product...</h1>
-                    <p id="product-detail-description" class="text-on-surface-variant mt-4 leading-relaxed font-medium">Loading product description...</p>
+                    <input id="product-detail-name"
+                        class="w-full border-none bg-transparent p-0 text-5xl font-serif italic text-primary leading-tight focus:ring-0"
+                        type="text" value="Loading product..." />
+                    <textarea id="product-detail-description"
+                        class="mt-4 min-h-28 w-full resize-y rounded-xl border-outline bg-surface-container-lowest px-4 py-3 text-on-surface-variant leading-relaxed font-medium focus:border-secondary focus:ring-secondary">Loading product description...</textarea>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div class="p-6 bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/10">
                         <label
                             class="text-[10px] uppercase font-bold text-on-surface/40 tracking-widest block mb-2">Base
@@ -73,7 +59,7 @@
                         <div class="flex items-baseline gap-1">
                             <span class="text-2xl font-serif text-primary">₫</span>
                             <input id="product-detail-price"
-                                class="text-3xl font-serif text-primary bg-transparent border-none p-0 w-24 focus:ring-0"
+                                class="min-w-0 flex-1 text-3xl font-serif text-primary bg-transparent border-none p-0 focus:ring-0"
                                 type="text" value="" />
                         </div>
                     </div>
@@ -85,6 +71,12 @@
                             <option value="" disabled selected>Loading...</option>
                         </select>
                     </div>
+                    <label class="p-6 bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/10 md:col-span-2">
+                        <span class="text-[10px] uppercase font-bold text-on-surface/40 tracking-widest block mb-2">Image URL</span>
+                        <input id="product-detail-image-url"
+                            class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary"
+                            type="url" placeholder="Enter image URL" />
+                    </label>
                 </div>
                 <div class="space-y-4">
                     <div class="flex items-center justify-between">
@@ -101,6 +93,7 @@
                         <button type="button" data-availability="false"
                             class="flex-1 py-3 text-xs font-bold uppercase text-on-surface/40 hover:text-on-surface transition-colors">Unavailable</button>
                     </div>
+                    <p id="product-detail-status" class="hidden text-sm font-bold"></p>
                 </div>
             </div>
         </div>
@@ -110,10 +103,17 @@
             <div class="lg:col-span-3 bg-surface-container-lowest rounded-2xl p-8 shadow-sm">
                 <div class="flex justify-between items-center mb-8">
                     <h3 class="text-2xl font-serif italic text-primary">Ingredients</h3>
-                    <button
-                        class="w-10 h-10 bg-secondary/10 text-secondary rounded-full flex items-center justify-center hover:bg-secondary hover:text-white transition-all">
-                        <span class="material-symbols-outlined">add</span>
-                    </button>
+                    <div class="flex items-center gap-3">
+                        <button id="add-recipe-ingredient" type="button"
+                            class="w-10 h-10 bg-secondary/10 text-secondary rounded-full flex items-center justify-center hover:bg-secondary hover:text-white transition-all"
+                            aria-label="Add recipe ingredient">
+                            <span class="material-symbols-outlined">add</span>
+                        </button>
+                        <button id="save-product-recipe" type="button"
+                            class="rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-white hover:bg-primary/90">
+                            Save Recipe
+                        </button>
+                    </div>
                 </div>
                 <ul id="product-recipe-list" class="space-y-6">
                     <li class="rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">
@@ -134,7 +134,6 @@
                 class="px-12 py-4 bg-secondary text-white font-bold rounded-xl shadow-lg shadow-secondary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">Save
                 Product Details</button>
         </div>
-    </div>
     </main>
   <script src="../assets/js/layout.js?v=fm-20260530"></script>
   <script src="../assets/js/main.js?v=fm-20260530"></script>
@@ -146,12 +145,17 @@
         const descriptionElement = document.getElementById('product-detail-description');
         const priceInput = document.getElementById('product-detail-price');
         const categorySelect = document.getElementById('product-detail-category');
+        const imageUrlInput = document.getElementById('product-detail-image-url');
+        const statusElement = document.getElementById('product-detail-status');
         const saveButton = document.getElementById('save-product-detail');
         const discardButton = document.getElementById('discard-product-detail');
         const deleteButton = document.getElementById('delete-product-detail');
         const recipeList = document.getElementById('product-recipe-list');
+        const addRecipeIngredientButton = document.getElementById('add-recipe-ingredient');
+        const saveRecipeButton = document.getElementById('save-product-recipe');
         let currentProduct = null;
         let productCategories = [];
+        let ingredients = [];
 
         const fetchApiData = async (path, options = {}) => {
             const response = await fetch(`${API_BASE_URL}${path}`, options);
@@ -169,9 +173,38 @@
             if (Array.isArray(data?.items)) return data.items;
             return [];
         };
+        const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+        }[character]));
 
         const formatPriceValue = (value) => new Intl.NumberFormat('vi-VN').format(Number(value) || 0);
-        const parsePriceValue = (value) => Number(String(value || '').replace(/[^\d.-]/g, '')) || 0;
+        const parsePriceValue = (value) => {
+            const normalized = String(value || '').trim();
+            if (!normalized) return 0;
+
+            const localeNumber = normalized.includes(',')
+                ? normalized.replace(/\./g, '').replace(',', '.')
+                : normalized.replace(/\./g, '');
+            return Number(localeNumber.replace(/[^\d.-]/g, '')) || 0;
+        };
+        const setFieldValue = (element, value) => {
+            if (!element) return;
+            if ('value' in element) {
+                element.value = value;
+            } else {
+                element.textContent = value;
+            }
+        };
+        const setStatus = (message, type = 'info') => {
+            if (!statusElement) return;
+            statusElement.textContent = message;
+            statusElement.className = `text-sm font-bold ${type === 'error' ? 'text-error' : 'text-secondary'}`;
+            statusElement.classList.toggle('hidden', !message);
+        };
 
         const deriveCategories = (products) => (
             [...new Set(products.map((product) => product.category).filter(Boolean))]
@@ -196,6 +229,15 @@
                 option.selected = true;
                 categorySelect.appendChild(option);
             }
+
+            if (!categorySelect.options.length) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'No category';
+                option.disabled = true;
+                option.selected = true;
+                categorySelect.appendChild(option);
+            }
         };
 
         const setAvailability = (isAvailable) => {
@@ -217,33 +259,83 @@
             });
         };
 
-        const renderRecipe = (recipe) => {
-            const items = Array.isArray(recipe?.items) ? recipe.items : [];
-            recipeList.innerHTML = '';
+        const getIngredient = (ingredientId) => ingredients.find((ingredient) => ingredient.id === ingredientId);
 
-            if (!items.length) {
+        const showRecipeEmptyState = () => {
+            recipeList.innerHTML = `
+                <li class="recipe-empty-state rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">
+                    No recipe ingredients configured.
+                </li>
+            `;
+        };
+
+        const createRecipeRow = (item = {}) => {
+            if (!ingredients.length) {
                 recipeList.innerHTML = `
-                    <li class="rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">
-                        No recipe ingredients configured.
+                    <li class="recipe-empty-state rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">
+                        No ingredients available. Add ingredients in inventory first.
                     </li>
                 `;
                 return;
             }
 
-            items.forEach((item) => {
-                const row = document.createElement('li');
-                row.className = 'flex items-center justify-between pb-4 border-b border-outline-variant/10';
-                row.innerHTML = `
-                    <div>
-                        <p class="text-sm font-bold text-primary">${item.ingredient_name || item.ingredient_id}</p>
-                        <p class="text-[10px] text-on-surface-variant">${item.ingredient_id}</p>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <span class="text-sm font-bold text-secondary">${formatPriceValue(item.quantity_per_serving)} ${item.unit || ''}</span>
-                    </div>
-                `;
-                recipeList.appendChild(row);
+            recipeList.querySelector('.recipe-empty-state')?.remove();
+
+            const selectedIngredientId = item.ingredient_id || ingredients[0].id;
+            const selectedIngredient = getIngredient(selectedIngredientId);
+            const row = document.createElement('li');
+            row.className = 'recipe-ingredient-row grid grid-cols-1 gap-4 rounded-2xl border border-outline-variant bg-surface-container-low p-4 md:grid-cols-[minmax(0,1fr)_170px_56px]';
+            row.innerHTML = `
+                <label class="space-y-2">
+                    <span class="text-xs font-bold text-on-surface-variant">Ingredient</span>
+                    <select class="recipe-ingredient-select w-full rounded-xl border-outline bg-surface px-3 py-2 text-sm focus:border-secondary focus:ring-secondary"></select>
+                    <span class="recipe-ingredient-unit text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">${escapeHtml(selectedIngredient?.unit || item.unit || '')}</span>
+                </label>
+                <label class="space-y-2">
+                    <span class="text-xs font-bold text-on-surface-variant">Quantity per serving</span>
+                    <input class="recipe-ingredient-quantity w-full rounded-xl border-outline bg-surface px-3 py-2 text-sm focus:border-secondary focus:ring-secondary"
+                        type="number" min="0.001" step="0.001" value="${escapeHtml(item.quantity_per_serving ?? '')}" />
+                </label>
+                <button type="button"
+                    class="remove-recipe-ingredient mt-6 flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant hover:bg-error-container/30 hover:text-error"
+                    aria-label="Remove recipe ingredient">
+                    <span class="material-symbols-outlined text-sm">delete</span>
+                </button>
+            `;
+
+            const select = row.querySelector('.recipe-ingredient-select');
+            const unit = row.querySelector('.recipe-ingredient-unit');
+            ingredients.forEach((ingredient) => {
+                const option = document.createElement('option');
+                option.value = ingredient.id;
+                option.textContent = `${ingredient.name} (${ingredient.unit || '-'})`;
+                option.selected = ingredient.id === selectedIngredientId;
+                select.appendChild(option);
             });
+
+            select.addEventListener('change', () => {
+                unit.textContent = getIngredient(select.value)?.unit || '';
+            });
+            row.querySelector('.remove-recipe-ingredient').addEventListener('click', () => {
+                row.remove();
+                if (!recipeList.querySelector('.recipe-ingredient-row')) {
+                    showRecipeEmptyState();
+                }
+            });
+
+            recipeList.appendChild(row);
+        };
+
+        const renderRecipe = (recipe) => {
+            const items = Array.isArray(recipe?.items) ? recipe.items : [];
+            recipeList.innerHTML = '';
+
+            if (!items.length) {
+                showRecipeEmptyState();
+                return;
+            }
+
+            items.forEach((item) => createRecipeRow(item));
         };
 
         const renderProduct = (product) => {
@@ -251,9 +343,10 @@
             const name = product.name || 'Unnamed Product';
             const description = product.description || 'No description available.';
 
-            nameElement.textContent = name;
-            descriptionElement.textContent = description;
+            setFieldValue(nameElement, name);
+            setFieldValue(descriptionElement, description);
             priceInput.value = formatPriceValue(product.selling_price);
+            imageUrlInput.value = product.image_url || '';
             populateCategorySelect(productCategories, product.category);
 
             const mainImage = document.getElementById('product-detail-main-image');
@@ -276,17 +369,19 @@
 
         const renderProductDetail = async () => {
             if (!productId) {
-                nameElement.textContent = 'Product not found';
-                descriptionElement.textContent = 'Missing product id in the URL.';
+                setFieldValue(nameElement, 'Product not found');
+                setFieldValue(descriptionElement, 'Missing product id in the URL.');
                 return;
             }
 
             try {
-                const [productsResponse, product, recipe] = await Promise.all([
+                const [productsResponse, product, recipe, ingredientsResponse] = await Promise.all([
                     fetchApiData('/products').catch(() => []),
                     fetchApiData(`/products/${encodeURIComponent(productId)}`),
                     fetchApiData(`/products/${encodeURIComponent(productId)}/recipe`).catch(() => ({ items: [] })),
+                    fetchApiData('/ingredients').catch(() => []),
                 ]);
+                ingredients = getListData(ingredientsResponse);
                 productCategories = deriveCategories(getListData(productsResponse));
                 if (product.category && !productCategories.includes(product.category)) {
                     productCategories = [...productCategories, product.category].sort((first, second) => first.localeCompare(second));
@@ -295,9 +390,9 @@
                 renderRecipe(recipe);
             } catch (error) {
                 console.error('Failed to load product detail:', error);
-                nameElement.textContent = 'Product not found';
-                descriptionElement.textContent =
-                    'Cannot load this product. Please return to the menu and check the backend server.';
+                setFieldValue(nameElement, 'Product not found');
+                setFieldValue(descriptionElement, 'Cannot load this product. Please return to the menu and check the backend server.');
+                setStatus('Cannot load product. Please check the backend server.', 'error');
             }
         };
 
@@ -306,14 +401,34 @@
 
             const payload = {
                 category: categorySelect.value || currentProduct.category,
-                name: currentProduct.name,
-                description: currentProduct.description,
+                name: nameElement.value.trim(),
+                description: descriptionElement.value.trim() || null,
                 selling_price: parsePriceValue(priceInput.value),
                 is_available: Boolean(currentProduct.is_available),
+                image_url: imageUrlInput.value.trim() || null,
             };
+
+            if (!payload.name) {
+                setStatus('Product name is required.', 'error');
+                nameElement.focus();
+                return;
+            }
+
+            if (!payload.category) {
+                setStatus('Product category is required.', 'error');
+                categorySelect.focus();
+                return;
+            }
+
+            if (payload.selling_price <= 0) {
+                setStatus('Selling price must be greater than 0.', 'error');
+                priceInput.focus();
+                return;
+            }
 
             saveButton.disabled = true;
             saveButton.textContent = 'Saving...';
+            setStatus('Saving product...');
 
             try {
                 const product = await fetchApiData(`/products/${encodeURIComponent(productId)}`, {
@@ -324,9 +439,10 @@
                     body: JSON.stringify(payload),
                 });
                 renderProduct(product);
+                setStatus('Product details saved.');
             } catch (error) {
                 console.error('Failed to save product:', error);
-                alert(error.message || 'Cannot save product. Please check the backend server.');
+                setStatus(error.message || 'Cannot save product. Please check the backend server.', 'error');
             } finally {
                 saveButton.disabled = false;
                 saveButton.textContent = 'Save Product Details';
@@ -337,6 +453,7 @@
             if (!productId || !currentProduct) return;
 
             try {
+                setStatus('Updating availability...');
                 const product = await fetchApiData(`/products/${encodeURIComponent(productId)}/availability`, {
                     method: 'PATCH',
                     headers: {
@@ -345,9 +462,58 @@
                     body: JSON.stringify({ is_available: isAvailable }),
                 });
                 renderProduct(product);
+                setStatus('Availability updated.');
             } catch (error) {
                 console.error('Failed to update product availability:', error);
-                alert(error.message || 'Cannot update product availability. Please check the backend server.');
+                setStatus(error.message || 'Cannot update product availability. Please check the backend server.', 'error');
+            }
+        };
+
+        const saveRecipe = async () => {
+            if (!productId || !currentProduct) return;
+
+            const rows = [...recipeList.querySelectorAll('.recipe-ingredient-row')];
+            if (!rows.length) {
+                setStatus('Recipe must include at least one ingredient.', 'error');
+                return;
+            }
+
+            const items = rows.map((row) => ({
+                ingredient_id: row.querySelector('.recipe-ingredient-select')?.value,
+                quantity_per_serving: Number(row.querySelector('.recipe-ingredient-quantity')?.value),
+            }));
+
+            if (items.some((item) => !item.ingredient_id || item.quantity_per_serving <= 0)) {
+                setStatus('Choose an ingredient and enter a positive quantity for every recipe row.', 'error');
+                return;
+            }
+
+            const ingredientIds = items.map((item) => item.ingredient_id);
+            if (new Set(ingredientIds).size !== ingredientIds.length) {
+                setStatus('Recipe cannot contain duplicate ingredients.', 'error');
+                return;
+            }
+
+            saveRecipeButton.disabled = true;
+            saveRecipeButton.textContent = 'Saving...';
+            setStatus('Saving recipe...');
+
+            try {
+                const recipe = await fetchApiData(`/products/${encodeURIComponent(productId)}/recipe`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ items }),
+                });
+                renderRecipe(recipe);
+                setStatus('Recipe saved.');
+            } catch (error) {
+                console.error('Failed to save recipe:', error);
+                setStatus(error.message || 'Cannot save recipe. Please check the backend server.', 'error');
+            } finally {
+                saveRecipeButton.disabled = false;
+                saveRecipeButton.textContent = 'Save Recipe';
             }
         };
 
@@ -373,6 +539,8 @@
         };
 
         saveButton?.addEventListener('click', saveProduct);
+        saveRecipeButton?.addEventListener('click', saveRecipe);
+        addRecipeIngredientButton?.addEventListener('click', () => createRecipeRow());
         discardButton?.addEventListener('click', renderProductDetail);
         deleteButton?.addEventListener('click', deleteProduct);
         document.querySelectorAll('[data-availability]').forEach((button) => {

@@ -359,52 +359,11 @@ function initRegister() {
 const POS_CART_STORAGE_KEY = 'matcha_pos_cart';
 const POS_ORDER_CODE_STORAGE_KEY = 'matcha_pos_order_code';
 
-const POS_TOPPINGS = [
-  { id: 'honey_boba', name: 'Honey Boba', price: 10000 },
-  { id: 'sea_salt_cream', name: 'Sea Salt Cream', price: 15000 },
-  { id: 'matcha_jelly', name: 'Matcha Jelly', price: 10000 },
-  { id: 'oat_milk', name: 'Oat Milk', price: 12000 },
-];
+let POS_TOPPINGS = [];
+let POS_MENU_ITEMS = [];
 
-const POS_MENU_ITEMS = [
-  {
-    id: 'ceremonial-latte',
-    category: 'Matcha Classics',
-    name: 'Ceremonial Grade Latte',
-    description: 'Stone-ground ceremonial grade matcha with silky oat milk.',
-    price: 75000,
-    badge: 'Popular',
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuD38R8L4FSRfpaQOSPtDSgjQvkcfuDFOrwoBfBCaV2cBG9i_nLOsGkkGMkN6witrF9Swu_3vu9Xr3fjKgcprxoBdot5V8dIg-JGuWJk-z4ViK0oXsRlqTWJyyS7Mh-P9SX-FjI6VIw6JKpyvhjoLVn322qOPcSYO3IULjxLtzZ5Gr_yaEjetWdlqKSMh3fxLQ7tpKD_eB_H-CtD5JIickHbQZUFG9tshpZxPMQD4nzPnwgDQ8CLKZkQCLPTRy4Okn8qQR_GyezQGV53',
-  },
-  {
-    id: 'matcha-cream-cheese',
-    category: 'Matcha Classics',
-    name: 'Matcha Cream Cheese',
-    description: 'Deep forest matcha topped with sea salt savory cream.',
-    price: 60000,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuB7lBG6XfDHs6N0iB1e-8JQV_Ih32BF-FEovTrKxMtBdKu4bu7fmgdcyr9viabl-zhXLQ1chV-Ylk8J4pE0zNIykr0wof2lhqY5ijypoZE0fWlzcI47DmgR5zubJvHYbUzYfQgyJ-O3Ub_gE-tVXDhZg_i-WSS6cb8gWmXGkHPQR9YBRCQJAKxstZM0XgNHffsKINPl-R6PM5lDie8twMHkoy4PvkEIZjkK7ss_uek3gVNdopNkTmhK0WzYF0hkTGklCel8nSOULiZq',
-  },
-  {
-    id: 'matcha-pearl-blossom',
-    category: 'Matcha Classics',
-    name: 'Matcha Pearl Blossom',
-    description: 'Traditional whisked tea served over house-made honey boba.',
-    price: 55000,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuCXMdCiTSkhaCj2XfxmnfqhmF5G_8X40ouY3AjKrKU3XTxdUReASJKRkoGqWr3tPP0yhBN3VfsBvvcKWUTiN3aMxj2fzQUQpP_3DWteZjuZeWoq0w79RrgOlu7nTwzqobxpKe_ejKCFz1sa_Q5Jle_ydgcGYjHLR6BwCIGx-j7AO78qNJ16R97quwAqsxSreeKSWLrbWSobk4Tnv_Af64ujPIxdW9aoFwELng3jgbQGlgdsppF8oSzDU6SEkHcWnQGQm86WURWYuXSP',
-  },
-  {
-    id: 'roasted-hojicha',
-    category: 'Toasted Notes',
-    name: 'Roasted Hojicha',
-    description: 'Slow-roasted green tea with earthy, cocoa undertones.',
-    price: 65000,
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuC2Kn97Sodrfnwct4UT7Ts_GB-NRMKDR12ubWNEysWSAk7jw9OSC1RNzBivZqIQHF6AQT3LzBazPvAvll5H0Q4OE2tPLIoaISi6rBA9i3VCQfH0grMiWzlAJGIpTIn0LLYQSwDsQD2fV3pcSEskfD2SXvwRXsrB1UFSPBV6Ko6GEW59Q8YbPMeRbP47CbKRmA3s6HcvuRyEij7S1l9qqDBCvcF5xWYPBdPMKMzT5_afcPIzho_yBOSlxhaeCbLSnqIVMQ079QcFqp-s',
-  },
-];
+const POS_FALLBACK_IMAGE =
+  'https://images.unsplash.com/photo-1515823662972-da6a2e4d3002?auto=format&fit=crop&w=900&q=80';
 
 function formatVnd(amount) {
   return `${Number(amount || 0).toLocaleString('vi-VN')} VND`;
@@ -417,6 +376,75 @@ function escapeHtml(value) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+function getMatchaApiBaseUrl() {
+  return MATCHA_API_BASE_URL;
+}
+
+function getMatchaAuthHeaders() {
+  const token = localStorage.getItem('matcha_access_token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+async function fetchMatchaApi(path, options = {}) {
+  const response = await fetch(`${getMatchaApiBaseUrl()}${path}`, {
+    ...options,
+    headers: {
+      ...getMatchaAuthHeaders(),
+      ...(options.headers || {}),
+    },
+  });
+  const payload = await response.json().catch(() => null);
+
+  if (!response.ok || payload?.success === false) {
+    throw new Error(payload?.message || 'Request failed');
+  }
+
+  return payload?.data ?? payload;
+}
+
+function getApiListData(data) {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.items)) return data.items;
+  return [];
+}
+
+function mapProductToPosItem(product) {
+  return {
+    id: String(product.id),
+    category: product.category || 'Menu',
+    name: product.name || 'Unnamed Product',
+    description: product.description || 'No description available.',
+    price: Number(product.selling_price) || 0,
+    image: product.image_url || POS_FALLBACK_IMAGE,
+  };
+}
+
+function isToppingProduct(product) {
+  return String(product.category || '').trim().toLowerCase() === 'toppings';
+}
+
+function mapProductToPosTopping(product) {
+  return {
+    id: String(product.id),
+    name: product.name || 'Unnamed Topping',
+    price: Number(product.selling_price) || 0,
+  };
+}
+
+function renderPosMenuState(message, type = 'info') {
+  const container = document.getElementById('posMenuSections');
+  if (!container) return;
+
+  const icon = type === 'error' ? 'error' : type === 'empty' ? 'inventory_2' : 'progress_activity';
+  const textClass = type === 'error' ? 'text-error' : 'text-on-surface-variant';
+  container.innerHTML = `
+    <div class="rounded-2xl bg-surface-container-lowest border border-outline-variant/10 p-10 text-center">
+      <span class="material-symbols-outlined ${textClass} text-4xl mb-3">${icon}</span>
+      <p class="text-sm font-extrabold ${textClass}">${escapeHtml(message)}</p>
+    </div>
+  `;
 }
 
 function getPosCart() {
@@ -441,13 +469,14 @@ function getPosOrderCode() {
 }
 
 function getCartTotal(cart) {
-  return cart.reduce((sum, item) => sum + item.totalPrice, 0);
+  return cart.reduce((sum, item) => sum + Number(item.totalPrice || 0), 0);
 }
 
 function buildCustomizationSummary(item) {
-  const parts = [item.temperature, item.iceLevel, item.sugarLevel];
-  if (item.toppings.length) {
-    parts.push(item.toppings.map((topping) => topping.name).join(', '));
+  const toppings = item.toppings || [];
+  const parts = [item.temperature, item.iceLevel, item.sugarLevel].filter(Boolean);
+  if (toppings.length) {
+    parts.push(toppings.map((topping) => topping.name).join(', '));
   }
   if (item.note) {
     parts.push(`Note: ${item.note}`);
@@ -455,9 +484,118 @@ function buildCustomizationSummary(item) {
   return parts.join(' | ');
 }
 
+function buildPosOrderItems(cart) {
+  const quantities = new Map();
+
+  cart.forEach((item) => {
+    if (item.id) {
+      quantities.set(item.id, (quantities.get(item.id) || 0) + 1);
+    }
+
+    (item.toppings || []).forEach((topping) => {
+      if (topping.id) {
+        quantities.set(topping.id, (quantities.get(topping.id) || 0) + 1);
+      }
+    });
+  });
+
+  return Array.from(quantities.entries()).map(([productId, quantity]) => ({
+    product_id: productId,
+    quantity,
+  }));
+}
+
+function buildPosOrderNote(cart) {
+  const note = cart
+    .map((item, index) => `${index + 1}. ${item.name}: ${buildCustomizationSummary(item)}`)
+    .join('\n');
+  return note || null;
+}
+
+function getPosPaymentMethod(value) {
+  if (value === 'cash') return 'cash';
+  if (value === 'card') return 'card';
+  return 'bank_transfer';
+}
+
+function getPosPaymentLabel(value) {
+  if (value === 'cash') return 'cash';
+  if (value === 'card') return 'card';
+  return 'QR bank transfer';
+}
+
+function setPosPaymentStatus(message = '', type = 'info') {
+  const status = document.getElementById('paymentStatus');
+  if (!status) return;
+
+  status.textContent = message;
+  status.classList.toggle('hidden', !message);
+  status.classList.remove('text-error', 'text-secondary', 'text-on-surface-variant');
+  status.classList.add(
+    type === 'error' ? 'text-error' : type === 'success' ? 'text-secondary' : 'text-on-surface-variant'
+  );
+}
+
+async function submitPosInstoreOrder(selectedPayment) {
+  const cart = getPosCart();
+  const items = buildPosOrderItems(cart);
+
+  if (!items.length) {
+    throw new Error('No order items selected.');
+  }
+
+  if (!localStorage.getItem('matcha_access_token')) {
+    throw new Error('Please log in before completing an in-shop order.');
+  }
+
+  const order = await fetchMatchaApi('/orders', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      order_type: 'instore',
+      discount_amount: 0,
+      note: buildPosOrderNote(cart),
+      items,
+    }),
+  });
+
+  const paymentMethod = getPosPaymentMethod(selectedPayment);
+  const amount = Number(order.total_amount || getCartTotal(cart));
+  const paymentPayload = {
+    order_id: order.id,
+    method: paymentMethod,
+    amount,
+  };
+
+  if (paymentMethod === 'cash') {
+    paymentPayload.amount_received = amount;
+  }
+
+  await fetchMatchaApi('/payments', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(paymentPayload),
+  });
+
+  const completedOrder = await fetchMatchaApi(`/orders/${order.id}/complete`, {
+    method: 'POST',
+  });
+
+  return completedOrder || order;
+}
+
 function renderPosMenuItems() {
   const container = document.getElementById('posMenuSections');
   if (!container) return;
+
+  if (!POS_MENU_ITEMS.length) {
+    renderPosMenuState('No available products found. Add available products in Menu first.', 'empty');
+    return;
+  }
 
   const categories = [...new Set(POS_MENU_ITEMS.map((item) => item.category))];
   container.innerHTML = categories
@@ -505,6 +643,15 @@ function renderPosToppingOptions() {
   const container = document.getElementById('posToppingOptions');
   if (!container) return;
 
+  if (!POS_TOPPINGS.length) {
+    container.innerHTML = `
+      <div class="rounded-xl bg-surface-container-lowest p-4 text-sm font-bold text-on-surface-variant">
+        No toppings available.
+      </div>
+    `;
+    return;
+  }
+
   container.innerHTML = POS_TOPPINGS.map(
     (topping) => `
       <label class="flex items-center justify-between p-4 bg-surface-container-lowest rounded-xl cursor-pointer hover:bg-surface-container transition-colors">
@@ -516,6 +663,15 @@ function renderPosToppingOptions() {
       </label>
     `
   ).join('');
+}
+
+async function loadPosMenuProducts() {
+  renderPosMenuState('Loading available products...');
+  const products = getApiListData(await fetchMatchaApi('/products?is_available=true'));
+  POS_TOPPINGS = products.filter(isToppingProduct).map(mapProductToPosTopping);
+  POS_MENU_ITEMS = products.filter((product) => !isToppingProduct(product)).map(mapProductToPosItem);
+  renderPosMenuItems();
+  renderPosToppingOptions();
 }
 
 function openPosCustomizeModal(itemId) {
@@ -598,9 +754,14 @@ function renderPosCart() {
     .join('');
 }
 
-function initPosMenu() {
-  renderPosMenuItems();
-  renderPosToppingOptions();
+async function initPosMenu() {
+  try {
+    await loadPosMenuProducts();
+  } catch (error) {
+    console.error('Failed to load POS products:', error);
+    renderPosMenuState('Cannot load products for Point of Sale. Please check the backend server.', 'error');
+  }
+
   renderPosCart();
 
   const menuContainer = document.getElementById('posMenuSections');
@@ -736,29 +897,42 @@ function initPosPayment() {
   const card = document.getElementById('successCard');
   const successText = document.getElementById('successPaymentText');
   const newOrderBtn = document.getElementById('newOrderBtn');
+  const paymentOrderCode = document.getElementById('paymentOrderCode');
+  const originalPayBtnHtml = payBtn?.innerHTML;
 
-  payBtn?.addEventListener('click', () => {
+  payBtn?.addEventListener('click', async () => {
     const selectedPayment = document.querySelector('input[name="payment"]:checked')?.value;
     if (!getPosCart().length || !overlay || !card) return;
 
     payBtn.disabled = true;
     payBtn.innerHTML =
       '<span class="material-symbols-outlined animate-spin">progress_activity</span> Processing...';
+    setPosPaymentStatus('Creating in-shop order...');
 
-    setTimeout(() => {
-      const label =
-        selectedPayment === 'cash'
-          ? 'cash'
-          : selectedPayment === 'card'
-            ? 'credit card'
-            : 'QR';
-      if (successText) {
-        successText.textContent = `${getPosOrderCode()} completed successfully by ${label} payment.`;
+    try {
+      const completedOrder = await submitPosInstoreOrder(selectedPayment);
+      const orderCode = completedOrder.order_code || completedOrder.id || getPosOrderCode();
+      localStorage.setItem(POS_ORDER_CODE_STORAGE_KEY, orderCode);
+
+      if (paymentOrderCode) {
+        paymentOrderCode.textContent = orderCode;
       }
+      if (successText) {
+        successText.textContent = `${orderCode} completed successfully by ${getPosPaymentLabel(selectedPayment)}.`;
+      }
+      setPosPaymentStatus('Order completed successfully.', 'success');
       overlay.classList.remove('opacity-0', 'pointer-events-none');
       card.classList.remove('scale-90');
       card.classList.add('scale-100');
-    }, 800);
+    } catch (error) {
+      console.error('Failed to complete POS order:', error);
+      setPosPaymentStatus(
+        error.message || 'Cannot complete order. Please check the backend server.',
+        'error'
+      );
+      payBtn.disabled = false;
+      payBtn.innerHTML = originalPayBtnHtml;
+    }
   });
 
   newOrderBtn?.addEventListener('click', () => {

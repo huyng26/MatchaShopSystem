@@ -16,7 +16,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
     rel="stylesheet" />
-    <link rel="stylesheet" href="../assets/css/style.css" />
+    <link rel="stylesheet" href="../assets/css/style.css?v=app-font-20260605" />
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script src="../assets/js/tailwind-config.js"></script>
 </head>
@@ -35,6 +35,8 @@
         <p class="text-outline font-medium">List of current staff in your system</p>
       </div>
       <button
+        id="open-staff-modal"
+        type="button"
         class="management-primary-action bg-secondary text-on-secondary px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-secondary/20 hover:scale-[1.02] transition-transform active:scale-95">
         <span class="material-symbols-outlined" data-icon="person_add">person_add</span>
         Add New Employee
@@ -74,7 +76,7 @@
             <p class="text-xs font-bold uppercase tracking-widest opacity-60 mb-1">Total Staff</p>
             <h3 id="total-staff-count" class="text-4xl font-serif">0</h3>
             <p class="text-xs mt-4 flex items-center gap-1 font-medium"><span class="material-symbols-outlined text-sm"
-                data-icon="trending_up">trending_up</span> +2 since last month</p>
+                data-icon="database">database</span> Loaded from API</p>
           </div>
           <span
             class="material-symbols-outlined absolute -bottom-4 -right-4 text-9xl opacity-5 group-hover:scale-110 transition-transform duration-500"
@@ -92,12 +94,12 @@
         </div>
         <div class="bg-white p-6 rounded-xl shadow-sm border border-surface-variant/20 flex flex-col justify-between">
           <div>
-            <p class="text-xs font-bold uppercase tracking-widest text-outline mb-1">Upcoming Shifts</p>
+            <p class="text-xs font-bold uppercase tracking-widest text-outline mb-1">Featured Staff</p>
             <p id="next-shift-label" class="text-sm font-semibold text-on-surface">Loading staff...</p>
           </div>
-          <a class="text-secondary text-xs font-bold flex items-center gap-1 hover:gap-2 transition-all" href="#">
-            VIEW SCHEDULE <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
-          </a>
+          <span class="text-secondary text-xs font-bold flex items-center gap-1">
+            STAFF API <span class="material-symbols-outlined text-sm" data-icon="api">api</span>
+          </span>
         </div>
       </div>
     </div>
@@ -114,6 +116,85 @@
       </div>
     </div>
   </main>
+  <div id="staff-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4 py-8 backdrop-blur-sm">
+    <div class="w-full max-w-3xl rounded-2xl bg-surface-container-lowest shadow-2xl">
+      <div class="flex items-center justify-between border-b border-outline-variant px-8 py-5">
+        <div>
+          <h2 class="font-serif text-3xl text-primary">New Employee</h2>
+          <p class="text-sm text-on-surface-variant">Create a staff profile using the staff API.</p>
+        </div>
+        <button id="close-staff-modal" type="button"
+          class="flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface">
+          <span class="material-symbols-outlined" data-icon="close">close</span>
+        </button>
+      </div>
+      <form id="staff-form" class="space-y-5 px-8 py-7">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <label class="space-y-2">
+            <span class="text-sm font-bold text-on-surface">Full Name</span>
+            <input id="staff-full-name" type="text" required
+              class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
+          </label>
+          <label class="space-y-2">
+            <span class="text-sm font-bold text-on-surface">Phone</span>
+            <input id="staff-phone" type="text" required
+              class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
+          </label>
+          <label class="space-y-2">
+            <span class="text-sm font-bold text-on-surface">Email</span>
+            <input id="staff-email" type="email" required
+              class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
+          </label>
+          <label class="space-y-2">
+            <span class="text-sm font-bold text-on-surface">Role</span>
+            <select id="staff-role" required
+              class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary">
+              <option value="admin">Admin</option>
+              <option value="inventory_manager">Inventory Manager</option>
+              <option value="delivery_manager">Delivery Manager</option>
+              <option value="cashier">Cashier</option>
+              <option value="shipper">Shipper</option>
+            </select>
+          </label>
+          <label class="space-y-2">
+            <span class="text-sm font-bold text-on-surface">Salary</span>
+            <input id="staff-salary" type="number" min="0" step="0.01"
+              class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
+          </label>
+          <label class="space-y-2">
+            <span class="text-sm font-bold text-on-surface">Date Joined</span>
+            <input id="staff-date-joined" type="date" required
+              class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
+          </label>
+          <label class="space-y-2">
+            <span class="text-sm font-bold text-on-surface">Status</span>
+            <select id="staff-status" required
+              class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary">
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </label>
+          <label class="space-y-2">
+            <span class="text-sm font-bold text-on-surface">Linked User ID</span>
+            <input id="staff-user-id" type="text"
+              class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary"
+              placeholder="Optional" />
+          </label>
+        </div>
+        <p id="staff-form-status" class="hidden text-sm font-bold"></p>
+        <div class="flex justify-end gap-3 border-t border-outline-variant pt-5">
+          <button id="cancel-staff-modal" type="button"
+            class="rounded-full bg-surface-container-high px-6 py-2.5 text-sm font-bold text-on-surface hover:bg-surface-container-highest">
+            Cancel
+          </button>
+          <button id="save-staff" type="submit"
+            class="rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-white hover:bg-primary/90">
+            Save Employee
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
   <script src="../assets/js/layout.js?v=fm-20260530"></script>
   <script src="../assets/js/main.js?v=fm-20260530"></script>
   <script>
@@ -123,6 +204,11 @@
       const totalStaffCount = document.getElementById('total-staff-count');
       const activeStaffCount = document.getElementById('active-staff-count');
       const nextShiftLabel = document.getElementById('next-shift-label');
+      const openStaffModalButton = document.getElementById('open-staff-modal');
+      const staffModal = document.getElementById('staff-modal');
+      const staffForm = document.getElementById('staff-form');
+      const staffFormStatus = document.getElementById('staff-form-status');
+      const saveStaffButton = document.getElementById('save-staff');
       const API_BASE_URL = window.MATCHA_API_BASE_URL || 'http://localhost:8000/api/v1';
 
       const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
@@ -169,10 +255,18 @@
           : 'bg-error-container/30 text-error';
       };
 
-      const fetchStaff = async () => {
+      const getTokenHeaders = () => {
         const token = localStorage.getItem('matcha_access_token');
-        const response = await fetch(`${API_BASE_URL}/staff`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        return token ? { Authorization: `Bearer ${token}` } : {};
+      };
+
+      const fetchApiData = async (path, options = {}) => {
+        const response = await fetch(`${API_BASE_URL}${path}`, {
+          ...options,
+          headers: {
+            ...getTokenHeaders(),
+            ...(options.headers || {}),
+          },
         });
         const payload = await response.json().catch(() => null);
 
@@ -180,11 +274,38 @@
           throw new Error(payload?.message || 'Request failed');
         }
 
-        const data = payload?.data ?? payload;
+        return payload?.data ?? payload;
+      };
+
+      const fetchStaff = async () => {
+        const data = await fetchApiData('/staff');
         if (Array.isArray(data)) {
           return data;
         }
         return Array.isArray(data?.items) ? data.items : [];
+      };
+
+      const setStaffFormStatus = (message, type = 'info') => {
+        staffFormStatus.textContent = message;
+        staffFormStatus.className = `text-sm font-bold ${type === 'error' ? 'text-error' : 'text-secondary'}`;
+        staffFormStatus.classList.toggle('hidden', !message);
+      };
+
+      const openStaffModal = () => {
+        staffForm.reset();
+        document.getElementById('staff-role').value = 'cashier';
+        document.getElementById('staff-status').value = 'active';
+        document.getElementById('staff-date-joined').value = new Date().toISOString().slice(0, 10);
+        setStaffFormStatus('');
+        staffModal.classList.remove('hidden');
+        staffModal.classList.add('flex');
+        document.body.classList.add('overflow-hidden');
+      };
+
+      const closeStaffModal = () => {
+        staffModal.classList.add('hidden');
+        staffModal.classList.remove('flex');
+        document.body.classList.remove('overflow-hidden');
       };
 
       const renderStaff = (staff) => {
@@ -194,8 +315,8 @@
         activeStaffCount.textContent = staff.filter((employee) => getNormalizedStatus(employee.status) === 'active').length;
         const nextEmployee = staff.find((employee) => getNormalizedStatus(employee.status) === 'active') || staff[0];
         nextShiftLabel.textContent = nextEmployee
-          ? `Next: ${nextEmployee.full_name || nextEmployee.email || nextEmployee.id}`
-          : 'No upcoming shifts';
+          ? nextEmployee.full_name || nextEmployee.email || nextEmployee.id
+          : 'No staff profiles';
 
         if (!staff.length) {
           tableBody.innerHTML = `
@@ -268,6 +389,51 @@
         }
       };
 
+      staffForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!staffForm.reportValidity()) return;
+
+        const payload = {
+          user_id: document.getElementById('staff-user-id').value.trim() || null,
+          full_name: document.getElementById('staff-full-name').value.trim(),
+          phone: document.getElementById('staff-phone').value.trim(),
+          email: document.getElementById('staff-email').value.trim(),
+          role: document.getElementById('staff-role').value,
+          salary: document.getElementById('staff-salary').value === '' ? null : Number(document.getElementById('staff-salary').value),
+          date_joined: document.getElementById('staff-date-joined').value,
+          status: document.getElementById('staff-status').value,
+        };
+
+        saveStaffButton.disabled = true;
+        saveStaffButton.textContent = 'Saving...';
+        setStaffFormStatus('Saving employee...');
+
+        try {
+          const createdStaff = await fetchApiData('/staff', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          closeStaffModal();
+          await loadStaff();
+          if (createdStaff?.id) {
+            window.location.href = `employee_detail.html?id=${encodeURIComponent(createdStaff.id)}`;
+          }
+        } catch (error) {
+          console.error('Failed to create staff:', error);
+          setStaffFormStatus(error.message || 'Cannot create employee. Please sign in with an admin account.', 'error');
+        } finally {
+          saveStaffButton.disabled = false;
+          saveStaffButton.textContent = 'Save Employee';
+        }
+      });
+
+      openStaffModalButton.addEventListener('click', openStaffModal);
+      document.getElementById('close-staff-modal').addEventListener('click', closeStaffModal);
+      document.getElementById('cancel-staff-modal').addEventListener('click', closeStaffModal);
+      staffModal.addEventListener('click', (event) => {
+        if (event.target === staffModal) closeStaffModal();
+      });
       loadStaff();
     });
   </script>

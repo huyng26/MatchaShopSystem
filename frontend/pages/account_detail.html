@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Account Detail | The Matcha Atelier</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="../assets/css/style.css?v=app-font-20260605" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="../assets/js/tailwind-config.js"></script>
+</head>
+
+<body class="page-account-detail bg-surface text-on-surface" data-page="account-detail">
+    <aside id="app-sidebar" class="h-screen w-72 fixed left-0 top-0 z-40 bg-[#002c04] dark:bg-[#001a02] shadow-[32px_0_64px_-12px_rgba(0,44,4,0.08)] flex flex-col py-8 px-6"></aside>
+    <header id="app-topbar" class="fixed top-0 right-0 left-72 h-20 z-30 bg-[#f9f9f8]/80 dark:bg-[#191c1c]/80 backdrop-blur-2xl flex items-center justify-between px-10"></header>
+
+    <main class="ml-72 pt-24 p-10 space-y-8">
+        <section class="flex flex-wrap items-end justify-between gap-4">
+            <div>
+                <h2 id="account-title" class="font-serif text-4xl text-primary mb-2">Account Detail</h2>
+                <p id="account-subtitle" class="text-on-surface-variant font-medium">Loaded from accounts API</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <button id="delete-account" type="button"
+                    class="rounded-xl bg-error-container px-5 py-3 text-sm font-extrabold text-error hover:bg-error hover:text-white">
+                    <span class="material-symbols-outlined align-middle text-lg" data-icon="delete">delete</span>
+                    Delete
+                </button>
+                <button id="save-account" type="button"
+                    class="rounded-xl bg-secondary px-6 py-3 text-sm font-extrabold text-white shadow-lg shadow-secondary/15 hover:bg-secondary/90">
+                    <span class="material-symbols-outlined align-middle text-lg" data-icon="save">save</span>
+                    Save Account
+                </button>
+            </div>
+        </section>
+
+        <p id="page-status" class="hidden rounded-xl px-4 py-3 text-sm font-bold"></p>
+
+        <section class="grid grid-cols-12 gap-8">
+            <aside class="col-span-12 lg:col-span-4 space-y-8">
+                <div class="bg-surface-container-lowest rounded-2xl p-8 text-center shadow-sm border border-outline-variant/10">
+                    <div id="account-avatar"
+                        class="mx-auto flex h-28 w-28 items-center justify-center rounded-2xl bg-primary-container text-3xl font-extrabold text-primary">
+                        AC
+                    </div>
+                    <h3 id="profile-email" class="text-xl font-extrabold mt-6 text-primary break-all">Loading...</h3>
+                    <p id="profile-role" class="text-secondary font-extrabold tracking-wide uppercase text-xs mt-2">--</p>
+                    <div class="mt-6 flex justify-center">
+                        <span id="profile-status" class="rounded-full bg-surface-container-high px-3 py-1 text-xs font-extrabold text-on-surface-variant">--</span>
+                    </div>
+                </div>
+
+                <div class="bg-primary-container rounded-2xl p-8 text-[#f9f9f8]">
+                    <h4 class="text-xl font-extrabold mb-6">Account Summary</h4>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center bg-[#06440c] p-4 rounded-xl gap-4">
+                            <span class="text-[#f9f9f8]/60 text-sm">Created</span>
+                            <span id="summary-created" class="text-sm font-semibold text-right">--</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-[#06440c] p-4 rounded-xl gap-4">
+                            <span class="text-[#f9f9f8]/60 text-sm">Updated</span>
+                            <span id="summary-updated" class="text-sm font-semibold text-right">--</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-[#06440c] p-4 rounded-xl gap-4">
+                            <span class="text-[#f9f9f8]/60 text-sm">Last Login</span>
+                            <span id="summary-last-login" class="text-sm font-semibold text-right">--</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <div class="col-span-12 lg:col-span-8">
+                <section class="bg-surface-container-low rounded-2xl p-8">
+                    <div class="mb-8 flex items-end justify-between gap-4">
+                        <div>
+                            <h4 class="text-2xl font-extrabold text-primary">Account Access</h4>
+                            <div class="h-1 w-12 bg-secondary mt-2 rounded-full"></div>
+                        </div>
+                        <span id="account-id-label" class="text-outline-variant text-xs font-bold">ID: --</span>
+                    </div>
+
+                    <form id="account-form" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <label class="space-y-2 md:col-span-2">
+                            <span class="text-xs text-outline font-bold tracking-wider uppercase">Email</span>
+                            <input id="account-email" type="email" required
+                                class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
+                        </label>
+                        <label class="space-y-2">
+                            <span class="text-xs text-outline font-bold tracking-wider uppercase">New Password</span>
+                            <input id="account-password" type="password" minlength="8" maxlength="72"
+                                class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary"
+                                placeholder="Leave blank to keep current password" />
+                        </label>
+                        <label class="space-y-2">
+                            <span class="text-xs text-outline font-bold tracking-wider uppercase">Role</span>
+                            <select id="account-role" required
+                                class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary">
+                                <option value="admin">Admin</option>
+                                <option value="inventory_manager">Inventory Manager</option>
+                                <option value="delivery_manager">Delivery Manager</option>
+                                <option value="cashier">Cashier</option>
+                                <option value="shipper">Shipper</option>
+                            </select>
+                        </label>
+                        <label class="space-y-2">
+                            <span class="text-xs text-outline font-bold tracking-wider uppercase">Status</span>
+                            <select id="account-status" required
+                                class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary">
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="locked">Locked</option>
+                            </select>
+                        </label>
+                    </form>
+                </section>
+            </div>
+        </section>
+    </main>
+
+    <script src="../assets/js/layout.js?v=account-detail-shell-20260605"></script>
+    <script src="../assets/js/main.js?v=fm-20260530"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const API_BASE_URL = window.MATCHA_API_BASE_URL || 'http://localhost:8000/api/v1';
+            const accountId = new URLSearchParams(window.location.search).get('id');
+            const accountForm = document.getElementById('account-form');
+            const saveAccountButton = document.getElementById('save-account');
+            const deleteAccountButton = document.getElementById('delete-account');
+            const pageStatus = document.getElementById('page-status');
+            let currentAccount = null;
+
+            const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;',
+            }[character]));
+            const formatLabel = (value) => String(value || '--')
+                .replace(/[_-]+/g, ' ')
+                .replace(/\b\w/g, (character) => character.toUpperCase());
+            const formatDateTime = (value) => {
+                if (!value) return '--';
+                const date = new Date(value);
+                return Number.isNaN(date.getTime())
+                    ? '--'
+                    : new Intl.DateTimeFormat('vi-VN', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+            };
+            const getInitials = (email) => {
+                const localPart = String(email || '').split('@')[0] || 'account';
+                const parts = localPart.split(/[._-]+/).filter(Boolean);
+                if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+                return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+            };
+            const getTokenHeaders = () => {
+                const token = localStorage.getItem('matcha_access_token');
+                return token ? { Authorization: `Bearer ${token}` } : {};
+            };
+            const fetchApiData = async (path, options = {}) => {
+                const response = await fetch(`${API_BASE_URL}${path}`, {
+                    ...options,
+                    headers: {
+                        ...getTokenHeaders(),
+                        ...(options.headers || {}),
+                    },
+                });
+                const payload = await response.json().catch(() => null);
+                if (!response.ok || payload?.success === false) {
+                    throw new Error(payload?.message || 'Request failed');
+                }
+                return payload?.data ?? payload;
+            };
+            const getStatusClass = (status) => {
+                const normalizedStatus = String(status || '').toLowerCase();
+                if (normalizedStatus === 'active') return 'bg-secondary/10 text-secondary';
+                if (normalizedStatus === 'inactive') return 'bg-error-container text-error';
+                if (normalizedStatus === 'locked') return 'bg-surface-container-highest text-on-surface-variant';
+                return 'bg-surface-container-high text-on-surface-variant';
+            };
+            const setPageStatus = (message, type = 'info') => {
+                pageStatus.textContent = message;
+                pageStatus.className = `rounded-xl px-4 py-3 text-sm font-bold ${type === 'error' ? 'bg-error-container text-error' : 'bg-secondary/10 text-secondary'}`;
+                pageStatus.classList.toggle('hidden', !message);
+            };
+            const renderAccount = (account) => {
+                currentAccount = account;
+                document.getElementById('account-title').textContent = 'Account Detail';
+                document.getElementById('account-subtitle').textContent = account.email || 'Loaded from accounts API';
+                document.getElementById('account-avatar').textContent = getInitials(account.email);
+                document.getElementById('profile-email').textContent = account.email || 'Unnamed account';
+                document.getElementById('profile-role').textContent = formatLabel(account.role);
+                document.getElementById('profile-status').textContent = formatLabel(account.status);
+                document.getElementById('profile-status').className = `rounded-full px-3 py-1 text-xs font-extrabold ${getStatusClass(account.status)}`;
+                document.getElementById('account-id-label').textContent = `ID: ${account.id}`;
+                document.getElementById('summary-created').textContent = formatDateTime(account.created_at);
+                document.getElementById('summary-updated').textContent = formatDateTime(account.updated_at);
+                document.getElementById('summary-last-login').textContent = formatDateTime(account.last_login_at);
+
+                document.getElementById('account-email').value = account.email || '';
+                document.getElementById('account-role').value = account.role || 'cashier';
+                document.getElementById('account-status').value = account.status || 'active';
+                document.getElementById('account-password').value = '';
+            };
+            const loadAccount = async () => {
+                if (!accountId) {
+                    setPageStatus('Missing account id. Open this page from Account Management.', 'error');
+                    saveAccountButton.disabled = true;
+                    deleteAccountButton.disabled = true;
+                    return;
+                }
+
+                try {
+                    const account = await fetchApiData(`/accounts/${encodeURIComponent(accountId)}`);
+                    renderAccount(account);
+                    setPageStatus('');
+                } catch (error) {
+                    console.error('Failed to load account:', error);
+                    setPageStatus(error.message || 'Cannot load account. Please sign in with an admin account.', 'error');
+                }
+            };
+            const buildPayload = () => {
+                const password = document.getElementById('account-password').value;
+                const payload = {
+                    email: document.getElementById('account-email').value.trim(),
+                    role: document.getElementById('account-role').value,
+                    status: document.getElementById('account-status').value,
+                };
+                if (password) {
+                    payload.password = password;
+                }
+                return payload;
+            };
+            const saveAccount = async () => {
+                if (!accountForm.reportValidity() || !accountId) return;
+
+                saveAccountButton.disabled = true;
+                saveAccountButton.textContent = 'Saving...';
+                setPageStatus('Saving account...');
+                try {
+                    const account = await fetchApiData(`/accounts/${encodeURIComponent(accountId)}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(buildPayload()),
+                    });
+                    renderAccount(account);
+                    setPageStatus('Account saved successfully.');
+                } catch (error) {
+                    console.error('Failed to save account:', error);
+                    setPageStatus(error.message || 'Cannot save account.', 'error');
+                } finally {
+                    saveAccountButton.disabled = false;
+                    saveAccountButton.innerHTML = '<span class="material-symbols-outlined align-middle text-lg" data-icon="save">save</span> Save Account';
+                }
+            };
+            const deleteAccount = async () => {
+                if (!accountId || !confirm('Delete this account?')) return;
+
+                deleteAccountButton.disabled = true;
+                setPageStatus('Deleting account...');
+                try {
+                    await fetchApiData(`/accounts/${encodeURIComponent(accountId)}`, { method: 'DELETE' });
+                    window.location.href = 'account_list.html';
+                } catch (error) {
+                    console.error('Failed to delete account:', error);
+                    setPageStatus(error.message || 'Cannot delete account.', 'error');
+                    deleteAccountButton.disabled = false;
+                }
+            };
+
+            saveAccountButton.addEventListener('click', saveAccount);
+            deleteAccountButton.addEventListener('click', deleteAccount);
+            loadAccount();
+        });
+    </script>
+</body>
+
+</html>

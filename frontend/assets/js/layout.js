@@ -107,6 +107,7 @@ const PAGE_CONFIG = {
   'inventory-list':  { activeNav: 'inventory',   searchPlaceholder: 'Search inventory...',                backUrl: null },
   'inventory-detail':{ activeNav: 'inventory',   searchPlaceholder: 'Search inventory...',                backUrl: 'inventory_list.html' },
   'account-list':    { activeNav: 'account',     searchPlaceholder: 'Search accounts...',                 backUrl: null },
+  'account-detail':  { activeNav: 'account',     searchPlaceholder: 'Search accounts...',                 backUrl: 'account_list.html' },
   'customer-list':   { activeNav: 'customers',   searchPlaceholder: 'Search customers...',               backUrl: null },
   'customer-detail': { activeNav: 'customers',   searchPlaceholder: 'Search customers...',               backUrl: 'customer_list.html' },
   'employee-list':   { activeNav: 'employees',   searchPlaceholder: 'Search employees...',               backUrl: null },
