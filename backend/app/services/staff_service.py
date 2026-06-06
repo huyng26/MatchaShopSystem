@@ -3,10 +3,12 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.constants import StaffStatus
+from app.core.constants import StaffStatus, UserRole, UserStatus
 from app.core.exceptions import BusinessRuleError, ConflictError, NotFoundError
+from app.core.security import hash_password
 from app.models.audit import AuditLog
 from app.models.staff import StaffProfile, StaffTask
+from app.models.user import User
 from app.repositories import staff_repo, user_repo
 from app.schemas.staff import (
     StaffProfileCreate,
@@ -48,9 +50,22 @@ async def create_staff_profile(
     actor_user_id: UUID | None,
 ) -> StaffProfile:
     await _validate_staff_uniqueness(db, payload.email, payload.phone)
-    await _validate_user_link(db, payload.user_id, payload.role)
+    user_id = await _resolve_staff_user_link(
+        db,
+        email=payload.email,
+        role=payload.role,
+        user_id=payload.user_id,
+        create_account=payload.create_account,
+        account_password=payload.account_password,
+        account_status=payload.account_status,
+        actor_user_id=actor_user_id,
+    )
 
-    staff_profile = StaffProfile(**payload.model_dump())
+    staff_data = payload.model_dump(
+        exclude={"create_account", "account_password", "account_status"}
+    )
+    staff_data["user_id"] = user_id
+    staff_profile = StaffProfile(**staff_data)
     staff_repo.add_staff_profile(db, staff_profile)
     await db.flush()
     _add_audit_log(
@@ -74,6 +89,26 @@ async def update_staff_profile(
 ) -> StaffProfile:
     staff_profile = await get_staff_profile(db, staff_id)
     update_data = payload.model_dump(exclude_unset=True)
+    create_account = bool(update_data.pop("create_account", False))
+    account_password = update_data.pop("account_password", None)
+    account_status = update_data.pop("account_status", UserStatus.ACTIVE)
+    if not update_data:
+        if create_account:
+            update_data["user_id"] = await _create_account_for_staff(
+                db,
+                email=staff_profile.email,
+                role=staff_profile.role,
+                account_password=account_password,
+                account_status=account_status,
+                actor_user_id=actor_user_id,
+                current_staff_id=staff_profile.id,
+                current_user_id=staff_profile.user_id,
+            )
+        else:
+            await _validate_account_options(
+                create_account=create_account,
+                account_password=account_password,
+            )
     if not update_data:
         return staff_profile
 
@@ -87,20 +122,45 @@ async def update_staff_profile(
     )
 
     next_role = update_data.get("role", staff_profile.role)
-    if "user_id" in update_data:
-        await _validate_user_link(
-            db,
-            update_data["user_id"],
-            next_role,
-            current_staff_id=staff_profile.id,
+    if create_account:
+        _validate_account_options(
+            create_account=True,
+            account_password=account_password,
+            requested_user_id=update_data.get("user_id"),
         )
-    elif staff_profile.user_id is not None and "role" in update_data:
-        await _validate_user_link(
+        update_data["user_id"] = await _create_account_for_staff(
             db,
-            staff_profile.user_id,
-            next_role,
+            email=next_email,
+            role=next_role,
+            account_password=account_password,
+            account_status=account_status,
+            actor_user_id=actor_user_id,
             current_staff_id=staff_profile.id,
+            current_user_id=staff_profile.user_id,
         )
+    else:
+        await _validate_account_options(
+            create_account=create_account,
+            account_password=account_password,
+        )
+        if "user_id" in update_data:
+            await _validate_user_link(
+                db,
+                update_data["user_id"],
+                next_role,
+                current_staff_id=staff_profile.id,
+            )
+        elif staff_profile.user_id is not None and "role" in update_data:
+            await _validate_user_link(
+                db,
+                staff_profile.user_id,
+                next_role,
+                current_staff_id=staff_profile.id,
+            )
+    _validate_shipper_account_requirement(
+        next_role,
+        update_data.get("user_id", staff_profile.user_id),
+    )
 
     old_value = _staff_audit_value(staff_profile)
     for field, value in update_data.items():
@@ -275,6 +335,118 @@ async def _validate_staff_uniqueness(
         )
 
 
+async def _resolve_staff_user_link(
+    db: AsyncSession,
+    *,
+    email: str,
+    role,
+    user_id: UUID | None,
+    create_account: bool,
+    account_password: str | None,
+    account_status: UserStatus,
+    actor_user_id: UUID | None,
+) -> UUID | None:
+    _validate_account_options(
+        create_account=create_account,
+        account_password=account_password,
+        requested_user_id=user_id,
+    )
+    if create_account:
+        user_id = await _create_account_for_staff(
+            db,
+            email=email,
+            role=role,
+            account_password=account_password,
+            account_status=account_status,
+            actor_user_id=actor_user_id,
+        )
+    else:
+        await _validate_user_link(db, user_id, role)
+
+    _validate_shipper_account_requirement(role, user_id)
+    return user_id
+
+
+async def _create_account_for_staff(
+    db: AsyncSession,
+    *,
+    email: str,
+    role,
+    account_password: str | None,
+    account_status: UserStatus,
+    actor_user_id: UUID | None,
+    current_staff_id: UUID | None = None,
+    current_user_id: UUID | None = None,
+) -> UUID:
+    _validate_account_options(
+        create_account=True,
+        account_password=account_password,
+        current_user_id=current_user_id,
+    )
+
+    existing = await user_repo.get_user_by_email(
+        db,
+        email,
+        include_deleted=True,
+    )
+    if existing is not None:
+        raise ConflictError(
+            "Account email already exists",
+            [{"field": "email", "message": "Account email already exists"}],
+        )
+
+    user = User(
+        email=email,
+        hashed_password=hash_password(account_password),
+        role=role,
+        status=account_status,
+    )
+    user_repo.add_user(db, user)
+    await db.flush()
+    _add_audit_log(
+        db,
+        actor_user_id,
+        "account.created",
+        "users",
+        user.id,
+        new_value=_user_audit_value(user),
+    )
+
+    existing_link = await staff_repo.get_staff_profile_by_user_id(
+        db,
+        user.id,
+        include_deleted=True,
+    )
+    if existing_link is not None and existing_link.id != current_staff_id:
+        raise ConflictError(
+            "User account is already linked to another staff profile",
+            [{"field": "user_id", "message": "User is already linked"}],
+        )
+
+    return user.id
+
+
+def _validate_account_options(
+    *,
+    create_account: bool,
+    account_password: str | None,
+    requested_user_id: UUID | None = None,
+    current_user_id: UUID | None = None,
+) -> None:
+    if account_password is not None and not create_account:
+        raise BusinessRuleError(
+            "create_account must be true when account_password is provided"
+        )
+    if not create_account:
+        return
+    if requested_user_id is not None:
+        raise BusinessRuleError("Choose either linked user or create account")
+    if current_user_id is not None:
+        raise BusinessRuleError("Staff profile already has a linked account")
+    if account_password is None:
+        raise BusinessRuleError("Account password is required")
+
+
 async def _validate_user_link(
     db: AsyncSession,
     user_id: UUID | None,
@@ -302,6 +474,11 @@ async def _validate_user_link(
             "User account is already linked to another staff profile",
             [{"field": "user_id", "message": "User is already linked"}],
         )
+
+
+def _validate_shipper_account_requirement(role, user_id: UUID | None) -> None:
+    if _enum_value(role) == UserRole.SHIPPER.value and user_id is None:
+        raise BusinessRuleError("Shipper staff must be linked to an account")
 
 
 async def _require_staff_profile(
@@ -350,6 +527,16 @@ def _staff_audit_value(staff_profile: StaffProfile) -> dict:
     }
 
 
+def _user_audit_value(user: User) -> dict:
+    return {
+        "id": str(user.id),
+        "email": user.email,
+        "role": _enum_value(user.role),
+        "status": _enum_value(user.status),
+        "deleted_at": user.deleted_at.isoformat() if user.deleted_at else None,
+    }
+
+
 def _task_audit_value(task: StaffTask) -> dict:
     return {
         "id": str(task.id),
@@ -360,3 +547,7 @@ def _task_audit_value(task: StaffTask) -> dict:
         "status": getattr(task.status, "value", task.status),
         "deleted_at": task.deleted_at.isoformat() if task.deleted_at else None,
     }
+
+
+def _enum_value(value):
+    return getattr(value, "value", value)
