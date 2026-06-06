@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS ingredients (
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now(),
     deleted_at timestamptz,
+    image_url text,
     CONSTRAINT ingredients_current_stock_non_negative CHECK (current_stock >= 0),
     CONSTRAINT ingredients_cost_per_unit_non_negative CHECK (cost_per_unit >= 0),
     CONSTRAINT ingredients_minimum_threshold_non_negative CHECK (

@@ -55,6 +55,7 @@ async def create_ingredient(
     cost_per_unit: Decimal,
     current_stock: Decimal = Decimal("0"),
     minimum_threshold: Decimal = Decimal("0"),
+    image_url: str | None = None,
 ) -> Ingredient:
     ingredient = Ingredient(
         name=name,
@@ -62,6 +63,7 @@ async def create_ingredient(
         current_stock=current_stock,
         cost_per_unit=cost_per_unit,
         minimum_threshold=minimum_threshold,
+        image_url=image_url,
     )
     db.add(ingredient)
     await db.flush()

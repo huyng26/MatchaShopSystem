@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -128,7 +128,7 @@ async def delete_staff_profile(
     staff_profile = await get_staff_profile(db, staff_id)
     old_value = _staff_audit_value(staff_profile)
     staff_profile.status = StaffStatus.INACTIVE
-    staff_profile.deleted_at = datetime.now(UTC)
+    staff_profile.deleted_at = datetime.now(timezone.utc)
     _add_audit_log(
         db,
         actor_user_id,
@@ -231,7 +231,7 @@ async def delete_staff_task(
 ) -> StaffTask:
     task = await get_staff_task(db, task_id)
     old_value = _task_audit_value(task)
-    task.deleted_at = datetime.now(UTC)
+    task.deleted_at = datetime.now(timezone.utc)
     _add_audit_log(
         db,
         actor_user_id,

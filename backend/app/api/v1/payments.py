@@ -10,7 +10,6 @@ from app.api.v1.deps import (
     raise_service_error,
     read_list,
     read_one,
-    require_actor_user_id,
 )
 from app.core.database import get_db
 from app.models.payment import PaymentEventStatus, PaymentMethod
