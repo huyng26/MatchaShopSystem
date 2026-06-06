@@ -71,16 +71,19 @@ function buildTopbarHTML(config) {
        </a>`
     : '';
   const searchW = config.backUrl ? 'w-64' : 'w-80';
-
-  return `
-    <div class="flex items-center gap-2">
-      ${backBtn}
-      <div class="flex items-center bg-surface-container rounded-full px-4 py-2.5 ${searchW} gap-2">
+  const searchBar = config.hideSearch
+    ? ''
+    : `<div class="flex items-center bg-surface-container rounded-full px-4 py-2.5 ${searchW} gap-2">
         <span class="material-symbols-outlined text-on-surface-variant">search</span>
         <input id="topbar-search"
           class="bg-transparent border-none focus:ring-0 text-sm w-full placeholder-on-surface-variant/60 font-body"
           placeholder="${config.searchPlaceholder}" type="text" />
-      </div>
+      </div>`;
+
+  return `
+    <div class="flex items-center gap-2">
+      ${backBtn}
+      ${searchBar}
     </div>
     <div class="flex items-center gap-3">
       <button class="hover:bg-surface-container rounded-full p-2.5 transition-all relative">
@@ -108,7 +111,7 @@ const PAGE_CONFIG = {
   'menu':            { activeNav: 'menu',        searchPlaceholder: 'Search menu items...',               backUrl: null },
   'product-detail':  { activeNav: 'menu',        searchPlaceholder: 'Search menu items...',               backUrl: 'menu.html' },
   'inventory-list':  { activeNav: 'inventory',   searchPlaceholder: 'Search inventory...',                backUrl: null },
-  'inventory-detail':{ activeNav: 'inventory',   searchPlaceholder: 'Search inventory...',                backUrl: 'inventory_list.html' },
+  'inventory-detail':{ activeNav: 'inventory',   searchPlaceholder: 'Search inventory...',                backUrl: 'inventory_list.html', hideSearch: true },
   'account-list':    { activeNav: 'account',     searchPlaceholder: 'Search accounts...',                 backUrl: null },
   'account-detail':  { activeNav: 'account',     searchPlaceholder: 'Search accounts...',                 backUrl: 'account_list.html' },
   'customer-list':   { activeNav: 'customers',   searchPlaceholder: 'Search customers...',               backUrl: null },
