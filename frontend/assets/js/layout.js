@@ -109,7 +109,7 @@ function buildTopbarHTML(config) {
 const PAGE_CONFIG = {
   'dashboard':       { activeNav: 'dashboard',  searchPlaceholder: 'Search dashboard...',                 backUrl: null },
   'menu':            { activeNav: 'menu',        searchPlaceholder: 'Search menu items...',               backUrl: null },
-  'product-detail':  { activeNav: 'menu',        searchPlaceholder: 'Search menu items...',               backUrl: 'menu.html' },
+  'product-detail':  { activeNav: 'menu',        searchPlaceholder: 'Search menu items...',               backUrl: 'menu.html', hideSearch: true },
   'inventory-list':  { activeNav: 'inventory',   searchPlaceholder: 'Search inventory...',                backUrl: null },
   'inventory-detail':{ activeNav: 'inventory',   searchPlaceholder: 'Search inventory...',                backUrl: 'inventory_list.html', hideSearch: true },
   'account-list':    { activeNav: 'account',     searchPlaceholder: 'Search accounts...',                 backUrl: null },
