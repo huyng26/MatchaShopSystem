@@ -1,8 +1,9 @@
 from datetime import datetime
 from decimal import Decimal
+from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.models.inventory import InventoryMovementType
 
@@ -17,6 +18,7 @@ class IngredientCreate(BaseModel):
     minimum_threshold: Decimal = Field(
         default=Decimal("0"), ge=0, max_digits=12, decimal_places=3
     )
+    image_url: str | None = None
 
 
 class IngredientUpdate(BaseModel):
@@ -31,6 +33,7 @@ class IngredientUpdate(BaseModel):
     minimum_threshold: Decimal | None = Field(
         default=None, ge=0, max_digits=12, decimal_places=3
     )
+    image_url: str | None = None
 
 
 class IngredientRead(BaseModel):
@@ -42,6 +45,28 @@ class IngredientRead(BaseModel):
     current_stock: Decimal
     cost_per_unit: Decimal
     minimum_threshold: Decimal
+    has_image: bool = False
+    image_url: str | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def populate_has_image(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            return {
+                **data,
+                "has_image": bool(data.get("image_url")),
+            }
+
+        return {
+            "id": getattr(data, "id", None),
+            "name": getattr(data, "name", None),
+            "unit": getattr(data, "unit", None),
+            "current_stock": getattr(data, "current_stock", None),
+            "cost_per_unit": getattr(data, "cost_per_unit", None),
+            "minimum_threshold": getattr(data, "minimum_threshold", None),
+            "has_image": bool(getattr(data, "image_url", None)),
+            "image_url": getattr(data, "image_url", None),
+        }
 
 
 class InventoryPurchaseCreate(BaseModel):

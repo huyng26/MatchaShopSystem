@@ -1,4 +1,4 @@
-from sqlalchemy import CheckConstraint, DateTime, Numeric, String, text
+from sqlalchemy import CheckConstraint, DateTime, Numeric, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.schema import Column
@@ -36,6 +36,7 @@ class Ingredient(Base):
         DateTime(timezone=True), nullable=False, server_default=text("now()")
     )
     deleted_at = Column(DateTime(timezone=True))
+    image_url = Column(Text)
 
     recipe_rows = relationship("ProductRecipe", back_populates="ingredient")
     purchases = relationship("InventoryPurchase", back_populates="ingredient")
