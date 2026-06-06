@@ -54,12 +54,13 @@
                   <th class="px-6 py-4">Employee ID</th>
                   <th class="px-6 py-4">Full Name</th>
                   <th class="px-6 py-4">Role</th>
+                  <th class="px-6 py-4">Account</th>
                   <th class="px-6 py-4">Status</th>
                 </tr>
             </thead>
             <tbody id="staff-table-body">
               <tr>
-                <td class="px-6 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="4">Loading staff...</td>
+                <td class="px-6 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="5">Loading staff...</td>
               </tr>
             </tbody>
           </table>
@@ -172,6 +173,36 @@
               class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary"
               placeholder="Optional" />
           </label>
+          <label class="space-y-2">
+            <span class="text-sm font-bold text-on-surface">Account Setup</span>
+            <select id="staff-account-mode"
+              class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary">
+              <option value="none">No account</option>
+              <option value="link">Link existing account</option>
+              <option value="create">Create new account</option>
+            </select>
+          </label>
+          <label id="staff-account-select-wrap" class="hidden space-y-2">
+            <span class="text-sm font-bold text-on-surface">Existing Account</span>
+            <select id="staff-account-select"
+              class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary">
+              <option value="">Select account</option>
+            </select>
+          </label>
+          <label id="staff-account-password-wrap" class="hidden space-y-2">
+            <span class="text-sm font-bold text-on-surface">Account Password</span>
+            <input id="staff-account-password" type="password" minlength="8" maxlength="72"
+              class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
+          </label>
+          <label id="staff-account-status-wrap" class="hidden space-y-2">
+            <span class="text-sm font-bold text-on-surface">Account Status</span>
+            <select id="staff-account-status"
+              class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary">
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="locked">Locked</option>
+            </select>
+          </label>
         </div>
         <p id="staff-form-status" class="hidden text-sm font-bold"></p>
         <div class="flex justify-end gap-3 border-t border-outline-variant pt-5">
@@ -205,9 +236,19 @@
       const staffForm = document.getElementById('staff-form');
       const staffFormStatus = document.getElementById('staff-form-status');
       const saveStaffButton = document.getElementById('save-staff');
+      const staffRoleInput = document.getElementById('staff-role');
+      const staffUserIdInput = document.getElementById('staff-user-id');
+      const accountModeInput = document.getElementById('staff-account-mode');
+      const accountSelectWrap = document.getElementById('staff-account-select-wrap');
+      const accountSelectInput = document.getElementById('staff-account-select');
+      const accountPasswordWrap = document.getElementById('staff-account-password-wrap');
+      const accountPasswordInput = document.getElementById('staff-account-password');
+      const accountStatusWrap = document.getElementById('staff-account-status-wrap');
+      const accountStatusInput = document.getElementById('staff-account-status');
       const API_BASE_URL = window.MATCHA_API_BASE_URL || 'http://localhost:8000/api/v1';
       const pageSize = 5;
       let staffCache = [];
+      let accountCache = [];
       let currentPage = 1;
       let activeSearchQuery = '';
 
@@ -255,6 +296,10 @@
           : 'bg-error-container/30 text-error';
       };
 
+      const getAccountLinkClass = (userId) => (
+        userId ? 'bg-primary/10 text-primary' : 'bg-surface-container-high text-on-surface-variant'
+      );
+
       const normalizeSearchText = (value) => String(value ?? '')
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
@@ -279,6 +324,67 @@
       const getVisibleStaff = () => staffCache.filter(staffMatchesSearch);
 
       const getTotalPages = (staffCount) => Math.max(1, Math.ceil(staffCount / pageSize));
+
+      const getListData = (data) => {
+        if (Array.isArray(data)) return data;
+        if (Array.isArray(data?.items)) return data.items;
+        return [];
+      };
+
+      const getLinkedAccountIds = () => new Set(
+        staffCache.map((employee) => employee.user_id).filter(Boolean)
+      );
+
+      const getAvailableAccountsForRole = (role) => {
+        const linkedAccountIds = getLinkedAccountIds();
+        return accountCache.filter((account) => (
+          String(account.role || '').toLowerCase() === String(role || '').toLowerCase()
+          && !linkedAccountIds.has(account.id)
+        ));
+      };
+
+      const renderAccountOptions = () => {
+        const availableAccounts = getAvailableAccountsForRole(staffRoleInput.value);
+        accountSelectInput.innerHTML = '<option value="">Select account</option>';
+
+        availableAccounts.forEach((account) => {
+          const option = document.createElement('option');
+          option.value = account.id;
+          option.textContent = `${account.email || account.id} · ${formatLabel(account.status)}`;
+          accountSelectInput.appendChild(option);
+        });
+
+        accountSelectInput.disabled = !availableAccounts.length;
+      };
+
+      const syncAccountControls = () => {
+        if (staffRoleInput.value === 'shipper' && accountModeInput.value === 'none') {
+          accountModeInput.value = 'create';
+        }
+
+        const mode = accountModeInput.value;
+        const shouldLink = mode === 'link';
+        const shouldCreate = mode === 'create';
+
+        accountSelectWrap.classList.toggle('hidden', !shouldLink);
+        accountPasswordWrap.classList.toggle('hidden', !shouldCreate);
+        accountStatusWrap.classList.toggle('hidden', !shouldCreate);
+        accountPasswordInput.required = shouldCreate;
+        staffUserIdInput.required = shouldLink;
+        staffUserIdInput.disabled = shouldCreate || mode === 'none';
+
+        if (shouldCreate || mode === 'none') {
+          staffUserIdInput.value = '';
+          accountSelectInput.value = '';
+        }
+
+        if (!shouldCreate) {
+          accountPasswordInput.value = '';
+          accountPasswordInput.required = false;
+        }
+
+        renderAccountOptions();
+      };
 
       const updatePaginationControls = (staffCount) => {
         const totalPages = getTotalPages(staffCount);
@@ -315,10 +421,17 @@
 
       const fetchStaff = async () => {
         const data = await fetchApiData('/staff');
-        if (Array.isArray(data)) {
-          return data;
+        return getListData(data);
+      };
+
+      const fetchAccounts = async () => {
+        try {
+          const data = await fetchApiData('/accounts?page_size=100');
+          return getListData(data);
+        } catch (error) {
+          console.warn('Cannot load accounts for staff linking:', error);
+          return [];
         }
-        return Array.isArray(data?.items) ? data.items : [];
       };
 
       const setStaffFormStatus = (message, type = 'info') => {
@@ -329,9 +442,12 @@
 
       const openStaffModal = () => {
         staffForm.reset();
-        document.getElementById('staff-role').value = 'cashier';
+        staffRoleInput.value = 'cashier';
         document.getElementById('staff-status').value = 'active';
         document.getElementById('staff-date-joined').value = new Date().toISOString().slice(0, 10);
+        accountModeInput.value = 'none';
+        accountStatusInput.value = 'active';
+        syncAccountControls();
         setStaffFormStatus('');
         staffModal.classList.remove('hidden');
         staffModal.classList.add('flex');
@@ -405,6 +521,11 @@
             <td class="px-6 py-6 bg-surface-container-low">
               <span class="px-3 py-1 ${getRoleClass(employee.role)} text-xs font-bold rounded-md">${escapeHtml(formatLabel(employee.role))}</span>
             </td>
+            <td class="px-6 py-6 bg-surface-container-low">
+              <span class="px-3 py-1 ${getAccountLinkClass(employee.user_id)} text-xs font-bold rounded-full">
+                ${employee.user_id ? 'Linked' : 'No account'}
+              </span>
+            </td>
             <td class="px-6 py-6 bg-surface-container-low rounded-r-xl">
               <span class="px-3 py-1 ${getStatusClass(employee.status)} text-xs font-bold rounded-full">${escapeHtml(formatLabel(normalizedStatus))}</span>
             </td>
@@ -415,10 +536,12 @@
 
       const loadStaff = async () => {
         try {
-          const staff = await fetchStaff();
+          const [staff, accounts] = await Promise.all([fetchStaff(), fetchAccounts()]);
           staffCache = Array.isArray(staff) ? staff : [];
+          accountCache = Array.isArray(accounts) ? accounts : [];
           currentPage = 1;
           renderStaff(getVisibleStaff());
+          renderAccountOptions();
         } catch (error) {
           console.error('Failed to load staff:', error);
           tableCount.textContent = 'Cannot load staff';
@@ -428,7 +551,7 @@
           activeStaffCount.textContent = '0';
           tableBody.innerHTML = `
             <tr>
-              <td class="px-6 py-8 text-center text-sm font-bold text-error" colspan="4">Cannot load staff. Please sign in with an admin account and check the backend server.</td>
+              <td class="px-6 py-8 text-center text-sm font-bold text-error" colspan="5">Cannot load staff. Please sign in with an admin account and check the backend server.</td>
             </tr>
           `;
         }
@@ -438,8 +561,20 @@
         event.preventDefault();
         if (!staffForm.reportValidity()) return;
 
+        const accountMode = accountModeInput.value;
+        const userId = staffUserIdInput.value.trim();
+
+        if (document.getElementById('staff-role').value === 'shipper' && accountMode === 'none') {
+          setStaffFormStatus('Shipper staff must be linked to an account.', 'error');
+          return;
+        }
+
+        if (accountMode === 'link' && !userId) {
+          setStaffFormStatus('Select or enter a linked account ID.', 'error');
+          return;
+        }
+
         const payload = {
-          user_id: document.getElementById('staff-user-id').value.trim() || null,
           full_name: document.getElementById('staff-full-name').value.trim(),
           phone: document.getElementById('staff-phone').value.trim(),
           email: document.getElementById('staff-email').value.trim(),
@@ -448,6 +583,14 @@
           date_joined: document.getElementById('staff-date-joined').value,
           status: document.getElementById('staff-status').value,
         };
+
+        if (accountMode === 'create') {
+          payload.create_account = true;
+          payload.account_password = accountPasswordInput.value;
+          payload.account_status = accountStatusInput.value;
+        } else {
+          payload.user_id = accountMode === 'link' ? userId : null;
+        }
 
         saveStaffButton.disabled = true;
         saveStaffButton.textContent = 'Saving...';
@@ -474,6 +617,11 @@
       });
 
       openStaffModalButton.addEventListener('click', openStaffModal);
+      staffRoleInput.addEventListener('change', syncAccountControls);
+      accountModeInput.addEventListener('change', syncAccountControls);
+      accountSelectInput.addEventListener('change', () => {
+        staffUserIdInput.value = accountSelectInput.value;
+      });
       topbarSearchInput?.addEventListener('input', (event) => {
         activeSearchQuery = normalizeSearchText(event.target.value);
         currentPage = 1;

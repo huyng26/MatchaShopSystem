@@ -64,35 +64,52 @@
                         <option value="cashier">Cashier</option>
                         <option value="shipper">Shipper</option>
                     </select>
-                    <select id="status-filter" class="rounded-xl border-outline bg-surface px-4 py-2.5 text-sm font-bold focus:border-secondary focus:ring-secondary">
+                    <select id="status-filter" class="rounded-xl border-outline bg-surface px-4 py-2.5 text-sm font-bold focus:border-secondary focus:ring-secondary" style="width:150px">
                         <option value="">All statuses</option>
                         <option value="active">Active</option>
                         <option value="inactive">Inactive</option>
                         <option value="locked">Locked</option>
                     </select>
                 </div>
-                <p id="account-table-count" class="text-xs text-on-surface-variant font-bold">Loading accounts...</p>
             </div>
 
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-surface-container-low/50 border-b border-outline-variant/10">
-                            <th class="px-6 py-5 text-sm font-bold text-primary-container/60 uppercase tracking-wider">ID</th>
                             <th class="px-6 py-5 text-sm font-bold text-primary-container/60 uppercase tracking-wider">Email</th>
                             <th class="px-6 py-5 text-sm font-bold text-primary-container/60 uppercase tracking-wider">Role</th>
+                            <th class="px-6 py-5 text-sm font-bold text-primary-container/60 uppercase tracking-wider">Staff Link</th>
                             <th class="px-6 py-5 text-sm font-bold text-primary-container/60 uppercase tracking-wider">Status</th>
                             <th class="px-6 py-5 text-sm font-bold text-primary-container/60 uppercase tracking-wider">Last Login</th>
-                            <th class="px-6 py-5 text-sm font-bold text-primary-container/60 uppercase tracking-wider">Created</th>
                         </tr>
                     </thead>
                     <tbody id="account-table-body" class="divide-y divide-outline-variant/5">
                         <tr>
-                            <td class="px-6 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="6">Loading accounts...</td>
+                            <td class="px-6 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="5">Loading accounts...</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+            <div class="management-table-footer px-6 py-4 bg-surface-container-low/30 flex justify-between items-center border-t border-outline-variant/10">
+                <p id="account-table-count" class="text-xs text-on-surface-variant font-medium">Loading accounts...</p>
+                <div id="account-pagination" class="hidden items-center gap-2">
+                    <button id="account-page-prev" type="button"
+                        class="flex h-8 w-8 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant transition-colors hover:bg-surface-container-highest disabled:cursor-not-allowed disabled:opacity-40"
+                        aria-label="Previous account page">
+                        <span class="material-symbols-outlined text-sm" data-icon="chevron_left">chevron_left</span>
+                    </button>
+                    <span id="account-page-label" class="text-xs font-medium text-on-surface-variant">Page 1 of 1</span>
+                    <button id="account-page-next" type="button"
+                        class="flex h-8 w-8 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant transition-colors hover:bg-surface-container-highest disabled:cursor-not-allowed disabled:opacity-40"
+                        aria-label="Next account page">
+                        <span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="mt-12 text-center">
+            <p class="text-[10px] text-stone-400 font-label uppercase tracking-widest">Hoppers' Matcha Internal Portal © 2026</p>
         </div>
     </main>
 
@@ -163,12 +180,22 @@
             const API_BASE_URL = window.MATCHA_API_BASE_URL || 'http://localhost:8000/api/v1';
             const tableBody = document.getElementById('account-table-body');
             const tableCount = document.getElementById('account-table-count');
+            const pagination = document.getElementById('account-pagination');
+            const previousPageButton = document.getElementById('account-page-prev');
+            const nextPageButton = document.getElementById('account-page-next');
+            const pageLabel = document.getElementById('account-page-label');
             const roleFilter = document.getElementById('role-filter');
             const statusFilter = document.getElementById('status-filter');
+            const topbarSearchInput = document.getElementById('topbar-search');
             const accountModal = document.getElementById('account-modal');
             const accountForm = document.getElementById('account-form');
             const accountFormStatus = document.getElementById('account-form-status');
             const saveAccountButton = document.getElementById('save-account');
+            const pageSize = 5;
+            let accountCache = [];
+            let staffByUserIdCache = new Map();
+            let currentPage = 1;
+            let activeSearchQuery = '';
 
             const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
                 '&': '&amp;',
@@ -203,6 +230,11 @@
                 }
                 return payload?.data ?? payload;
             };
+            const getListData = (data) => {
+                if (Array.isArray(data)) return data;
+                if (Array.isArray(data?.items)) return data.items;
+                return [];
+            };
             const getRoleClass = (role) => {
                 const normalizedRole = String(role || '').toLowerCase();
                 return normalizedRole === 'admin'
@@ -215,6 +247,38 @@
                 if (normalizedStatus === 'inactive') return 'bg-error-container/30 text-error';
                 if (normalizedStatus === 'locked') return 'bg-surface-container-highest text-on-surface-variant';
                 return 'bg-surface-container-high text-on-surface-variant';
+            };
+            const normalizeSearchText = (value) => String(value ?? '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .trim();
+            const accountMatchesSearch = (account) => {
+                if (!activeSearchQuery) return true;
+                const linkedStaff = staffByUserIdCache.get(account.id);
+                const searchableText = normalizeSearchText([
+                    account.email,
+                    account.role,
+                    account.status,
+                    account.last_login_at,
+                    linkedStaff?.full_name,
+                    linkedStaff?.email,
+                    linkedStaff?.phone,
+                ].join(' '));
+
+                return searchableText.includes(activeSearchQuery);
+            };
+            const getVisibleAccounts = () => accountCache.filter(accountMatchesSearch);
+            const getTotalPages = (accountCount) => Math.max(1, Math.ceil(accountCount / pageSize));
+            const updatePaginationControls = (accountCount) => {
+                const totalPages = getTotalPages(accountCount);
+                const hasMultiplePages = totalPages > 1;
+
+                pagination.classList.toggle('hidden', !hasMultiplePages);
+                pagination.classList.toggle('flex', hasMultiplePages);
+                previousPageButton.disabled = currentPage <= 1;
+                nextPageButton.disabled = currentPage >= totalPages;
+                pageLabel.textContent = `Page ${currentPage} of ${totalPages}`;
             };
             const setFormStatus = (message, type = 'info') => {
                 accountFormStatus.textContent = message;
@@ -240,38 +304,49 @@
                 document.getElementById('active-accounts-stat').textContent = accounts.filter((account) => account.status === 'active').length;
                 document.getElementById('admin-accounts-stat').textContent = accounts.filter((account) => account.role === 'admin').length;
             };
-            const renderAccounts = (accounts, meta = {}) => {
+            const renderAccounts = (accounts) => {
                 tableBody.innerHTML = '';
-                const total = meta.total ?? accounts.length;
-                tableCount.textContent = `Showing ${accounts.length} of ${total} account${total === 1 ? '' : 's'}`;
-                renderStats(accounts, total);
+                renderStats(accountCache, accountCache.length);
 
                 if (!accounts.length) {
+                    tableCount.textContent = 'Showing 0 of 0 accounts';
+                    updatePaginationControls(0);
                     tableBody.innerHTML = `
                         <tr>
-                            <td class="px-6 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="6">No accounts found.</td>
+                            <td class="px-6 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="5">No accounts found.</td>
                         </tr>
                     `;
                     return;
                 }
 
-                accounts.forEach((account) => {
+                const totalPages = getTotalPages(accounts.length);
+                currentPage = Math.min(Math.max(currentPage, 1), totalPages);
+                const startIndex = (currentPage - 1) * pageSize;
+                const pageAccounts = accounts.slice(startIndex, startIndex + pageSize);
+                const endIndex = startIndex + pageAccounts.length;
+
+                tableCount.textContent = `Showing ${startIndex + 1}-${endIndex} of ${accounts.length} account${accounts.length === 1 ? '' : 's'}`;
+                updatePaginationControls(accounts.length);
+
+                pageAccounts.forEach((account) => {
+                    const linkedStaff = staffByUserIdCache.get(account.id);
                     const row = document.createElement('tr');
                     row.className = 'hover:bg-surface-container-low transition-colors cursor-pointer';
                     row.addEventListener('click', () => {
                         window.location.href = `account_detail.html?id=${encodeURIComponent(account.id)}`;
                     });
                     row.innerHTML = `
-                        <td class="px-6 py-5 text-xs font-bold text-primary">${escapeHtml(account.id)}</td>
                         <td class="px-6 py-5 text-sm font-bold text-on-surface">${escapeHtml(account.email)}</td>
                         <td class="px-6 py-5">
                             <span class="px-3 py-1 ${getRoleClass(account.role)} text-xs font-bold rounded-md">${escapeHtml(formatLabel(account.role))}</span>
+                        </td>
+                        <td class="px-6 py-5 text-sm font-bold ${linkedStaff ? 'text-primary' : 'text-on-surface-variant'}">
+                            ${escapeHtml(linkedStaff?.full_name || 'Not linked')}
                         </td>
                         <td class="px-6 py-5">
                             <span class="px-3 py-1 ${getStatusClass(account.status)} text-xs font-bold rounded-full">${escapeHtml(formatLabel(account.status))}</span>
                         </td>
                         <td class="px-6 py-5 text-sm font-medium text-on-surface-variant">${escapeHtml(formatDate(account.last_login_at))}</td>
-                        <td class="px-6 py-5 text-sm font-medium text-on-surface-variant">${escapeHtml(formatDate(account.created_at))}</td>
                     `;
                     tableBody.appendChild(row);
                 });
@@ -281,15 +356,32 @@
                     const params = new URLSearchParams({ page_size: '100' });
                     if (roleFilter.value) params.set('role', roleFilter.value);
                     if (statusFilter.value) params.set('status', statusFilter.value);
-                    const data = await fetchApiData(`/accounts?${params.toString()}`);
-                    renderAccounts(Array.isArray(data?.items) ? data.items : [], data || {});
+                    const [data, staffData] = await Promise.all([
+                        fetchApiData(`/accounts?${params.toString()}`),
+                        fetchApiData('/staff?page_size=100').catch((error) => {
+                            console.warn('Cannot load staff links for accounts:', error);
+                            return [];
+                        }),
+                    ]);
+                    const staffByUserId = new Map(
+                        getListData(staffData)
+                            .filter((staff) => staff.user_id)
+                            .map((staff) => [staff.user_id, staff])
+                    );
+                    accountCache = getListData(data);
+                    staffByUserIdCache = staffByUserId;
+                    currentPage = 1;
+                    renderAccounts(getVisibleAccounts());
                 } catch (error) {
                     console.error('Failed to load accounts:', error);
                     tableCount.textContent = 'Cannot load accounts';
+                    accountCache = [];
+                    staffByUserIdCache = new Map();
+                    updatePaginationControls(0);
                     renderStats([], 0);
                     tableBody.innerHTML = `
                         <tr>
-                            <td class="px-6 py-8 text-center text-sm font-bold text-error" colspan="6">Cannot load accounts. Please sign in with an admin account and check the backend server.</td>
+                            <td class="px-6 py-8 text-center text-sm font-bold text-error" colspan="5">Cannot load accounts. Please sign in with an admin account and check the backend server.</td>
                         </tr>
                     `;
                 }
@@ -337,6 +429,21 @@
             });
             roleFilter.addEventListener('change', loadAccounts);
             statusFilter.addEventListener('change', loadAccounts);
+            topbarSearchInput?.addEventListener('input', (event) => {
+                activeSearchQuery = normalizeSearchText(event.target.value);
+                currentPage = 1;
+                renderAccounts(getVisibleAccounts());
+            });
+            previousPageButton.addEventListener('click', () => {
+                if (currentPage <= 1) return;
+                currentPage -= 1;
+                renderAccounts(getVisibleAccounts());
+            });
+            nextPageButton.addEventListener('click', () => {
+                if (currentPage >= getTotalPages(getVisibleAccounts().length)) return;
+                currentPage += 1;
+                renderAccounts(getVisibleAccounts());
+            });
             loadAccounts();
         });
     </script>

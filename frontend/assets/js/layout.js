@@ -113,11 +113,11 @@ const PAGE_CONFIG = {
   'inventory-list':  { activeNav: 'inventory',   searchPlaceholder: 'Search inventory...',                backUrl: null },
   'inventory-detail':{ activeNav: 'inventory',   searchPlaceholder: 'Search inventory...',                backUrl: 'inventory_list.html', hideSearch: true },
   'account-list':    { activeNav: 'account',     searchPlaceholder: 'Search accounts...',                 backUrl: null },
-  'account-detail':  { activeNav: 'account',     searchPlaceholder: 'Search accounts...',                 backUrl: 'account_list.html' },
+  'account-detail':  { activeNav: 'account',     searchPlaceholder: 'Search accounts...',                 backUrl: 'account_list.html', hideSearch: true },
   'customer-list':   { activeNav: 'customers',   searchPlaceholder: 'Search customers...',               backUrl: null },
   'customer-detail': { activeNav: 'customers',   searchPlaceholder: 'Search customers...',               backUrl: 'customer_list.html' },
   'employee-list':   { activeNav: 'employees',   searchPlaceholder: 'Search employees...',               backUrl: null },
-  'employee-detail': { activeNav: 'employees',   searchPlaceholder: 'Search employees...',               backUrl: 'employee_list.html' },
+  'employee-detail': { activeNav: 'employees',   searchPlaceholder: 'Search employees...',               backUrl: 'employee_list.html', hideSearch: true },
   'financial-management': { activeNav: 'financial-management', searchPlaceholder: 'Search finance records...', backUrl: null },
   'settings':        { activeNav: 'settings',    searchPlaceholder: 'Search settings...',                backUrl: null },
   'pos-menu':        { activeNav: 'pos-menu',    searchPlaceholder: 'Search menu items...',               backUrl: null },
@@ -129,7 +129,7 @@ const PAGE_CONFIG = {
 const LAYOUT_ROLE_DEFAULT_PAGE = {
   admin: 'dashboard.html',
   cashier: 'POS_menu.html',
-  delivery_manager: 'delivery_manage.html',
+  delivery_manager: 'dashboard.html',
   inventory_manager: 'inventory_list.html',
   shipper: 'shipper.html',
 };
@@ -173,7 +173,7 @@ function canLayoutRoleAccessPage(role, page) {
 
   const allowedPagesByRole = {
     cashier: new Set(['pos-menu', 'pos-payment']),
-    delivery_manager: new Set(['delivery-manage']),
+    delivery_manager: new Set(['dashboard', 'delivery-manage']),
     inventory_manager: new Set(['inventory-list', 'inventory-detail']),
     shipper: new Set(['shipper']),
   };

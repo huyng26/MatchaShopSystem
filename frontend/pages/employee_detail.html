@@ -71,6 +71,10 @@
                 <span class="text-[#f9f9f8]/60 text-sm">Open Tasks</span>
                 <span id="summary-open-tasks" class="text-lg font-semibold">0</span>
               </div>
+              <div class="flex justify-between items-center bg-[#06440c] p-4 rounded-xl">
+                <span class="text-[#f9f9f8]/60 text-sm">Account</span>
+                <span id="summary-account" class="text-lg font-semibold">--</span>
+              </div>
             </div>
           </div>
         </aside>
@@ -136,6 +140,36 @@
                   class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary"
                   placeholder="Optional" />
               </label>
+              <label class="space-y-2">
+                <span class="text-xs text-outline font-label tracking-wider uppercase">Account Setup</span>
+                <select id="staff-account-mode"
+                  class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary">
+                  <option value="none">No account</option>
+                  <option value="link">Link existing account</option>
+                  <option value="create">Create new account</option>
+                </select>
+              </label>
+              <label id="staff-account-select-wrap" class="hidden space-y-2">
+                <span class="text-xs text-outline font-label tracking-wider uppercase">Existing Account</span>
+                <select id="staff-account-select"
+                  class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary">
+                  <option value="">Select account</option>
+                </select>
+              </label>
+              <label id="staff-account-password-wrap" class="hidden space-y-2">
+                <span class="text-xs text-outline font-label tracking-wider uppercase">Account Password</span>
+                <input id="staff-account-password" type="password" minlength="8" maxlength="72"
+                  class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
+              </label>
+              <label id="staff-account-status-wrap" class="hidden space-y-2">
+                <span class="text-xs text-outline font-label tracking-wider uppercase">Account Status</span>
+                <select id="staff-account-status"
+                  class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary">
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="locked">Locked</option>
+                </select>
+              </label>
             </form>
           </section>
 
@@ -172,6 +206,9 @@
           </section>
         </div>
       </section>
+      <div class="mt-12 text-center">
+        <p class="text-[10px] text-stone-400 font-label uppercase tracking-widest">Hoppers' Matcha Internal Portal © 2026</p>
+      </div>
     </div>
   </main>
 
@@ -240,7 +277,7 @@
     </div>
   </div>
 
-  <script src="../assets/js/layout.js?v=fm-20260530"></script>
+  <script src="../assets/js/layout.js?v=detail-hide-search-20260606"></script>
   <script src="../assets/js/main.js?v=fm-20260530"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -254,8 +291,19 @@
       const taskForm = document.getElementById('task-form');
       const taskFormStatus = document.getElementById('task-form-status');
       const taskTableBody = document.getElementById('task-table-body');
+      const staffRoleInput = document.getElementById('staff-role');
+      const staffUserIdInput = document.getElementById('staff-user-id');
+      const accountModeInput = document.getElementById('staff-account-mode');
+      const accountSelectWrap = document.getElementById('staff-account-select-wrap');
+      const accountSelectInput = document.getElementById('staff-account-select');
+      const accountPasswordWrap = document.getElementById('staff-account-password-wrap');
+      const accountPasswordInput = document.getElementById('staff-account-password');
+      const accountStatusWrap = document.getElementById('staff-account-status-wrap');
+      const accountStatusInput = document.getElementById('staff-account-status');
       let currentStaff = null;
       let taskCache = [];
+      let accountCache = [];
+      let staffCache = [];
 
       const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
         '&': '&amp;',
@@ -327,6 +375,85 @@
         urgent: 'bg-error text-white',
       }[priority] || 'bg-surface-container-high text-on-surface-variant');
 
+      const getLinkedAccountIds = () => new Set(
+        staffCache
+          .filter((staff) => staff.id !== currentStaff?.id)
+          .map((staff) => staff.user_id)
+          .filter(Boolean)
+      );
+
+      const getAccountById = (userId) => accountCache.find((account) => account.id === userId) || null;
+
+      const getAvailableAccountsForRole = (role) => {
+        const linkedAccountIds = getLinkedAccountIds();
+        return accountCache.filter((account) => {
+          const isCurrentLink = account.id === currentStaff?.user_id;
+          return String(account.role || '').toLowerCase() === String(role || '').toLowerCase()
+            && (isCurrentLink || !linkedAccountIds.has(account.id));
+        });
+      };
+
+      const renderAccountOptions = () => {
+        const selectedUserId = staffUserIdInput.value || currentStaff?.user_id || '';
+        const accounts = getAvailableAccountsForRole(staffRoleInput.value);
+        accountSelectInput.innerHTML = '<option value="">Select account</option>';
+
+        accounts.forEach((account) => {
+          const option = document.createElement('option');
+          option.value = account.id;
+          option.textContent = `${account.email || account.id} · ${formatLabel(account.status)}`;
+          accountSelectInput.appendChild(option);
+        });
+
+        if (selectedUserId && !accounts.some((account) => account.id === selectedUserId)) {
+          const option = document.createElement('option');
+          option.value = selectedUserId;
+          option.textContent = selectedUserId;
+          accountSelectInput.appendChild(option);
+        }
+
+        accountSelectInput.value = selectedUserId;
+        accountSelectInput.disabled = accounts.length === 0 && !selectedUserId;
+      };
+
+      const syncAccountControls = () => {
+        const createOption = accountModeInput.querySelector('option[value="create"]');
+        if (createOption) {
+          createOption.disabled = Boolean(currentStaff?.user_id);
+        }
+
+        if (staffRoleInput.value === 'shipper' && accountModeInput.value === 'none') {
+          accountModeInput.value = currentStaff?.user_id ? 'link' : 'create';
+        }
+
+        if (currentStaff?.user_id && accountModeInput.value === 'create') {
+          accountModeInput.value = 'link';
+        }
+
+        const mode = accountModeInput.value;
+        const shouldLink = mode === 'link';
+        const shouldCreate = mode === 'create';
+
+        accountSelectWrap.classList.toggle('hidden', !shouldLink);
+        accountPasswordWrap.classList.toggle('hidden', !shouldCreate);
+        accountStatusWrap.classList.toggle('hidden', !shouldCreate);
+        accountPasswordInput.required = shouldCreate;
+        staffUserIdInput.required = shouldLink;
+        staffUserIdInput.disabled = shouldCreate || mode === 'none';
+
+        if (mode === 'none' || shouldCreate) {
+          staffUserIdInput.value = '';
+          accountSelectInput.value = '';
+        }
+
+        if (!shouldCreate) {
+          accountPasswordInput.value = '';
+          accountPasswordInput.required = false;
+        }
+
+        renderAccountOptions();
+      };
+
       const renderStaff = (staff) => {
         currentStaff = staff;
         document.getElementById('employee-title').textContent = staff.full_name || 'Employee Detail';
@@ -339,15 +466,19 @@
         document.getElementById('staff-id-label').textContent = `ID: ${staff.id}`;
         document.getElementById('summary-salary').textContent = formatCurrency(staff.salary);
         document.getElementById('summary-joined').textContent = formatDate(staff.date_joined);
+        document.getElementById('summary-account').textContent = staff.user_id ? 'Linked' : 'Not linked';
 
         document.getElementById('staff-full-name').value = staff.full_name || '';
         document.getElementById('staff-phone').value = staff.phone || '';
         document.getElementById('staff-email').value = staff.email || '';
-        document.getElementById('staff-role').value = staff.role || 'cashier';
+        staffRoleInput.value = staff.role || 'cashier';
         document.getElementById('staff-salary').value = staff.salary ?? '';
         document.getElementById('staff-date-joined').value = staff.date_joined || '';
         document.getElementById('staff-status').value = staff.status || 'active';
-        document.getElementById('staff-user-id').value = staff.user_id || '';
+        staffUserIdInput.value = staff.user_id || '';
+        accountModeInput.value = staff.user_id ? 'link' : staff.role === 'shipper' ? 'create' : 'none';
+        accountStatusInput.value = 'active';
+        syncAccountControls();
       };
 
       const renderTasks = (tasks) => {
@@ -403,7 +534,19 @@
         }
 
         try {
-          const staff = await fetchApiData(`/staff/${encodeURIComponent(staffId)}`);
+          const [staff, accountsData, staffData] = await Promise.all([
+            fetchApiData(`/staff/${encodeURIComponent(staffId)}`),
+            fetchApiData('/accounts?page_size=100').catch((error) => {
+              console.warn('Cannot load accounts for staff linking:', error);
+              return [];
+            }),
+            fetchApiData('/staff?page_size=100').catch((error) => {
+              console.warn('Cannot load staff list for account availability:', error);
+              return [];
+            }),
+          ]);
+          accountCache = getListData(accountsData);
+          staffCache = getListData(staffData);
           renderStaff(staff);
           setPageStatus('');
         } catch (error) {
@@ -439,19 +582,52 @@
         }
       };
 
-      const buildStaffPayload = () => ({
-        user_id: document.getElementById('staff-user-id').value.trim() || null,
-        full_name: document.getElementById('staff-full-name').value.trim(),
-        phone: document.getElementById('staff-phone').value.trim(),
-        email: document.getElementById('staff-email').value.trim(),
-        role: document.getElementById('staff-role').value,
-        salary: document.getElementById('staff-salary').value === '' ? null : Number(document.getElementById('staff-salary').value),
-        date_joined: document.getElementById('staff-date-joined').value,
-        status: document.getElementById('staff-status').value,
-      });
+      const buildStaffPayload = () => {
+        const accountMode = accountModeInput.value;
+        const userId = staffUserIdInput.value.trim();
+        const role = staffRoleInput.value;
+        const payload = {
+          full_name: document.getElementById('staff-full-name').value.trim(),
+          phone: document.getElementById('staff-phone').value.trim(),
+          email: document.getElementById('staff-email').value.trim(),
+          role,
+          salary: document.getElementById('staff-salary').value === '' ? null : Number(document.getElementById('staff-salary').value),
+          date_joined: document.getElementById('staff-date-joined').value,
+          status: document.getElementById('staff-status').value,
+        };
+
+        if (accountMode === 'create') {
+          payload.create_account = true;
+          payload.account_password = accountPasswordInput.value;
+          payload.account_status = accountStatusInput.value;
+        } else {
+          payload.user_id = accountMode === 'link' ? userId : null;
+        }
+
+        return payload;
+      };
 
       const saveStaff = async () => {
         if (!staffForm.reportValidity() || !staffId) return;
+
+        const accountMode = accountModeInput.value;
+        const userId = staffUserIdInput.value.trim();
+        const linkedAccount = getAccountById(userId);
+
+        if (staffRoleInput.value === 'shipper' && accountMode === 'none') {
+          setPageStatus('Shipper staff must be linked to an account.', 'error');
+          return;
+        }
+
+        if (accountMode === 'link' && !userId) {
+          setPageStatus('Select or enter a linked account ID.', 'error');
+          return;
+        }
+
+        if (linkedAccount && String(linkedAccount.role || '').toLowerCase() !== String(staffRoleInput.value || '').toLowerCase()) {
+          setPageStatus('Linked account role must match staff role.', 'error');
+          return;
+        }
 
         saveStaffButton.disabled = true;
         saveStaffButton.textContent = 'Saving...';
@@ -558,6 +734,11 @@
 
       saveStaffButton.addEventListener('click', saveStaff);
       deleteStaffButton.addEventListener('click', deleteStaff);
+      staffRoleInput.addEventListener('change', syncAccountControls);
+      accountModeInput.addEventListener('change', syncAccountControls);
+      accountSelectInput.addEventListener('change', () => {
+        staffUserIdInput.value = accountSelectInput.value;
+      });
       document.getElementById('open-task-modal').addEventListener('click', () => openTaskModal());
       document.getElementById('close-task-modal').addEventListener('click', closeTaskModal);
       document.getElementById('cancel-task-modal').addEventListener('click', closeTaskModal);

@@ -124,7 +124,7 @@ const MATCHA_PUBLIC_PAGES = new Set([
 const MATCHA_ROLE_DEFAULT_PAGE = {
   admin: 'dashboard.html',
   cashier: 'POS_menu.html',
-  delivery_manager: 'delivery_manage.html',
+  delivery_manager: 'dashboard.html',
   inventory_manager: 'inventory_list.html',
   shipper: 'shipper.html',
 };
@@ -195,7 +195,7 @@ function canFrontendRoleAccessPage(role, page) {
 
   const allowedPagesByRole = {
     cashier: new Set(['pos-menu', 'pos-payment']),
-    delivery_manager: new Set(['delivery-manage']),
+    delivery_manager: new Set(['dashboard', 'delivery-manage']),
     inventory_manager: new Set(['inventory-list', 'inventory-detail']),
     shipper: new Set(['shipper']),
   };
@@ -1927,7 +1927,10 @@ const FINANCE_STATE = {
   summary: null,
   expenses: [],
   records: [],
+  recordPage: 1,
 };
+
+const FINANCE_RECORD_PAGE_SIZE = 5;
 
 function getCurrentFinanceMonth() {
   const now = new Date();
@@ -2035,13 +2038,34 @@ function renderFinanceExpenses(expenses) {
     .join('');
 }
 
+function getFinanceRecordTotalPages(recordCount) {
+  return Math.max(1, Math.ceil(recordCount / FINANCE_RECORD_PAGE_SIZE));
+}
+
+function updateFinanceRecordPagination(recordCount) {
+  const pagination = document.getElementById('finance-record-pagination');
+  const previousButton = document.getElementById('finance-record-prev');
+  const nextButton = document.getElementById('finance-record-next');
+  const pageLabel = document.getElementById('finance-record-page-label');
+  if (!pagination || !previousButton || !nextButton || !pageLabel) return;
+
+  const totalPages = getFinanceRecordTotalPages(recordCount);
+  const hasMultiplePages = totalPages > 1;
+  pagination.classList.toggle('hidden', !hasMultiplePages);
+  pagination.classList.toggle('flex', hasMultiplePages);
+  previousButton.disabled = FINANCE_STATE.recordPage <= 1;
+  nextButton.disabled = FINANCE_STATE.recordPage >= totalPages;
+  pageLabel.textContent = `Page ${FINANCE_STATE.recordPage} of ${totalPages}`;
+}
+
 function renderFinanceRecords(records) {
   const body = document.getElementById('finance-records-body');
   if (!body) return;
 
-  setFinanceText('finance-record-count', `${records.length} record${records.length === 1 ? '' : 's'}`);
-
   if (!records.length) {
+    FINANCE_STATE.recordPage = 1;
+    setFinanceText('finance-record-count', 'Showing 0 of 0 records');
+    updateFinanceRecordPagination(0);
     body.innerHTML = `
       <tr>
         <td class="px-6 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="6">No financial records found for this month.</td>
@@ -2050,12 +2074,23 @@ function renderFinanceRecords(records) {
     return;
   }
 
-  body.innerHTML = records
+  const totalPages = getFinanceRecordTotalPages(records.length);
+  FINANCE_STATE.recordPage = Math.min(Math.max(FINANCE_STATE.recordPage, 1), totalPages);
+  const startIndex = (FINANCE_STATE.recordPage - 1) * FINANCE_RECORD_PAGE_SIZE;
+  const pageRecords = records.slice(startIndex, startIndex + FINANCE_RECORD_PAGE_SIZE);
+  const endIndex = startIndex + pageRecords.length;
+  setFinanceText(
+    'finance-record-count',
+    `Showing ${startIndex + 1}-${endIndex} of ${records.length} record${records.length === 1 ? '' : 's'}`
+  );
+  updateFinanceRecordPagination(records.length);
+
+  body.innerHTML = pageRecords
     .map(
       (record) => `
         <tr>
           <td class="font-mono text-xs font-bold text-secondary">${escapeHtml(String(record.id).slice(0, 8))}</td>
-          <td><span class="rounded-full bg-secondary/10 px-3 py-1 text-xs font-extrabold uppercase text-secondary">${escapeHtml(formatFinanceLabel(record.record_type))}</span></td>
+          <td><span class="text-xs font-extrabold uppercase text-secondary">${escapeHtml(formatFinanceLabel(record.record_type))}</span></td>
           <td>
             <b class="text-primary">${escapeHtml(formatFinanceLabel(record.source_type))}</b>
             <p class="font-mono text-xs text-on-surface-variant">${escapeHtml(String(record.source_id).slice(0, 8))}</p>
@@ -2116,6 +2151,9 @@ function renderFinancePage() {
 function renderFinanceLoading() {
   setFinanceStatus('Loading finance data...');
   renderFinanceSummary({});
+  setFinanceText('finance-record-count', 'Loading records...');
+  FINANCE_STATE.recordPage = 1;
+  updateFinanceRecordPagination(0);
   const expenseBody = document.getElementById('finance-expenses-body');
   const recordBody = document.getElementById('finance-records-body');
   if (expenseBody) {
@@ -2148,6 +2186,7 @@ async function loadFinanceData(month = FINANCE_STATE.month) {
     FINANCE_STATE.summary = summary || {};
     FINANCE_STATE.expenses = getApiListData(expenses);
     FINANCE_STATE.records = getApiListData(records);
+    FINANCE_STATE.recordPage = 1;
     renderFinancePage();
     setFinanceStatus(`Loaded ${formatFinanceMonth(selectedMonth)} finance data.`, 'success');
   } catch (error) {
@@ -2155,6 +2194,7 @@ async function loadFinanceData(month = FINANCE_STATE.month) {
     FINANCE_STATE.summary = {};
     FINANCE_STATE.expenses = [];
     FINANCE_STATE.records = [];
+    FINANCE_STATE.recordPage = 1;
     renderFinancePage();
     setFinanceStatus(error.message || 'Cannot load finance data. Please check the backend server.', 'error');
   }
@@ -2200,6 +2240,8 @@ async function initFinancialManagement() {
   const saveExpenseBtn = document.getElementById('finance-save-expense-btn');
   const staffWageBtn = document.getElementById('finance-staff-wage-btn');
   const exportBtn = document.getElementById('finance-export-btn');
+  const recordPrevBtn = document.getElementById('finance-record-prev');
+  const recordNextBtn = document.getElementById('finance-record-next');
 
   const initialMonth = getCurrentFinanceMonth();
   if (periodInput) periodInput.value = initialMonth;
@@ -2269,6 +2311,16 @@ async function initFinancialManagement() {
   });
 
   exportBtn?.addEventListener('click', downloadFinanceCsv);
+  recordPrevBtn?.addEventListener('click', () => {
+    if (FINANCE_STATE.recordPage <= 1) return;
+    FINANCE_STATE.recordPage -= 1;
+    renderFinanceRecords(FINANCE_STATE.records);
+  });
+  recordNextBtn?.addEventListener('click', () => {
+    if (FINANCE_STATE.recordPage >= getFinanceRecordTotalPages(FINANCE_STATE.records.length)) return;
+    FINANCE_STATE.recordPage += 1;
+    renderFinanceRecords(FINANCE_STATE.records);
+  });
 
   await loadFinanceData(initialMonth);
 }
