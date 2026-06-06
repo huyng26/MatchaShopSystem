@@ -48,6 +48,21 @@ async def get_customer_by_id(
     return result.scalar_one_or_none()
 
 
+async def get_customer_by_phone(
+    db: AsyncSession,
+    phone: str,
+    *,
+    include_deleted: bool = False,
+) -> Customer | None:
+    stmt = select(Customer).where(Customer.phone == phone)
+    if not include_deleted:
+        stmt = stmt.where(Customer.deleted_at.is_(None))
+
+    stmt = stmt.order_by(Customer.created_at.desc())
+    result = await db.execute(stmt)
+    return result.scalars().first()
+
+
 def add_customer(db: AsyncSession, customer: Customer) -> Customer:
     db.add(customer)
     return customer
@@ -89,3 +104,25 @@ async def customer_exists(db: AsyncSession, customer_id: UUID) -> bool:
     )
     result = await db.execute(stmt)
     return bool(result.scalar())
+
+
+async def add_loyalty_points(
+    db: AsyncSession,
+    customer_id: UUID,
+    points: int,
+) -> Customer | None:
+    stmt = (
+        select(Customer)
+        .where(Customer.id == customer_id, Customer.deleted_at.is_(None))
+        .with_for_update()
+    )
+    result = await db.execute(stmt)
+    customer = result.scalar_one_or_none()
+    if customer is None:
+        return None
+
+    customer.loyalty_points += points
+    customer.updated_at = utc_now()
+    await db.flush()
+    await db.refresh(customer)
+    return customer

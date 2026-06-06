@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.finance import FinancialRecordType
 from app.models.ingredients import Ingredient
 from app.models.inventory import InventoryMovementType
+from app.models.customer import Customer
 from app.models.order import Order, OrderPaymentStatus, OrderStatus, OrderType
 from app.models.payment import PaymentEventStatus, PaymentMethod
 from app.repositories import (
@@ -30,6 +31,7 @@ from app.schemas.order import (
 from app.services.errors import ServiceError
 
 MONEY_QUANT = Decimal("0.01")
+LOYALTY_AMOUNT_PER_POINT = Decimal("10000.00")
 
 
 @dataclass(frozen=True)
@@ -38,6 +40,16 @@ class PricedOrderItem:
     quantity: int
     unit_price: Decimal
     line_total: Decimal
+
+
+@dataclass(frozen=True)
+class ResolvedOrderCustomer:
+    customer_id: UUID | None
+    customer_name: str | None
+    customer_phone: str | None
+    delivery_address: str | None
+    delivery_latitude: Decimal | None
+    delivery_longitude: Decimal | None
 
 
 def utc_now() -> datetime:
@@ -51,35 +63,32 @@ async def create_order(
     created_by: UUID,
 ) -> Order:
     _validate_delivery_fields(payload)
-    if payload.customer_id is not None and not await customer_repo.customer_exists(
-        db,
-        payload.customer_id,
-    ):
-        raise ServiceError("customer_not_found", status_code=404)
-
-    priced_items = await _price_order_items(db, payload)
-    subtotal = sum((item.line_total for item in priced_items), Decimal("0")).quantize(
-        MONEY_QUANT
-    )
-    if payload.discount_amount > subtotal:
-        raise ServiceError("discount_exceeds_subtotal")
-    total_amount = (subtotal - payload.discount_amount).quantize(MONEY_QUANT)
 
     try:
+        resolved_customer = await _resolve_customer_for_order(db, payload)
+        priced_items = await _price_order_items(db, payload)
+        subtotal = sum(
+            (item.line_total for item in priced_items),
+            Decimal("0"),
+        ).quantize(MONEY_QUANT)
+        if payload.discount_amount > subtotal:
+            raise ServiceError("discount_exceeds_subtotal")
+        total_amount = (subtotal - payload.discount_amount).quantize(MONEY_QUANT)
+
         order_code = await order_repo.reserve_unique_order_code(db)
         order = await order_repo.create_order_header(
             db,
             order_code=order_code,
             order_type=payload.order_type,
-            customer_id=payload.customer_id,
+            customer_id=resolved_customer.customer_id,
             subtotal=subtotal,
             discount_amount=payload.discount_amount,
             total_amount=total_amount,
-            customer_name=payload.customer_name,
-            customer_phone=payload.customer_phone,
-            delivery_address=payload.delivery_address,
-            delivery_latitude=payload.delivery_latitude,
-            delivery_longitude=payload.delivery_longitude,
+            customer_name=resolved_customer.customer_name,
+            customer_phone=resolved_customer.customer_phone,
+            delivery_address=resolved_customer.delivery_address,
+            delivery_latitude=resolved_customer.delivery_latitude,
+            delivery_longitude=resolved_customer.delivery_longitude,
             note=payload.note,
             created_by=created_by,
         )
@@ -268,6 +277,7 @@ async def complete_order(db: AsyncSession, order_id: UUID) -> OrderCompleteRespo
             material_cost=material_cost.quantize(MONEY_QUANT),
             record_date=completed_at.date(),
         )
+        await _add_loyalty_points_for_completed_order(db, order)
         await db.commit()
         return OrderCompleteResponse(
             id=order.id,
@@ -353,6 +363,7 @@ async def complete_order_without_commit(
         material_cost=material_cost.quantize(MONEY_QUANT),
         record_date=completed_at.date(),
     )
+    await _add_loyalty_points_for_completed_order(db, order)
     return OrderCompleteResponse(
         id=order.id,
         status=order.status,
@@ -362,18 +373,119 @@ async def complete_order_without_commit(
     )
 
 
+async def _resolve_customer_for_order(
+    db: AsyncSession,
+    payload: OrderCreate,
+) -> ResolvedOrderCustomer:
+    if payload.order_type == OrderType.DELIVERY:
+        return await _resolve_delivery_customer(db, payload)
+    return await _resolve_instore_customer(db, payload)
+
+
+async def _resolve_instore_customer(
+    db: AsyncSession,
+    payload: OrderCreate,
+) -> ResolvedOrderCustomer:
+    customer: Customer | None = None
+    if payload.customer_id is not None:
+        customer = await customer_repo.get_customer_by_id(db, payload.customer_id)
+        if customer is None:
+            raise ServiceError("customer_not_found", status_code=404)
+    elif payload.customer_phone is not None:
+        customer = await customer_repo.get_customer_by_phone(
+            db,
+            payload.customer_phone,
+        )
+
+    if customer is None and payload.create_customer_profile:
+        if payload.customer_name is None or payload.customer_phone is None:
+            raise ServiceError(
+                "customer_profile_fields_required",
+                status_code=422,
+                context={"fields": ["customer_name", "customer_phone"]},
+            )
+        customer = Customer(
+            name=payload.customer_name,
+            phone=payload.customer_phone,
+        )
+        customer_repo.add_customer(db, customer)
+        await db.flush()
+        await db.refresh(customer)
+
+    if customer is None:
+        return ResolvedOrderCustomer(
+            customer_id=None,
+            customer_name=None,
+            customer_phone=None,
+            delivery_address=None,
+            delivery_latitude=None,
+            delivery_longitude=None,
+        )
+
+    return ResolvedOrderCustomer(
+        customer_id=customer.id,
+        customer_name=customer.name,
+        customer_phone=customer.phone,
+        delivery_address=None,
+        delivery_latitude=None,
+        delivery_longitude=None,
+    )
+
+
+async def _resolve_delivery_customer(
+    db: AsyncSession,
+    payload: OrderCreate,
+) -> ResolvedOrderCustomer:
+    customer: Customer | None = None
+    if payload.customer_id is not None:
+        customer = await customer_repo.get_customer_by_id(db, payload.customer_id)
+        if customer is None:
+            raise ServiceError("customer_not_found", status_code=404)
+    elif payload.customer_phone is not None:
+        customer = await customer_repo.get_customer_by_phone(
+            db,
+            payload.customer_phone,
+        )
+
+    if customer is None:
+        customer = Customer(
+            name=payload.customer_name,
+            phone=payload.customer_phone,
+            address=payload.delivery_address,
+        )
+        customer_repo.add_customer(db, customer)
+        await db.flush()
+        await db.refresh(customer)
+
+    return ResolvedOrderCustomer(
+        customer_id=customer.id,
+        customer_name=payload.customer_name,
+        customer_phone=payload.customer_phone,
+        delivery_address=payload.delivery_address,
+        delivery_latitude=payload.delivery_latitude,
+        delivery_longitude=payload.delivery_longitude,
+    )
+
+
 def _validate_delivery_fields(payload: OrderCreate) -> None:
     if payload.order_type != OrderType.DELIVERY:
         return
 
     missing = [
         field
-        for field in ("customer_name", "customer_phone", "delivery_address")
+        for field in (
+            "customer_name",
+            "customer_phone",
+            "delivery_address",
+            "delivery_latitude",
+            "delivery_longitude",
+        )
         if not getattr(payload, field)
     ]
     if missing:
         raise ServiceError(
             "delivery_fields_required",
+            status_code=422,
             context={"fields": missing},
         )
 
@@ -564,6 +676,29 @@ def _find_insufficient_stock(
             )
 
     return insufficient
+
+
+async def _add_loyalty_points_for_completed_order(
+    db: AsyncSession,
+    order: Order,
+) -> None:
+    if order.customer_id is None:
+        return
+
+    points = _calculate_loyalty_points(order.total_amount)
+    if points <= 0:
+        return
+
+    customer = await customer_repo.add_loyalty_points(db, order.customer_id, points)
+    if customer is None:
+        raise ServiceError("customer_not_found", status_code=404)
+
+
+def _calculate_loyalty_points(total_amount: Decimal) -> int:
+    total = total_amount.quantize(MONEY_QUANT)
+    if total <= Decimal("0"):
+        return 0
+    return max(1, int(total // LOYALTY_AMOUNT_PER_POINT))
 
 
 async def _create_completion_financial_records(
