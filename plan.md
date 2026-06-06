@@ -1293,6 +1293,12 @@ Else:
 
 Allow cashier/admin to create and manage orders.
 
+Dependency:
+
+```text
+Customer lookup/create/update should be available before order creation. In-store orders may stay anonymous, but the POS checkout should offer customer lookup/creation for loyalty points before the order is saved. Delivery orders must resolve customer/contact/address information before the order is inserted.
+```
+
 ### Endpoints
 
 ```http
@@ -1308,23 +1314,106 @@ POST   /api/v1/orders/{order_id}/complete
 ### Create Order Flow
 
 ```text
-1. Validate order_type is instore or delivery.
-2. Validate at least one item exists.
-3. For each item:
+1. Cashier builds a POS cart/order draft first.
+2. Validate order_type is instore or delivery.
+3. Validate at least one item exists.
+4. Resolve customer information according to order_type:
+   - In-store order:
+     - Ask for customer phone at checkout, after the cart is built and before saving the order.
+     - If phone matches an existing active customer, link order.customer_id to that customer.
+     - Copy customer name/phone into the order snapshot.
+     - Use the linked customer_id later for loyalty points and purchase history.
+     - If phone does not match any customer, ask whether the customer wants to create a loyalty profile.
+     - If yes, collect minimum customer information, create the customer, then link the order.
+     - If no, save the order as anonymous with customer_id = null and skip loyalty points.
+   - Delivery order:
+     - Require recipient name, phone, delivery address, latitude, and longitude before inserting the order.
+     - If customer_id is provided, load customer and use it as the linked profile.
+     - If customer_id is not provided, find customer by phone.
+     - If no customer exists by phone, create the customer in the same transaction.
+     - Copy customer/contact/address into order snapshot fields.
+5. For each item:
    - Validate product exists.
    - Validate product is available.
    - Validate quantity > 0.
    - Read product selling_price from database.
    - Calculate line_total = selling_price * quantity.
-4. Calculate subtotal.
-5. Apply discount if supported.
-6. Calculate total_amount.
-7. Insert order.
-8. Insert order_items.
-9. Commit.
+6. Calculate subtotal.
+7. Apply discount if supported.
+8. Calculate total_amount.
+9. Insert order using resolved customer_id and order-time customer/delivery snapshot.
+10. Insert order_items.
+11. Commit.
 ```
 
 Do not trust price or total from frontend.
+
+Important rule:
+
+```text
+In-store customer linking is optional and exists mainly for loyalty/history. Delivery customer/contact information is required before inserting the order. The order should store both the customer_id link when available and an order-time snapshot, because customer profiles can change after the order is placed.
+```
+
+### In-Store Customer/Loyalty Flow
+
+```text
+1. Cashier creates the cart.
+2. At checkout, cashier asks for customer phone.
+3. If customer exists:
+   - Link order.customer_id.
+   - Copy customer name/phone into order snapshot.
+   - Customer can earn loyalty points after the order is completed.
+4. If customer does not exist:
+   - Ask whether the customer wants to create a loyalty profile.
+   - If yes, collect name and phone, create customer, then link order.customer_id.
+   - If no, continue anonymous checkout with customer_id = null.
+5. Save order.
+6. Take payment.
+7. Complete order.
+8. If order.customer_id is present, add loyalty points and keep order in customer history.
+```
+
+### Recommended End-to-End Order Lifecycle
+
+```text
+1. Cashier selects order_type.
+2. Cashier builds cart.
+3. Cashier resolves customer:
+   - optional loyalty lookup/create for in-store
+   - required for delivery
+4. Backend validates products and calculates prices/totals.
+5. Backend creates order in pending status.
+6. Staff starts preparation:
+   pending -> in_progress
+7. Payment and fulfillment branch by order_type:
+   - In-store:
+     - receive cash/card/bank_transfer payment
+     - mark payment success and order.payment_status = paid
+     - complete order after handoff
+     - deduct inventory and create finance records
+   - Delivery prepaid:
+     - receive card/bank_transfer payment before dispatch
+     - mark payment success and order.payment_status = paid
+     - mark ready_for_delivery
+     - delivery manager batches order into trip
+     - shipper marks delivered
+     - complete order, deduct inventory, and create finance records
+   - Delivery COD:
+     - create pending COD payment before ready_for_delivery
+     - mark ready_for_delivery
+     - delivery manager batches order into trip
+     - shipper collects COD and marks delivered
+     - mark COD payment success and order.payment_status = paid
+     - complete order, deduct inventory, and create finance records in the same delivery transaction
+8. If delivery fails:
+   - mark delivery_trip_order = failed
+   - return order to ready_for_delivery
+   - keep COD unpaid/pending
+   - do not complete order or deduct inventory yet
+9. When trip stops are final:
+   - complete trip
+   - reconcile COD with delivery manager
+```
 
 ### Order Status Transition Rules
 
@@ -1523,14 +1612,18 @@ This must be atomic.
 13. Set order.completed_at.
 14. Insert financial_records revenue row.
 15. Insert financial_records material_cost row.
-16. Insert audit log.
-17. Commit transaction.
+16. If order.customer_id is present:
+   - add loyalty_points according to the configured loyalty rule.
+   - keep the order visible in customer purchase history.
+17. Insert audit log.
+18. Commit transaction.
 ```
 
 ### Important Notes
 
 - If stock deduction fails, order must not be completed.
 - If finance record creation fails, inventory must not be deducted.
+- Loyalty points must only be added after a successful completed paid order.
 - If order completion fails, everything must rollback.
 - Use row locking when reading ingredients to prevent race conditions.
 
@@ -2290,7 +2383,7 @@ Phase 5:
 - Implement product delete restriction
 
 Phase 6:
-- Implement create order
+- Implement create order using customer lookup/create before order insert
 - Implement order list/detail/filter
 - Implement status transition validation
 - Implement cancel order
@@ -2396,10 +2489,10 @@ Build in this exact order:
 4. Account/staff
 5. Inventory
 6. Product/menu/recipe
-7. Orders
-8. Payments
-9. Complete order + inventory deduction + finance records
-10. Customer management
+7. Customer management
+8. Orders
+9. Payments
+10. Complete order + inventory deduction + finance records
 11. Delivery queue
 12. Trip creation and route ordering
 13. Shipper assignment and delivery status
@@ -2410,4 +2503,3 @@ Build in this exact order:
 ```
 
 Do not start with auto-routing first. Auto-routing depends on delivery orders, coordinates, trips, and shipper assignment. Build those foundations first.
-
