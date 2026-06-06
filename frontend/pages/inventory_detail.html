@@ -35,8 +35,11 @@
                         class="absolute -inset-1 bg-gradient-to-tr from-secondary/20 to-primary/20 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000">
                     </div>
                     <div
-                        class="relative w-full md:w-80 aspect-square rounded-xl shadow-2xl bg-surface-container-lowest border border-outline-variant/10 flex items-center justify-center">
-                        <span class="material-symbols-outlined text-8xl text-primary/30" data-icon="inventory_2">inventory_2</span>
+                        class="relative w-full md:w-80 aspect-square rounded-xl shadow-2xl bg-surface-container-lowest border border-outline-variant/10 flex items-center justify-center overflow-hidden">
+                        <img id="ingredient-image" class="hidden h-full w-full object-cover" alt="Ingredient image" />
+                        <div id="ingredient-image-placeholder" class="flex h-full w-full items-center justify-center">
+                            <span class="material-symbols-outlined text-8xl text-primary/30" data-icon="inventory_2">inventory_2</span>
+                        </div>
                     </div>
                 </div>
                 <div class="flex-1 space-y-6">
@@ -52,13 +55,13 @@
                             class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
                             <div class="text-on-surface-variant text-sm mb-1">Current Stock</div>
                             <div id="ingredient-current-stock" class="text-3xl font-headline font-bold text-primary">--</div>
-                            <div class="mt-2 text-xs font-medium text-on-surface-variant">Loaded from inventory API</div>
+                            <div class="mt-2 text-xs font-medium text-on-surface-variant">Available quantity on hand</div>
                         </div>
                         <div
                             class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
                             <div class="text-on-surface-variant text-sm mb-1">Unit Cost</div>
                             <div id="ingredient-unit-cost" class="text-3xl font-headline font-bold text-primary">--</div>
-                            <div class="mt-2 text-xs font-medium text-on-surface-variant">Loaded from inventory API</div>
+                            <div class="mt-2 text-xs font-medium text-on-surface-variant">Cost per inventory unit</div>
                         </div>
                         <div
                             class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
@@ -158,6 +161,10 @@
                     <div class="py-3 text-sm font-bold text-on-surface-variant">Loading recent activities...</div>
                 </div>
             </section>
+            <!-- Footer Meta Info -->
+            <div class="mt-12 text-center">
+                <p class="text-[10px] text-stone-400 font-label uppercase tracking-widest">Hoppers' Matcha Internal Portal © 2026</p>
+            </div>
         </div>
     </main>
     <div id="edit-ingredient-modal"
@@ -172,7 +179,7 @@
                     <span class="material-symbols-outlined" data-icon="close">close</span>
                 </button>
             </div>
-            <form id="edit-ingredient-form" class="space-y-5 px-8 py-7">
+            <form id="edit-ingredient-form" class="space-y-5 px-8 py-7" enctype="multipart/form-data">
                 <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                     <label class="space-y-2 md:col-span-2">
                         <span class="text-sm font-bold text-on-surface">Ingredient Name</span>
@@ -198,6 +205,20 @@
                         <span class="text-sm font-bold text-on-surface">Minimum Threshold</span>
                         <input id="edit-ingredient-threshold" type="number" min="0" step="0.001" required
                             class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
+                    </label>
+                    <label class="space-y-2 md:col-span-2">
+                        <span class="text-sm font-bold text-on-surface">Ingredient Image</span>
+                        <div class="flex flex-col gap-4 rounded-xl border border-dashed border-outline-variant bg-surface-container-low/40 p-4 sm:flex-row sm:items-center">
+                            <div id="edit-ingredient-image-preview"
+                                class="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-surface-container-high text-on-surface-variant">
+                                <span class="material-symbols-outlined" data-icon="image">image</span>
+                            </div>
+                            <div class="min-w-0 flex-1 space-y-2">
+                                <input id="edit-ingredient-image" type="file" accept="image/png,image/jpeg,image/webp"
+                                    class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm file:mr-4 file:rounded-full file:border-0 file:bg-secondary file:px-4 file:py-2 file:text-sm file:font-bold file:text-on-secondary hover:file:bg-secondary/90 focus:border-secondary focus:ring-secondary" />
+                                <p class="text-xs text-on-surface-variant">Choose a new image to replace the current ingredient image.</p>
+                            </div>
+                        </div>
                     </label>
                 </div>
                 <p id="edit-ingredient-status" class="hidden text-sm font-bold"></p>
@@ -256,10 +277,12 @@
             </form>
         </div>
     </div>
-  <script src="../assets/js/layout.js?v=fm-20260530"></script>
+  <script src="../assets/js/layout.js?v=inventory-detail-hide-search-20260606"></script>
   <script src="../assets/js/main.js?v=fm-20260530"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('topbar-search')?.closest('.bg-surface-container')?.remove();
+
         const API_BASE_URL = window.MATCHA_API_BASE_URL || 'http://localhost:8000/api/v1';
         const ingredientId = new URLSearchParams(window.location.search).get('id');
         const ingredientName = document.getElementById('ingredient-name');
@@ -267,6 +290,8 @@
         const ingredientCurrentStock = document.getElementById('ingredient-current-stock');
         const ingredientUnitCost = document.getElementById('ingredient-unit-cost');
         const ingredientTotalValue = document.getElementById('ingredient-total-value');
+        const ingredientImage = document.getElementById('ingredient-image');
+        const ingredientImagePlaceholder = document.getElementById('ingredient-image-placeholder');
         const stockHealthLabel = document.getElementById('stock-health-label');
         const stockHealthBar = document.getElementById('stock-health-bar');
         const stockThresholdLabel = document.getElementById('stock-threshold-label');
@@ -283,6 +308,8 @@
         const restockStatus = document.getElementById('restock-ingredient-status');
         const saveEditButton = document.getElementById('save-edit-ingredient');
         const saveRestockButton = document.getElementById('save-restock-ingredient');
+        const editIngredientImageInput = document.getElementById('edit-ingredient-image');
+        const editIngredientImagePreview = document.getElementById('edit-ingredient-image-preview');
         let currentIngredient = null;
 
         const formatNumber = (value) => new Intl.NumberFormat('vi-VN', {
@@ -341,6 +368,41 @@
             const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
             return local.toISOString().slice(0, 16);
         };
+        const renderImagePreview = (preview, imageUrl) => {
+            if (imageUrl) {
+                preview.innerHTML = '';
+                const image = document.createElement('img');
+                image.className = 'h-full w-full object-cover';
+                image.alt = 'Ingredient image preview';
+                image.src = imageUrl;
+                preview.appendChild(image);
+                return;
+            }
+
+            preview.innerHTML = '<span class="material-symbols-outlined" data-icon="image">image</span>';
+        };
+        const updateHeroImage = (ingredient) => {
+            if (ingredient.image_url) {
+                ingredientImage.src = ingredient.image_url;
+                ingredientImage.alt = ingredient.name || 'Ingredient image';
+                ingredientImage.classList.remove('hidden');
+                ingredientImagePlaceholder.classList.add('hidden');
+                return;
+            }
+
+            ingredientImage.removeAttribute('src');
+            ingredientImage.classList.add('hidden');
+            ingredientImagePlaceholder.classList.remove('hidden');
+        };
+        const updateEditImagePreview = () => {
+            const imageFile = editIngredientImageInput.files?.[0];
+            if (!imageFile) {
+                renderImagePreview(editIngredientImagePreview, currentIngredient?.image_url || '');
+                return;
+            }
+
+            renderImagePreview(editIngredientImagePreview, URL.createObjectURL(imageFile));
+        };
         const getStockStatus = (ingredient) => {
             const currentStock = Number(ingredient.current_stock) || 0;
             const minimumThreshold = Number(ingredient.minimum_threshold) || 0;
@@ -387,6 +449,7 @@
             ingredientCurrentStock.innerHTML = `${formatNumber(currentStock)} <span class="text-lg font-body font-normal">${ingredient.unit || ''}</span>`;
             ingredientUnitCost.innerHTML = `${formatCurrency(unitCost)} <span class="text-lg font-body font-normal">/${ingredient.unit || 'unit'}</span>`;
             ingredientTotalValue.textContent = formatCurrency(totalValue);
+            updateHeroImage(ingredient);
             stockHealthLabel.textContent = `${Math.round(stockStatus.percent)}% ${stockStatus.label}`;
             stockHealthBar.className = `${stockStatus.barClass} h-full rounded-full`;
             stockHealthBar.style.width = `${stockStatus.percent}%`;
@@ -399,6 +462,8 @@
             document.getElementById('edit-ingredient-cost').value = Number(ingredient.cost_per_unit) || 0;
             document.getElementById('edit-ingredient-stock').value = Number(ingredient.current_stock) || 0;
             document.getElementById('edit-ingredient-threshold').value = Number(ingredient.minimum_threshold) || 0;
+            editIngredientImageInput.value = '';
+            renderImagePreview(editIngredientImagePreview, ingredient.image_url || '');
             document.getElementById('restock-cost').value = Number(ingredient.cost_per_unit) || 0;
         };
         const renderMovements = (movements) => {
@@ -493,6 +558,8 @@
 
         document.getElementById('open-edit-ingredient').addEventListener('click', () => {
             setStatus(editStatus, '');
+            editIngredientImageInput.value = '';
+            renderImagePreview(editIngredientImagePreview, currentIngredient?.image_url || '');
             openModal(editModal);
         });
         document.getElementById('open-restock-ingredient').addEventListener('click', () => {
@@ -506,6 +573,7 @@
         document.querySelectorAll('.close-restock-ingredient').forEach((button) => {
             button.addEventListener('click', () => closeModal(restockModal));
         });
+        editIngredientImageInput.addEventListener('change', updateEditImagePreview);
         [editModal, restockModal].forEach((modal) => {
             modal.addEventListener('click', (event) => {
                 if (event.target === modal) {
@@ -517,13 +585,17 @@
             event.preventDefault();
             if (!editForm.reportValidity() || !ingredientId) return;
 
-            const payload = {
-                name: document.getElementById('edit-ingredient-name').value.trim(),
-                unit: document.getElementById('edit-ingredient-unit').value.trim(),
-                current_stock: Number(document.getElementById('edit-ingredient-stock').value),
-                cost_per_unit: Number(document.getElementById('edit-ingredient-cost').value),
-                minimum_threshold: Number(document.getElementById('edit-ingredient-threshold').value),
-            };
+            const formData = new FormData();
+            formData.append('name', document.getElementById('edit-ingredient-name').value.trim());
+            formData.append('unit', document.getElementById('edit-ingredient-unit').value.trim());
+            formData.append('current_stock', document.getElementById('edit-ingredient-stock').value);
+            formData.append('cost_per_unit', document.getElementById('edit-ingredient-cost').value);
+            formData.append('minimum_threshold', document.getElementById('edit-ingredient-threshold').value);
+
+            const imageFile = editIngredientImageInput.files?.[0];
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
 
             saveEditButton.disabled = true;
             saveEditButton.textContent = 'Saving...';
@@ -532,10 +604,7 @@
             try {
                 const ingredient = await fetchApiData(`/ingredients/${encodeURIComponent(ingredientId)}`, {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(payload),
+                    body: formData,
                 });
                 renderIngredient(ingredient);
                 closeModal(editModal);

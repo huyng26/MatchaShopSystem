@@ -45,8 +45,8 @@
                 <p class="text-xs font-label uppercase tracking-widest text-stone-400 mb-1">Total Customers</p>
                 <p id="total-customers-stat" class="text-3xl font-serif font-bold text-primary">0</p>
                 <div class="mt-4 flex items-center text-xs text-secondary font-bold">
-                    <span class="material-symbols-outlined text-sm mr-1" data-icon="trending_up">trending_up</span>
-                    Loaded from API
+                    <span class="material-symbols-outlined text-sm mr-1" data-icon="database">database</span>
+                    Customer records in system
                 </div>
             </div>
             <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
@@ -76,16 +76,6 @@
         </div>
         <!-- Filters & List -->
         <div class="management-table-card bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/10 overflow-hidden">
-            <!-- Filter Bar -->
-            <div class="management-filter-bar p-6 border-b border-surface-container flex flex-wrap items-center justify-between gap-4">
-                <label class="flex min-w-[280px] flex-1 items-center bg-surface-container px-3 py-2 rounded-lg gap-2 text-sm font-label text-stone-600">
-                    <span class="material-symbols-outlined text-lg" data-icon="search">search</span>
-                    <input id="customer-search" class="w-full border-none bg-transparent p-0 text-sm focus:ring-0" type="search" placeholder="Search customers..." />
-                </label>
-                <div id="customer-table-count" class="text-xs text-stone-400 font-label">
-                    Loading customers...
-                </div>
-            </div>
             <!-- Table -->
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
@@ -115,10 +105,28 @@
                     </tbody>
                 </table>
             </div>
+            <!-- Pagination / Footer -->
+            <div
+                class="management-table-footer px-6 py-4 bg-surface-container-low/30 flex justify-between items-center border-t border-outline-variant/10">
+                <p id="customer-table-count" class="text-xs text-on-surface-variant font-medium">Loading customers...</p>
+                <div id="customer-pagination" class="hidden items-center gap-2">
+                    <button id="customer-page-prev" type="button"
+                        class="flex h-8 w-8 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant transition-colors hover:bg-surface-container-highest disabled:cursor-not-allowed disabled:opacity-40"
+                        aria-label="Previous customer page">
+                        <span class="material-symbols-outlined text-sm" data-icon="chevron_left">chevron_left</span>
+                    </button>
+                    <span id="customer-page-label" class="text-xs font-medium text-on-surface-variant">Page 1 of 1</span>
+                    <button id="customer-page-next" type="button"
+                        class="flex h-8 w-8 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant transition-colors hover:bg-surface-container-highest disabled:cursor-not-allowed disabled:opacity-40"
+                        aria-label="Next customer page">
+                        <span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+                    </button>
+                </div>
+            </div>
         </div>
         <!-- Footer Meta Info -->
         <div class="mt-12 text-center">
-            <p class="text-[10px] text-stone-400 font-label uppercase tracking-widest">Matcha Atelier Internal Portal © 2024</p>
+            <p class="text-[10px] text-stone-400 font-label uppercase tracking-widest">Hoppers' Matcha Internal Portal © 2026</p>
         </div>
         </div>
     <div id="customer-modal"
@@ -183,7 +191,11 @@
         const API_BASE_URL = window.MATCHA_API_BASE_URL || 'http://localhost:8000/api/v1';
         const tableBody = document.getElementById('customer-table-body');
         const tableCount = document.getElementById('customer-table-count');
-        const searchInput = document.getElementById('customer-search');
+        const pagination = document.getElementById('customer-pagination');
+        const previousPageButton = document.getElementById('customer-page-prev');
+        const nextPageButton = document.getElementById('customer-page-next');
+        const pageLabel = document.getElementById('customer-page-label');
+        const topbarSearchInput = document.getElementById('topbar-search');
         const modal = document.getElementById('customer-modal');
         const form = document.getElementById('customer-form');
         const formStatus = document.getElementById('customer-form-status');
@@ -192,7 +204,9 @@
         const goldCustomersStat = document.getElementById('gold-customers-stat');
         const activeCustomersStat = document.getElementById('active-customers-stat');
         const loyaltyPointsStat = document.getElementById('loyalty-points-stat');
+        const pageSize = 5;
         let customersCache = [];
+        let currentPage = 1;
         let searchTimer = null;
 
         const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
@@ -264,12 +278,24 @@
             activeCustomersStat.textContent = formatNumber(customers.filter((customer) => Number(customer.loyalty_points) > 0).length);
             loyaltyPointsStat.textContent = formatNumber(totalPoints);
         };
+        const getTotalPages = (customerCount) => Math.max(1, Math.ceil(customerCount / pageSize));
+        const updatePaginationControls = (customerCount) => {
+            const totalPages = getTotalPages(customerCount);
+            const hasMultiplePages = totalPages > 1;
+
+            pagination.classList.toggle('hidden', !hasMultiplePages);
+            pagination.classList.toggle('flex', hasMultiplePages);
+            previousPageButton.disabled = currentPage <= 1;
+            nextPageButton.disabled = currentPage >= totalPages;
+            pageLabel.textContent = `Page ${currentPage} of ${totalPages}`;
+        };
         const renderCustomers = (customers) => {
             tableBody.innerHTML = '';
-            tableCount.textContent = `Showing ${customers.length} customer${customers.length === 1 ? '' : 's'}`;
             renderStats(customers);
 
             if (!customers.length) {
+                tableCount.textContent = 'Showing 0 customers';
+                updatePaginationControls(0);
                 tableBody.innerHTML = `
                     <tr>
                         <td class="px-6 py-8 text-center text-sm font-bold text-stone-500" colspan="5">No customers found.</td>
@@ -278,7 +304,16 @@
                 return;
             }
 
-            customers.forEach((customer) => {
+            const totalPages = getTotalPages(customers.length);
+            currentPage = Math.min(Math.max(currentPage, 1), totalPages);
+            const startIndex = (currentPage - 1) * pageSize;
+            const pageCustomers = customers.slice(startIndex, startIndex + pageSize);
+            const endIndex = startIndex + pageCustomers.length;
+
+            tableCount.textContent = `Showing ${startIndex + 1}-${endIndex} of ${customers.length} customer${customers.length === 1 ? '' : 's'}`;
+            updatePaginationControls(customers.length);
+
+            pageCustomers.forEach((customer) => {
                 const tier = getTier(customer.loyalty_points);
                 const href = `customer_detail.html?id=${encodeURIComponent(customer.id)}`;
                 const row = document.createElement('tr');
@@ -316,10 +351,12 @@
                 const query = search ? `?q=${encodeURIComponent(search)}` : '';
                 const customers = getListData(await fetchApiData(`/customers${query}`));
                 customersCache = customers;
+                currentPage = 1;
                 renderCustomers(customersCache);
             } catch (error) {
                 console.error('Failed to load customers:', error);
                 tableCount.textContent = 'Cannot load customers';
+                updatePaginationControls(0);
                 renderStats([]);
                 tableBody.innerHTML = `
                     <tr>
@@ -335,9 +372,19 @@
         modal.addEventListener('click', (event) => {
             if (event.target === modal) closeModal();
         });
-        searchInput.addEventListener('input', () => {
+        topbarSearchInput?.addEventListener('input', () => {
             window.clearTimeout(searchTimer);
-            searchTimer = window.setTimeout(() => loadCustomers(searchInput.value.trim()), 300);
+            searchTimer = window.setTimeout(() => loadCustomers(topbarSearchInput.value.trim()), 300);
+        });
+        previousPageButton.addEventListener('click', () => {
+            if (currentPage <= 1) return;
+            currentPage -= 1;
+            renderCustomers(customersCache);
+        });
+        nextPageButton.addEventListener('click', () => {
+            if (currentPage >= getTotalPages(customersCache.length)) return;
+            currentPage += 1;
+            renderCustomers(customersCache);
         });
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
@@ -362,7 +409,7 @@
                 });
                 form.reset();
                 closeModal();
-                await loadCustomers(searchInput.value.trim());
+                await loadCustomers(topbarSearchInput?.value.trim() || '');
             } catch (error) {
                 console.error('Failed to create customer:', error);
                 setFormStatus(error.message || 'Cannot create customer. Please check the backend server.', 'error');

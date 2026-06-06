@@ -35,17 +35,16 @@
                     <p class="page-header-subtitle">Manage your seasonal offerings. Adjust
                         availability and basic details for the admin view.</p>
                 </div>
-                <div class="flex gap-3">
-                    <button
-                        class="flex items-center gap-2 px-6 py-2.5 rounded-full bg-surface-container-high text-on-surface font-bold text-sm hover:bg-surface-container-highest transition-colors">
+                <div class="relative flex gap-3">
+                    <button id="filter-menu-button" type="button"
+                        class="flex items-center gap-2 px-6 py-2.5 rounded-full bg-surface-container-high text-on-surface font-bold text-sm hover:bg-surface-container-highest transition-colors"
+                        aria-haspopup="true" aria-expanded="false">
                         <span class="material-symbols-outlined text-sm" data-icon="filter_list">filter_list</span>
-                        Filters
+                        <span id="active-filter-label">All Categories</span>
                     </button>
-                    <button
-                        class="flex items-center gap-2 px-6 py-2.5 rounded-full bg-surface-container-high text-on-surface font-bold text-sm hover:bg-surface-container-highest transition-colors">
-                        <span class="material-symbols-outlined text-sm" data-icon="sort">sort</span>
-                        Sort
-                    </button>
+                    <div id="filter-menu"
+                        class="absolute right-0 top-full z-20 mt-3 hidden min-w-52 overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest py-2 shadow-xl">
+                    </div>
                 </div>
             </div>
             <!-- Simplified Uniform Grid -->
@@ -62,37 +61,9 @@
                     <p class="font-bold text-sm">New Product</p>
                 </div>
             </div>
-            <!-- Management Section -->
-            <div class="mt-20">
-                <div class="flex items-center justify-between mb-8">
-                    <h2 class="text-3xl serif text-primary">Inventory Snapshot</h2>
-                    <button class="text-secondary font-bold text-sm flex items-center gap-1 hover:underline">
-                        Detailed Inventory
-                        <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
-                    </button>
-                </div>
-                <div
-                    class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden border border-surface-container-high">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr
-                                class="bg-surface-container-low text-on-surface-variant font-label text-[10px] tracking-widest uppercase">
-                                <th class="px-8 py-4 font-bold">Product</th>
-                                <th class="px-8 py-4 font-bold">Category</th>
-                                <th class="px-8 py-4 font-bold text-right">Price</th>
-                                <th class="px-8 py-4 font-bold text-center">Status</th>
-                                <th class="px-8 py-4 font-bold text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-surface-container">
-                            <tr>
-                                <td class="px-8 py-6 text-center text-sm font-bold text-on-surface-variant" colspan="5">
-                                    Loading products...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+            <!-- Footer Meta Info -->
+            <div class="mt-12 text-center">
+                <p class="text-[10px] text-stone-400 font-label uppercase tracking-widest">Hoppers' Matcha Internal Portal © 2026</p>
             </div>
         </div>
     </main>
@@ -220,8 +191,14 @@
         const addIngredientButton = document.getElementById('add-ingredient');
         const ingredientsContainer = document.getElementById('ingredients-container');
         const productGrid = document.getElementById('product-grid');
-        const inventoryTableBody = document.querySelector('tbody');
+        const filterMenuButton = document.getElementById('filter-menu-button');
+        const filterMenu = document.getElementById('filter-menu');
+        const activeFilterLabel = document.getElementById('active-filter-label');
+        const topbarSearchInput = document.getElementById('topbar-search');
+        let allProducts = [];
         let productCategories = [];
+        let activeCategory = '';
+        let activeSearchQuery = '';
         let inventoryIngredients = [];
         let ingredientsLoaded = false;
 
@@ -281,7 +258,7 @@
         };
 
         const deriveCategories = (products) => (
-            [...new Set(products.map((product) => product.category).filter(Boolean))]
+            [...new Set(products.map((product) => getProductCategory(product)).filter(Boolean))]
                 .sort((first, second) => first.localeCompare(second))
         );
 
@@ -291,6 +268,68 @@
                 categorySelect.value = selectedCategory;
             }
             return productCategories;
+        };
+
+        const closeFilterMenu = () => {
+            filterMenu?.classList.add('hidden');
+            filterMenuButton?.setAttribute('aria-expanded', 'false');
+        };
+
+        const normalizeSearchText = (value) => String(value ?? '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .trim();
+
+        const productMatchesSearch = (product) => {
+            if (!activeSearchQuery) return true;
+
+            const searchableText = normalizeSearchText([
+                getProductName(product),
+                getProductDescription(product),
+                getProductCategory(product),
+                formatPrice(getProductPrice(product)),
+            ].join(' '));
+
+            return searchableText.includes(activeSearchQuery);
+        };
+
+        const getVisibleProducts = () => allProducts.filter((product) => (
+            (!activeCategory || getProductCategory(product) === activeCategory)
+            && productMatchesSearch(product)
+        ));
+
+        const updateFilterLabel = () => {
+            if (activeFilterLabel) {
+                activeFilterLabel.textContent = activeCategory || 'All Categories';
+            }
+        };
+
+        const populateFilterMenu = (categories) => {
+            if (!filterMenu) return;
+
+            filterMenu.innerHTML = '';
+            const options = [
+                { label: 'All Categories', value: '' },
+                ...categories.map((category) => ({ label: category, value: category })),
+            ];
+
+            options.forEach(({ label, value }) => {
+                const option = document.createElement('button');
+                option.type = 'button';
+                option.className = `block w-full px-4 py-2.5 text-left text-sm font-bold transition-colors hover:bg-surface-container-high ${value === activeCategory ? 'text-secondary' : 'text-on-surface'}`;
+                option.textContent = label;
+                option.addEventListener('click', () => {
+                    activeCategory = value;
+                    updateFilterLabel();
+                    populateFilterMenu(productCategories);
+                    renderProducts(getVisibleProducts());
+                    closeFilterMenu();
+                });
+                filterMenu.appendChild(option);
+            });
+
+            updateFilterLabel();
         };
 
         const formatPrice = (value) => new Intl.NumberFormat('vi-VN', {
@@ -500,69 +539,28 @@
             return card;
         };
 
-        const createInventoryRow = (productData, index = 0) => {
-            const row = document.createElement('tr');
-            row.className = 'hover:bg-surface-container-low transition-colors';
-
-            const statusLabel = productData.is_available === false ? 'INACTIVE' : 'ACTIVE';
-            const statusClass = productData.is_available === false
-                ? 'bg-error-container/30 text-error'
-                : 'bg-secondary-container/30 text-secondary';
-            const productHref = productData.id
-                ? `product_detail.html?id=${encodeURIComponent(productData.id)}`
-                : 'product_detail.html';
-            const productName = getProductName(productData);
-            const productImageUrl = getProductImageUrl(productData);
-            const thumbnailMarkup = productImageUrl
-                ? `<img class="w-full h-full object-cover" alt="${escapeHtml(productName)} thumbnail" src="${escapeHtml(productImageUrl)}" />`
-                : '<div class="flex h-full w-full items-center justify-center text-on-surface-variant"><span class="material-symbols-outlined text-lg" data-icon="restaurant">restaurant</span></div>';
-
-            row.innerHTML = `
-                <td class="px-8 py-4">
-                    <a class="flex items-center gap-4" href="${productHref}">
-                        <div class="w-10 h-10 rounded-lg bg-surface-container overflow-hidden">
-                            ${thumbnailMarkup}
-                        </div>
-                        <div>
-                            <p class="font-bold text-sm text-on-surface">${escapeHtml(productName)}</p>
-                            <p class="text-[10px] text-on-surface-variant">${escapeHtml(productData.id || 'new-product')}</p>
-                        </div>
-                    </a>
-                </td>
-                <td class="px-8 py-4 text-sm text-on-surface-variant">${escapeHtml(getProductCategory(productData))}</td>
-                <td class="px-8 py-4 text-sm font-bold text-right text-on-surface">${escapeHtml(formatPrice(getProductPrice(productData)))}</td>
-                <td class="px-8 py-4 text-center">
-                    <span class="inline-block px-2.5 py-1 rounded-full ${statusClass} text-[10px] font-bold">${statusLabel}</span>
-                </td>
-                <td class="px-8 py-4 text-right">
-                    <button class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span></button>
-                </td>
-            `;
-
-            return row;
-        };
-
         const renderProducts = (products) => {
             productGrid.querySelectorAll('.product-card').forEach((card) => card.remove());
-            inventoryTableBody.innerHTML = '';
 
             if (!products.length) {
                 const emptyState = document.createElement('div');
                 emptyState.className = 'product-card col-span-full rounded-2xl bg-surface-container-low p-8 text-center text-sm text-on-surface-variant';
-                emptyState.textContent = 'No products found.';
+                emptyState.textContent = activeSearchQuery
+                    ? 'No menu items match your search.'
+                    : activeCategory
+                    ? 'No products found in this category.'
+                    : 'No products found.';
                 productGrid.appendChild(emptyState);
                 return;
             }
 
             products.forEach((product, index) => {
                 productGrid.appendChild(createProductCard(product, index));
-                inventoryTableBody.appendChild(createInventoryRow(product, index));
             });
         };
 
         const loadProducts = async () => {
             productGrid.querySelectorAll('.product-card').forEach((card) => card.remove());
-            inventoryTableBody.innerHTML = '';
 
             const loadingCard = document.createElement('div');
             loadingCard.className = 'product-card col-span-full rounded-2xl bg-surface-container-low p-8 text-center text-sm font-bold text-on-surface-variant';
@@ -570,14 +568,22 @@
             productGrid.appendChild(loadingCard);
 
             try {
-                const products = getListData(await fetchApiData('/products'));
-                productCategories = deriveCategories(products);
+                allProducts = getListData(await fetchApiData('/products'));
+                productCategories = deriveCategories(allProducts);
+                if (activeCategory && !productCategories.includes(activeCategory)) {
+                    activeCategory = '';
+                }
                 populateCategorySelect(productCategories);
-                renderProducts(products);
+                populateFilterMenu(productCategories);
+                renderProducts(getVisibleProducts());
             } catch (error) {
                 console.error('Failed to load products:', error);
+                allProducts = [];
+                productCategories = [];
+                activeCategory = '';
                 productGrid.querySelectorAll('.product-card').forEach((card) => card.remove());
                 populateCategorySelect([]);
+                populateFilterMenu([]);
 
                 const errorCard = document.createElement('div');
                 errorCard.className = 'product-card col-span-full rounded-2xl bg-error-container/20 p-8 text-center text-sm font-bold text-error';
@@ -603,6 +609,16 @@
         closeModalButton.addEventListener('click', closeModal);
         cancelButton.addEventListener('click', closeModal);
         addIngredientButton.addEventListener('click', createIngredientRow);
+        filterMenuButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const isOpen = !filterMenu.classList.contains('hidden');
+            filterMenu.classList.toggle('hidden', isOpen);
+            filterMenuButton.setAttribute('aria-expanded', String(!isOpen));
+        });
+        topbarSearchInput?.addEventListener('input', (event) => {
+            activeSearchQuery = normalizeSearchText(event.target.value);
+            renderProducts(getVisibleProducts());
+        });
         createCategoryButton.addEventListener('click', async () => {
             const name = newCategoryNameInput.value.trim();
             if (!name) {
@@ -621,6 +637,7 @@
                 }
                 newCategoryNameInput.value = '';
                 refreshCategories(name);
+                populateFilterMenu(productCategories);
                 setProductStatus('Category added.');
             } catch (error) {
                 console.error('Failed to add category:', error);
@@ -637,7 +654,16 @@
             }
         });
 
+        document.addEventListener('click', (event) => {
+            if (!filterMenu?.contains(event.target) && !filterMenuButton?.contains(event.target)) {
+                closeFilterMenu();
+            }
+        });
+
         document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closeFilterMenu();
+            }
             if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
                 closeModal();
             }
