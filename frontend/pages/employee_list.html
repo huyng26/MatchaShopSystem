@@ -65,18 +65,31 @@
           </table>
         </div>
         <!-- Pagination/Footer of Table -->
-        <div class="management-table-footer px-6 py-4 border-t border-outline-variant/10">
+        <div class="management-table-footer px-6 py-4 border-t border-outline-variant/10 flex items-center justify-between">
             <p id="staff-table-count" class="text-xs text-on-surface-variant font-medium">Loading staff...</p>
+            <div id="staff-pagination" class="hidden items-center gap-2">
+              <button id="staff-page-prev" type="button"
+                class="flex h-8 w-8 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant transition-colors hover:bg-surface-container-highest disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label="Previous staff page">
+                <span class="material-symbols-outlined text-sm" data-icon="chevron_left">chevron_left</span>
+              </button>
+              <span id="staff-page-label" class="text-xs font-medium text-on-surface-variant">Page 1 of 1</span>
+              <button id="staff-page-next" type="button"
+                class="flex h-8 w-8 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant transition-colors hover:bg-surface-container-highest disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label="Next staff page">
+                <span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+              </button>
+            </div>
         </div>
       </div>
       <!-- Stats/Insight Cards -->
-      <div class="col-span-12 grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+      <div class="col-span-12 grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
         <div class="bg-primary-container text-on-primary-container p-6 rounded-xl relative overflow-hidden group">
           <div class="relative z-10">
             <p class="text-xs font-bold uppercase tracking-widest opacity-60 mb-1">Total Staff</p>
             <h3 id="total-staff-count" class="text-4xl font-serif">0</h3>
             <p class="text-xs mt-4 flex items-center gap-1 font-medium"><span class="material-symbols-outlined text-sm"
-                data-icon="database">database</span> Loaded from API</p>
+                data-icon="badge">badge</span> Employee profiles in system</p>
           </div>
           <span
             class="material-symbols-outlined absolute -bottom-4 -right-4 text-9xl opacity-5 group-hover:scale-110 transition-transform duration-500"
@@ -85,35 +98,14 @@
         <div class="bg-surface-container-high p-6 rounded-xl group">
           <p class="text-xs font-bold uppercase tracking-widest text-outline mb-1">Active Now</p>
           <h3 id="active-staff-count" class="text-4xl font-serif text-secondary">0</h3>
-          <div class="flex mt-4 gap-1">
-            <div class="h-1.5 w-1/4 rounded-full bg-secondary"></div>
-            <div class="h-1.5 w-1/4 rounded-full bg-secondary"></div>
-            <div class="h-1.5 w-1/4 rounded-full bg-secondary/30"></div>
-            <div class="h-1.5 w-1/4 rounded-full bg-secondary/30"></div>
-          </div>
-        </div>
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-surface-variant/20 flex flex-col justify-between">
-          <div>
-            <p class="text-xs font-bold uppercase tracking-widest text-outline mb-1">Featured Staff</p>
-            <p id="next-shift-label" class="text-sm font-semibold text-on-surface">Loading staff...</p>
-          </div>
-          <span class="text-secondary text-xs font-bold flex items-center gap-1">
-            STAFF API <span class="material-symbols-outlined text-sm" data-icon="api">api</span>
-          </span>
+          <p class="text-xs mt-4 flex items-center gap-1 font-medium text-on-surface-variant"><span class="material-symbols-outlined text-sm"
+              data-icon="check_circle">check_circle</span> Employees currently marked active</p>
         </div>
       </div>
     </div>
-    <!-- Artistic Quote / Footer Branding -->
-    <div class="mt-20 text-center pb-10">
-      <p class="font-serif italic text-2xl text-primary/30 max-w-lg mx-auto">
-        "Modern management for the mindful tea experience."
-      </p>
-      <div
-        class="flex justify-center gap-4 mt-6 grayscale opacity-20 hover:grayscale-0 hover:opacity-50 transition-all duration-700">
-        <span class="material-symbols-outlined" data-icon="eco">eco</span>
-        <span class="material-symbols-outlined" data-icon="local_cafe">local_cafe</span>
-        <span class="material-symbols-outlined" data-icon="spa">spa</span>
-      </div>
+    <!-- Footer Meta Info -->
+    <div class="mt-12 text-center">
+      <p class="text-[10px] text-stone-400 font-label uppercase tracking-widest">Hoppers' Matcha Internal Portal © 2026</p>
     </div>
   </main>
   <div id="staff-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4 py-8 backdrop-blur-sm">
@@ -201,15 +193,23 @@
     document.addEventListener('DOMContentLoaded', () => {
       const tableBody = document.getElementById('staff-table-body');
       const tableCount = document.getElementById('staff-table-count');
+      const pagination = document.getElementById('staff-pagination');
+      const previousPageButton = document.getElementById('staff-page-prev');
+      const nextPageButton = document.getElementById('staff-page-next');
+      const pageLabel = document.getElementById('staff-page-label');
       const totalStaffCount = document.getElementById('total-staff-count');
       const activeStaffCount = document.getElementById('active-staff-count');
-      const nextShiftLabel = document.getElementById('next-shift-label');
+      const topbarSearchInput = document.getElementById('topbar-search');
       const openStaffModalButton = document.getElementById('open-staff-modal');
       const staffModal = document.getElementById('staff-modal');
       const staffForm = document.getElementById('staff-form');
       const staffFormStatus = document.getElementById('staff-form-status');
       const saveStaffButton = document.getElementById('save-staff');
       const API_BASE_URL = window.MATCHA_API_BASE_URL || 'http://localhost:8000/api/v1';
+      const pageSize = 5;
+      let staffCache = [];
+      let currentPage = 1;
+      let activeSearchQuery = '';
 
       const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
         '&': '&amp;',
@@ -253,6 +253,42 @@
         return normalizedStatus === 'active'
           ? 'bg-secondary-container/30 text-secondary'
           : 'bg-error-container/30 text-error';
+      };
+
+      const normalizeSearchText = (value) => String(value ?? '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+
+      const staffMatchesSearch = (employee) => {
+        if (!activeSearchQuery) return true;
+
+        const searchableText = normalizeSearchText([
+          employee.id,
+          employee.full_name,
+          employee.email,
+          employee.phone,
+          employee.role,
+          employee.status,
+        ].join(' '));
+
+        return searchableText.includes(activeSearchQuery);
+      };
+
+      const getVisibleStaff = () => staffCache.filter(staffMatchesSearch);
+
+      const getTotalPages = (staffCount) => Math.max(1, Math.ceil(staffCount / pageSize));
+
+      const updatePaginationControls = (staffCount) => {
+        const totalPages = getTotalPages(staffCount);
+        const hasMultiplePages = totalPages > 1;
+
+        pagination.classList.toggle('hidden', !hasMultiplePages);
+        pagination.classList.toggle('flex', hasMultiplePages);
+        previousPageButton.disabled = currentPage <= 1;
+        nextPageButton.disabled = currentPage >= totalPages;
+        pageLabel.textContent = `Page ${currentPage} of ${totalPages}`;
       };
 
       const getTokenHeaders = () => {
@@ -310,15 +346,12 @@
 
       const renderStaff = (staff) => {
         tableBody.innerHTML = '';
-        tableCount.textContent = `Showing ${staff.length} employee${staff.length === 1 ? '' : 's'}`;
-        totalStaffCount.textContent = staff.length;
-        activeStaffCount.textContent = staff.filter((employee) => getNormalizedStatus(employee.status) === 'active').length;
-        const nextEmployee = staff.find((employee) => getNormalizedStatus(employee.status) === 'active') || staff[0];
-        nextShiftLabel.textContent = nextEmployee
-          ? nextEmployee.full_name || nextEmployee.email || nextEmployee.id
-          : 'No staff profiles';
+        totalStaffCount.textContent = staffCache.length;
+        activeStaffCount.textContent = staffCache.filter((employee) => getNormalizedStatus(employee.status) === 'active').length;
 
         if (!staff.length) {
+          tableCount.textContent = 'Showing 0 employees';
+          updatePaginationControls(0);
           tableBody.innerHTML = `
             <tr>
               <td class="px-6 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="4">No staff found.</td>
@@ -327,7 +360,16 @@
           return;
         }
 
-        staff.forEach((employee, index) => {
+        const totalPages = getTotalPages(staff.length);
+        currentPage = Math.min(Math.max(currentPage, 1), totalPages);
+        const startIndex = (currentPage - 1) * pageSize;
+        const pageStaff = staff.slice(startIndex, startIndex + pageSize);
+        const endIndex = startIndex + pageStaff.length;
+
+        tableCount.textContent = `Showing ${startIndex + 1}-${endIndex} of ${staff.length} employee${staff.length === 1 ? '' : 's'}`;
+        updatePaginationControls(staff.length);
+
+        pageStaff.forEach((employee, index) => {
           const row = document.createElement('tr');
           row.className = 'group hover:bg-surface-container-low transition-colors duration-200 cursor-pointer';
           row.addEventListener('click', () => {
@@ -374,13 +416,16 @@
       const loadStaff = async () => {
         try {
           const staff = await fetchStaff();
-          renderStaff(Array.isArray(staff) ? staff : []);
+          staffCache = Array.isArray(staff) ? staff : [];
+          currentPage = 1;
+          renderStaff(getVisibleStaff());
         } catch (error) {
           console.error('Failed to load staff:', error);
           tableCount.textContent = 'Cannot load staff';
+          staffCache = [];
+          updatePaginationControls(0);
           totalStaffCount.textContent = '0';
           activeStaffCount.textContent = '0';
-          nextShiftLabel.textContent = 'Cannot load staff';
           tableBody.innerHTML = `
             <tr>
               <td class="px-6 py-8 text-center text-sm font-bold text-error" colspan="4">Cannot load staff. Please sign in with an admin account and check the backend server.</td>
@@ -429,6 +474,21 @@
       });
 
       openStaffModalButton.addEventListener('click', openStaffModal);
+      topbarSearchInput?.addEventListener('input', (event) => {
+        activeSearchQuery = normalizeSearchText(event.target.value);
+        currentPage = 1;
+        renderStaff(getVisibleStaff());
+      });
+      previousPageButton.addEventListener('click', () => {
+        if (currentPage <= 1) return;
+        currentPage -= 1;
+        renderStaff(getVisibleStaff());
+      });
+      nextPageButton.addEventListener('click', () => {
+        if (currentPage >= getTotalPages(getVisibleStaff().length)) return;
+        currentPage += 1;
+        renderStaff(getVisibleStaff());
+      });
       document.getElementById('close-staff-modal').addEventListener('click', closeStaffModal);
       document.getElementById('cancel-staff-modal').addEventListener('click', closeStaffModal);
       staffModal.addEventListener('click', (event) => {
