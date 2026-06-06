@@ -17,7 +17,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
         rel="stylesheet" />
-      <link rel="stylesheet" href="../assets/css/style.css" />
+        <link rel="stylesheet" href="../assets/css/style.css?v=header-subtitle-20260605" />
 </head>
 
 <body class="page-inventory-detail bg-surface text-on-surface min-h-screen" data-page="inventory-detail">
@@ -34,44 +34,36 @@
                     <div
                         class="absolute -inset-1 bg-gradient-to-tr from-secondary/20 to-primary/20 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000">
                     </div>
-                    <img alt="Uji Ceremonial Matcha"
-                        class="relative w-full md:w-80 aspect-square object-cover rounded-xl shadow-2xl"
-                        data-alt="High quality vibrant green ceremonial matcha powder in a black ceramic bowl on a wooden surface with a bamboo whisk"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAS3VVoHEvWt-jcKXAWm_Zwd1gJDwSDVoIkQ9TCDvvm2AH53A7dHOMuTk5rrsL8jHCTxnHLU9r53MvUiqAU2Oe-MTzL4tB7EpdpfcXdGHTcX7ZGXANP5fMR8ur82CrVYuAD77sM-nXIzqqYgoLe_LCYnRJh4eKCDnqmBYzTUzdeztDQZXLt-FY44GoVwwqTkGhT_fPxx_09FI0Xp9E1omK0pw-Vn-dt4LXOiXIbiLmmdBrViIFCSi-edCa4xelD_DMiMBsbhj0_Z_K" />
+                    <div
+                        class="relative w-full md:w-80 aspect-square rounded-xl shadow-2xl bg-surface-container-lowest border border-outline-variant/10 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-8xl text-primary/30" data-icon="inventory_2">inventory_2</span>
+                    </div>
                 </div>
                 <div class="flex-1 space-y-6">
                     <div>
                         <span
-                            class="inline-block px-3 py-1 bg-primary-container/10 text-primary text-xs font-bold rounded-full mb-3 uppercase tracking-widest">Premium
-                            Grade</span>
-                        <h2 class="text-5xl font-headline font-bold text-primary leading-tight">Uji Ceremonial Matcha
-                        </h2>
-                        <p class="text-on-surface-variant max-w-2xl mt-2">First-harvest tea leaves from the Uji region,
-                            stone-ground to a fine, vibrant powder. Known for its intense umami and smooth finish.</p>
+                            class="inline-block px-3 py-1 bg-primary-container/10 text-primary text-xs font-bold rounded-full mb-3 uppercase tracking-widest">Inventory
+                            Item</span>
+                        <h2 id="ingredient-name" class="text-5xl font-headline font-bold text-primary leading-tight">Loading ingredient...</h2>
+                        <p id="ingredient-description" class="page-header-subtitle">Loading ingredient details from the API.</p>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div
                             class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
                             <div class="text-on-surface-variant text-sm mb-1">Current Stock</div>
-                            <div class="text-3xl font-headline font-bold text-primary">12.4 <span
-                                    class="text-lg font-body font-normal">kg</span></div>
-                            <div class="mt-2 text-xs font-bold text-secondary flex items-center gap-1">
-                                <span class="material-symbols-outlined text-sm">trending_up</span>
-                                +2.1kg from last week
-                            </div>
+                            <div id="ingredient-current-stock" class="text-3xl font-headline font-bold text-primary">--</div>
+                            <div class="mt-2 text-xs font-medium text-on-surface-variant">Loaded from inventory API</div>
                         </div>
                         <div
                             class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
                             <div class="text-on-surface-variant text-sm mb-1">Unit Cost</div>
-                            <div class="text-3xl font-headline font-bold text-primary">$142.00 <span
-                                    class="text-lg font-body font-normal">/kg</span></div>
-                            <div class="mt-2 text-xs font-medium text-on-surface-variant">Last updated: Oct 12, 2023
-                            </div>
+                            <div id="ingredient-unit-cost" class="text-3xl font-headline font-bold text-primary">--</div>
+                            <div class="mt-2 text-xs font-medium text-on-surface-variant">Loaded from inventory API</div>
                         </div>
                         <div
                             class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
                             <div class="text-on-surface-variant text-sm mb-1">Total Value</div>
-                            <div class="text-3xl font-headline font-bold text-primary">$1,760.80</div>
+                            <div id="ingredient-total-value" class="text-3xl font-headline font-bold text-primary">--</div>
                             <div class="mt-2 text-xs font-medium text-on-surface-variant">Asset valuation</div>
                         </div>
                     </div>
@@ -88,38 +80,42 @@
                             <div>
                                 <div class="flex justify-between text-sm font-semibold mb-2">
                                     <span>Inventory Level</span>
-                                    <span class="text-primary">82% Healthy</span>
+                                    <span id="stock-health-label" class="text-primary">Loading...</span>
                                 </div>
                                 <div class="w-full h-4 bg-surface-container rounded-full overflow-hidden">
-                                    <div class="bg-secondary h-full rounded-full" style="width: 82%"></div>
+                                    <div id="stock-health-bar" class="bg-secondary h-full rounded-full" style="width: 0%"></div>
                                 </div>
                                 <div class="flex justify-between mt-2">
                                     <span class="text-xs text-on-surface-variant">Empty</span>
-                                    <span class="text-xs font-bold text-primary">Safety Threshold (5kg)</span>
-                                    <span class="text-xs text-on-surface-variant">Full (15kg)</span>
+                                    <span id="stock-threshold-label" class="text-xs font-bold text-primary">Safety Threshold</span>
+                                    <span class="text-xs text-on-surface-variant">Full</span>
                                 </div>
                             </div>
                             <div class="p-4 bg-surface-container-low rounded-xl space-y-3">
                                 <div class="flex items-center gap-3">
                                     <span class="material-symbols-outlined text-secondary">verified</span>
-                                    <span class="text-sm font-medium">Optimum levels maintained.</span>
+                                    <span id="stock-status-title" class="text-sm font-medium">Loading stock status...</span>
                                 </div>
-                                <p class="text-xs text-on-surface-variant leading-relaxed">Based on current burn rates,
-                                    you have 18 days of supply remaining before hitting safety stock.</p>
+                                <p id="stock-status-copy" class="text-xs text-on-surface-variant leading-relaxed">Stock status will appear after the ingredient is loaded.</p>
                             </div>
                         </div>
                     </div>
                     <!-- Quick Actions -->
                     <div class="space-y-4">
-                        <button
+                        <button id="open-edit-ingredient"
                             class="w-full flex items-center justify-between p-4 bg-primary text-[#f9f9f8] rounded-xl hover:scale-[0.98] transition-all">
                             <span class="font-bold">Adjust Stock Count</span>
                             <span class="material-symbols-outlined">edit_square</span>
                         </button>
-                        <button
+                        <button id="open-restock-ingredient"
                             class="w-full flex items-center justify-between p-4 bg-secondary text-on-secondary rounded-xl hover:scale-[0.98] transition-all">
                             <span class="font-bold">Order from Supplier</span>
                             <span class="material-symbols-outlined">shopping_cart</span>
+                        </button>
+                        <button id="delete-ingredient"
+                            class="w-full flex items-center justify-between p-4 bg-error-container/30 text-error rounded-xl hover:scale-[0.98] transition-all">
+                            <span class="font-bold">Delete Ingredient</span>
+                            <span class="material-symbols-outlined">delete</span>
                         </button>
                     </div>
                 </div>
@@ -135,126 +131,19 @@
                                 <option>Last 6 Months</option>
                             </select>
                         </div>
-                        <!-- Visual Mockup of a Chart -->
-                        <div class="relative h-64 w-full flex items-end justify-between gap-1">
+                        <div id="stock-history-chart" class="relative h-64 w-full flex items-end justify-between gap-1">
                             <div class="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-10">
                                 <div class="border-t border-primary w-full"></div>
                                 <div class="border-t border-primary w-full"></div>
                                 <div class="border-t border-primary w-full"></div>
                                 <div class="border-t border-primary w-full"></div>
                             </div>
-                            <div class="bg-secondary/40 w-full rounded-t-sm" style="height: 60%"></div>
-                            <div class="bg-secondary/40 w-full rounded-t-sm" style="height: 55%"></div>
-                            <div class="bg-secondary/40 w-full rounded-t-sm" style="height: 70%"></div>
-                            <div class="bg-secondary/40 w-full rounded-t-sm" style="height: 65%"></div>
-                            <div class="bg-secondary/40 w-full rounded-t-sm" style="height: 85%"></div>
-                            <div class="bg-secondary/40 w-full rounded-t-sm" style="height: 80%"></div>
-                            <div class="bg-secondary w-full rounded-t-sm" style="height: 95%"></div>
-                            <div class="bg-secondary w-full rounded-t-sm" style="height: 90%"></div>
-                            <div class="bg-secondary w-full rounded-t-sm" style="height: 75%"></div>
-                            <div class="bg-secondary w-full rounded-t-sm" style="height: 65%"></div>
-                            <div class="bg-secondary w-full rounded-t-sm" style="height: 55%"></div>
-                            <div class="bg-secondary w-full rounded-t-sm" style="height: 45%"></div>
-                            <div class="bg-secondary w-full rounded-t-sm" style="height: 40%"></div>
-                            <div class="bg-secondary w-full rounded-t-sm" style="height: 60%"></div>
-                            <div class="bg-secondary w-full rounded-t-sm" style="height: 70%"></div>
                         </div>
                         <div
+                            id="stock-history-labels"
                             class="flex justify-between mt-4 text-[10px] uppercase tracking-widest font-bold text-on-surface-variant opacity-60">
-                            <span>Oct 01</span>
-                            <span>Oct 08</span>
-                            <span>Oct 15</span>
-                            <span>Oct 22</span>
-                            <span>Today</span>
-                        </div>
-                    </div>
-                    <!-- Form Fields -->
-                    <div class="bg-surface-container-lowest p-8 rounded-2xl shadow-sm border border-outline-variant/10">
-                        <h3 class="text-xl font-headline font-bold mb-8">Ingredient Configuration</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <!-- Left Column Inputs -->
-                            <div class="space-y-6">
-                                <div>
-                                    <label
-                                        class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Unit
-                                        Cost (USD)</label>
-                                    <input
-                                        class="w-full bg-surface-container border-none rounded-xl p-4 focus:ring-2 focus:ring-secondary/30 transition-all font-medium text-primary"
-                                        type="text" value="142.00" />
-                                </div>
-                                <div>
-                                    <label
-                                        class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Supplier
-                                        Info</label>
-                                    <div class="relative">
-                                        <input
-                                            class="w-full bg-surface-container border-none rounded-xl p-4 focus:ring-2 focus:ring-secondary/30 transition-all font-medium text-primary pr-12"
-                                            type="text" value="Kyoto Tea Collective" />
-                                        <span
-                                            class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant">launch</span>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label
-                                        class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Shelf
-                                        Life (Days)</label>
-                                    <input
-                                        class="w-full bg-surface-container border-none rounded-xl p-4 focus:ring-2 focus:ring-secondary/30 transition-all font-medium text-primary"
-                                        type="number" value="180" />
-                                </div>
-                            </div>
-                            <!-- Right Column Inputs -->
-                            <div class="space-y-6">
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label
-                                            class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Min
-                                            Stock (kg)</label>
-                                        <input
-                                            class="w-full bg-surface-container border-none rounded-xl p-4 focus:ring-2 focus:ring-secondary/30 transition-all font-medium text-primary"
-                                            type="text" value="5.0" />
-                                    </div>
-                                    <div>
-                                        <label
-                                            class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Max
-                                            Stock (kg)</label>
-                                        <input
-                                            class="w-full bg-surface-container border-none rounded-xl p-4 focus:ring-2 focus:ring-secondary/30 transition-all font-medium text-primary"
-                                            type="text" value="15.0" />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label
-                                        class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Storage
-                                        Location</label>
-                                    <select
-                                        class="w-full bg-surface-container border-none rounded-xl p-4 focus:ring-2 focus:ring-secondary/30 transition-all font-medium text-primary appearance-none">
-                                        <option>Cold Storage A-12</option>
-                                        <option>Main Pantry</option>
-                                        <option>Ambient Shelf 04</option>
-                                    </select>
-                                </div>
-                                <div class="pt-2">
-                                    <label class="flex items-center gap-3 cursor-pointer group">
-                                        <div class="relative">
-                                            <input checked="" class="sr-only" type="checkbox" />
-                                            <div
-                                                class="w-10 h-6 bg-secondary/20 rounded-full transition-colors group-hover:bg-secondary/30">
-                                            </div>
-                                            <div class="absolute left-1 top-1 w-4 h-4 bg-secondary rounded-full"></div>
-                                        </div>
-                                        <span class="text-sm font-semibold text-primary">Auto-reorder enabled</span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-10 flex justify-end gap-4">
-                            <button
-                                class="px-8 py-3 text-on-surface-variant font-bold hover:text-primary transition-colors">Discard
-                                Changes</button>
-                            <button
-                                class="px-10 py-3 bg-primary text-[#f9f9f8] rounded-xl font-bold shadow-lg shadow-primary/10 hover:translate-y-[-2px] transition-all">Save
-                                Ingredient Profile</button>
+                            <span>Loading movement history</span>
+                            <span>Current stock</span>
                         </div>
                     </div>
                 </div>
@@ -265,34 +154,461 @@
                     <span class="material-symbols-outlined text-on-surface-variant">history</span>
                     <h3 class="text-lg font-headline font-bold">Recent Activities</h3>
                 </div>
-                <div class="space-y-4">
-                    <div class="flex items-center justify-between py-3 border-b border-outline-variant/10">
-                        <div class="flex items-center gap-4">
-                            <div class="w-2 h-2 rounded-full bg-secondary"></div>
-                            <span class="text-sm font-medium">Restock received - 5.0 kg</span>
-                        </div>
-                        <span class="text-xs text-on-surface-variant font-medium">Oct 18, 14:20 by Admin</span>
-                    </div>
-                    <div class="flex items-center justify-between py-3 border-b border-outline-variant/10">
-                        <div class="flex items-center gap-4">
-                            <div class="w-2 h-2 rounded-full bg-tertiary"></div>
-                            <span class="text-sm font-medium">Daily consumption sync - 0.45 kg</span>
-                        </div>
-                        <span class="text-xs text-on-surface-variant font-medium">Oct 18, 08:00 by System</span>
-                    </div>
-                    <div class="flex items-center justify-between py-3">
-                        <div class="flex items-center gap-4">
-                            <div class="w-2 h-2 rounded-full bg-outline"></div>
-                            <span class="text-sm font-medium">Unit cost updated from $140.00</span>
-                        </div>
-                        <span class="text-xs text-on-surface-variant font-medium">Oct 12, 11:45 by Procurement</span>
-                    </div>
+                <div id="recent-activities" class="space-y-4">
+                    <div class="py-3 text-sm font-bold text-on-surface-variant">Loading recent activities...</div>
                 </div>
             </section>
         </div>
     </main>
+    <div id="edit-ingredient-modal"
+        class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4 py-8 backdrop-blur-sm">
+        <div class="w-full max-w-2xl rounded-2xl bg-surface-container-lowest shadow-2xl">
+            <div class="flex items-center justify-between border-b border-outline-variant px-8 py-5">
+                <div>
+                    <h2 class="font-serif text-3xl text-primary">Edit Ingredient</h2>
+                    <p class="text-sm text-on-surface-variant">Update tracked inventory values.</p>
+                </div>
+                <button class="close-edit-ingredient flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface" type="button">
+                    <span class="material-symbols-outlined" data-icon="close">close</span>
+                </button>
+            </div>
+            <form id="edit-ingredient-form" class="space-y-5 px-8 py-7">
+                <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                    <label class="space-y-2 md:col-span-2">
+                        <span class="text-sm font-bold text-on-surface">Ingredient Name</span>
+                        <input id="edit-ingredient-name" type="text" required
+                            class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
+                    </label>
+                    <label class="space-y-2">
+                        <span class="text-sm font-bold text-on-surface">Unit</span>
+                        <input id="edit-ingredient-unit" type="text" required
+                            class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
+                    </label>
+                    <label class="space-y-2">
+                        <span class="text-sm font-bold text-on-surface">Unit Price</span>
+                        <input id="edit-ingredient-cost" type="number" min="0" step="0.01" required
+                            class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
+                    </label>
+                    <label class="space-y-2">
+                        <span class="text-sm font-bold text-on-surface">Current Stock</span>
+                        <input id="edit-ingredient-stock" type="number" min="0" step="0.001" required
+                            class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
+                    </label>
+                    <label class="space-y-2">
+                        <span class="text-sm font-bold text-on-surface">Minimum Threshold</span>
+                        <input id="edit-ingredient-threshold" type="number" min="0" step="0.001" required
+                            class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
+                    </label>
+                </div>
+                <p id="edit-ingredient-status" class="hidden text-sm font-bold"></p>
+                <div class="flex justify-end gap-3 border-t border-outline-variant pt-5">
+                    <button class="close-edit-ingredient rounded-full bg-surface-container-high px-6 py-2.5 text-sm font-bold text-on-surface hover:bg-surface-container-highest" type="button">Cancel</button>
+                    <button id="save-edit-ingredient" class="rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-white hover:bg-primary/90" type="submit">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="restock-ingredient-modal"
+        class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4 py-8 backdrop-blur-sm">
+        <div class="w-full max-w-2xl rounded-2xl bg-surface-container-lowest shadow-2xl">
+            <div class="flex items-center justify-between border-b border-outline-variant px-8 py-5">
+                <div>
+                    <h2 class="font-serif text-3xl text-primary">Record Restock</h2>
+                    <p class="text-sm text-on-surface-variant">Create a purchase and increase current stock.</p>
+                </div>
+                <button class="close-restock-ingredient flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface" type="button">
+                    <span class="material-symbols-outlined" data-icon="close">close</span>
+                </button>
+            </div>
+            <form id="restock-ingredient-form" class="space-y-5 px-8 py-7">
+                <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                    <label class="space-y-2">
+                        <span class="text-sm font-bold text-on-surface">Quantity</span>
+                        <input id="restock-quantity" type="number" min="0.001" step="0.001" required
+                            class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
+                    </label>
+                    <label class="space-y-2">
+                        <span class="text-sm font-bold text-on-surface">Unit Price</span>
+                        <input id="restock-cost" type="number" min="0" step="0.01" required
+                            class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
+                    </label>
+                    <label class="space-y-2">
+                        <span class="text-sm font-bold text-on-surface">Supplier</span>
+                        <input id="restock-supplier" type="text"
+                            class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
+                    </label>
+                    <label class="space-y-2">
+                        <span class="text-sm font-bold text-on-surface">Purchased At</span>
+                        <input id="restock-date" type="datetime-local" required
+                            class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
+                    </label>
+                    <label class="space-y-2 md:col-span-2">
+                        <span class="text-sm font-bold text-on-surface">Notes</span>
+                        <textarea id="restock-notes" rows="3"
+                            class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary"></textarea>
+                    </label>
+                </div>
+                <p id="restock-ingredient-status" class="hidden text-sm font-bold"></p>
+                <div class="flex justify-end gap-3 border-t border-outline-variant pt-5">
+                    <button class="close-restock-ingredient rounded-full bg-surface-container-high px-6 py-2.5 text-sm font-bold text-on-surface hover:bg-surface-container-highest" type="button">Cancel</button>
+                    <button id="save-restock-ingredient" class="rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-white hover:bg-primary/90" type="submit">Save Restock</button>
+                </div>
+            </form>
+        </div>
+    </div>
   <script src="../assets/js/layout.js?v=fm-20260530"></script>
   <script src="../assets/js/main.js?v=fm-20260530"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const API_BASE_URL = window.MATCHA_API_BASE_URL || 'http://localhost:8000/api/v1';
+        const ingredientId = new URLSearchParams(window.location.search).get('id');
+        const ingredientName = document.getElementById('ingredient-name');
+        const ingredientDescription = document.getElementById('ingredient-description');
+        const ingredientCurrentStock = document.getElementById('ingredient-current-stock');
+        const ingredientUnitCost = document.getElementById('ingredient-unit-cost');
+        const ingredientTotalValue = document.getElementById('ingredient-total-value');
+        const stockHealthLabel = document.getElementById('stock-health-label');
+        const stockHealthBar = document.getElementById('stock-health-bar');
+        const stockThresholdLabel = document.getElementById('stock-threshold-label');
+        const stockStatusTitle = document.getElementById('stock-status-title');
+        const stockStatusCopy = document.getElementById('stock-status-copy');
+        const recentActivities = document.getElementById('recent-activities');
+        const stockHistoryChart = document.getElementById('stock-history-chart');
+        const stockHistoryLabels = document.getElementById('stock-history-labels');
+        const editModal = document.getElementById('edit-ingredient-modal');
+        const restockModal = document.getElementById('restock-ingredient-modal');
+        const editForm = document.getElementById('edit-ingredient-form');
+        const restockForm = document.getElementById('restock-ingredient-form');
+        const editStatus = document.getElementById('edit-ingredient-status');
+        const restockStatus = document.getElementById('restock-ingredient-status');
+        const saveEditButton = document.getElementById('save-edit-ingredient');
+        const saveRestockButton = document.getElementById('save-restock-ingredient');
+        let currentIngredient = null;
+
+        const formatNumber = (value) => new Intl.NumberFormat('vi-VN', {
+            maximumFractionDigits: 3,
+        }).format(Number(value) || 0);
+        const formatCurrency = (value) => new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND',
+            maximumFractionDigits: 0,
+        }).format(Number(value) || 0);
+        const formatDateTime = (value) => {
+            if (!value) return 'Unknown time';
+            return new Intl.DateTimeFormat('vi-VN', {
+                dateStyle: 'medium',
+                timeStyle: 'short',
+            }).format(new Date(value));
+        };
+        const getCurrentUserId = () => {
+            try {
+                return JSON.parse(localStorage.getItem('matcha_user') || '{}').id || '';
+            } catch {
+                return '';
+            }
+        };
+        const getListData = (data) => {
+            if (Array.isArray(data)) return data;
+            if (Array.isArray(data?.items)) return data.items;
+            return [];
+        };
+        const fetchApiData = async (path, options = {}) => {
+            const response = await fetch(`${API_BASE_URL}${path}`, options);
+            const payload = await response.json().catch(() => null);
+
+            if (!response.ok || payload?.success === false) {
+                throw new Error(payload?.message || 'Request failed');
+            }
+
+            return payload?.data ?? payload;
+        };
+        const setStatus = (element, message, type = 'info') => {
+            element.textContent = message;
+            element.className = `text-sm font-bold ${type === 'error' ? 'text-error' : 'text-secondary'}`;
+            element.classList.toggle('hidden', !message);
+        };
+        const openModal = (modal) => {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.classList.add('overflow-hidden');
+        };
+        const closeModal = (modal) => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.classList.remove('overflow-hidden');
+        };
+        const toDatetimeLocalValue = (date) => {
+            const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+            return local.toISOString().slice(0, 16);
+        };
+        const getStockStatus = (ingredient) => {
+            const currentStock = Number(ingredient.current_stock) || 0;
+            const minimumThreshold = Number(ingredient.minimum_threshold) || 0;
+
+            if (currentStock <= 0) {
+                return {
+                    percent: 0,
+                    label: 'Out of Stock',
+                    title: 'Ingredient is out of stock.',
+                    copy: 'Create a restock purchase before this ingredient can be used reliably.',
+                    barClass: 'bg-outline',
+                };
+            }
+
+            if (currentStock <= minimumThreshold) {
+                const percent = minimumThreshold > 0 ? Math.max(8, Math.min(45, (currentStock / minimumThreshold) * 45)) : 25;
+                return {
+                    percent,
+                    label: 'Low Stock',
+                    title: 'Stock is below safety threshold.',
+                    copy: 'Create a restock purchase soon to avoid running out.',
+                    barClass: 'bg-error',
+                };
+            }
+
+            const percent = minimumThreshold > 0 ? Math.min(100, Math.max(60, (currentStock / (minimumThreshold * 2)) * 100)) : 100;
+            return {
+                percent,
+                label: 'In Stock',
+                title: 'Optimum levels maintained.',
+                copy: 'Current stock is above the configured safety threshold.',
+                barClass: 'bg-secondary',
+            };
+        };
+        const renderIngredient = (ingredient) => {
+            currentIngredient = ingredient;
+            const currentStock = Number(ingredient.current_stock) || 0;
+            const unitCost = Number(ingredient.cost_per_unit) || 0;
+            const totalValue = currentStock * unitCost;
+            const stockStatus = getStockStatus(ingredient);
+
+            ingredientName.textContent = ingredient.name || 'Unnamed Ingredient';
+            ingredientDescription.textContent = `${ingredient.name || 'This ingredient'} is tracked in ${ingredient.unit || 'units'} with a minimum threshold of ${formatNumber(ingredient.minimum_threshold)}.`;
+            ingredientCurrentStock.innerHTML = `${formatNumber(currentStock)} <span class="text-lg font-body font-normal">${ingredient.unit || ''}</span>`;
+            ingredientUnitCost.innerHTML = `${formatCurrency(unitCost)} <span class="text-lg font-body font-normal">/${ingredient.unit || 'unit'}</span>`;
+            ingredientTotalValue.textContent = formatCurrency(totalValue);
+            stockHealthLabel.textContent = `${Math.round(stockStatus.percent)}% ${stockStatus.label}`;
+            stockHealthBar.className = `${stockStatus.barClass} h-full rounded-full`;
+            stockHealthBar.style.width = `${stockStatus.percent}%`;
+            stockThresholdLabel.textContent = `Safety Threshold (${formatNumber(ingredient.minimum_threshold)} ${ingredient.unit || ''})`;
+            stockStatusTitle.textContent = stockStatus.title;
+            stockStatusCopy.textContent = stockStatus.copy;
+
+            document.getElementById('edit-ingredient-name').value = ingredient.name || '';
+            document.getElementById('edit-ingredient-unit').value = ingredient.unit || '';
+            document.getElementById('edit-ingredient-cost').value = Number(ingredient.cost_per_unit) || 0;
+            document.getElementById('edit-ingredient-stock').value = Number(ingredient.current_stock) || 0;
+            document.getElementById('edit-ingredient-threshold').value = Number(ingredient.minimum_threshold) || 0;
+            document.getElementById('restock-cost').value = Number(ingredient.cost_per_unit) || 0;
+        };
+        const renderMovements = (movements) => {
+            recentActivities.innerHTML = '';
+
+            if (!movements.length) {
+                recentActivities.innerHTML = `
+                    <div class="py-3 text-sm font-bold text-on-surface-variant">No recent activities.</div>
+                `;
+                return;
+            }
+
+            movements.slice(0, 6).forEach((movement) => {
+                const row = document.createElement('div');
+                row.className = 'flex items-center justify-between py-3 border-b border-outline-variant/10';
+                const quantity = Number(movement.quantity_change) || 0;
+                row.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="w-2 h-2 rounded-full ${quantity >= 0 ? 'bg-secondary' : 'bg-error'}"></div>
+                        <span class="text-sm font-medium">${movement.movement_type || 'movement'} - ${formatNumber(quantity)}</span>
+                    </div>
+                    <span class="text-xs text-on-surface-variant font-medium">${formatDateTime(movement.created_at)}</span>
+                `;
+                recentActivities.appendChild(row);
+            });
+        };
+        const renderStockHistory = (movements, ingredient) => {
+            const orderedMovements = [...movements]
+                .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+                .slice(-15);
+            const stockValues = orderedMovements.length
+                ? orderedMovements.map((movement) => Number(movement.stock_after) || 0)
+                : [Number(ingredient.current_stock) || 0];
+            const maxStock = Math.max(...stockValues, Number(ingredient.minimum_threshold) || 0, 1);
+
+            stockHistoryChart.innerHTML = `
+                <div class="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-10">
+                    <div class="border-t border-primary w-full"></div>
+                    <div class="border-t border-primary w-full"></div>
+                    <div class="border-t border-primary w-full"></div>
+                    <div class="border-t border-primary w-full"></div>
+                </div>
+            `;
+
+            stockValues.forEach((stockValue, index) => {
+                const bar = document.createElement('div');
+                const percent = Math.max(6, Math.min(100, (stockValue / maxStock) * 100));
+                bar.className = index < stockValues.length - 1
+                    ? 'bg-secondary/40 w-full rounded-t-sm'
+                    : 'bg-secondary w-full rounded-t-sm';
+                bar.style.height = `${percent}%`;
+                bar.title = `${formatNumber(stockValue)} ${ingredient.unit || ''}`;
+                stockHistoryChart.appendChild(bar);
+            });
+
+            if (!orderedMovements.length) {
+                stockHistoryLabels.innerHTML = '<span>No movement history</span><span>Current stock</span>';
+                return;
+            }
+
+            const firstDate = orderedMovements[0]?.created_at;
+            const middleDate = orderedMovements[Math.floor(orderedMovements.length / 2)]?.created_at;
+            const lastDate = orderedMovements[orderedMovements.length - 1]?.created_at;
+            stockHistoryLabels.innerHTML = `
+                <span>${firstDate ? new Date(firstDate).toLocaleDateString('vi-VN') : ''}</span>
+                <span>${middleDate ? new Date(middleDate).toLocaleDateString('vi-VN') : ''}</span>
+                <span>${lastDate ? new Date(lastDate).toLocaleDateString('vi-VN') : 'Today'}</span>
+            `;
+        };
+        const loadIngredient = async () => {
+            if (!ingredientId) {
+                ingredientName.textContent = 'Ingredient not found';
+                ingredientDescription.textContent = 'Missing ingredient id in the URL.';
+                return;
+            }
+
+            try {
+                const [ingredient, movements] = await Promise.all([
+                    fetchApiData(`/ingredients/${encodeURIComponent(ingredientId)}`),
+                    fetchApiData(`/inventory/movements?ingredient_id=${encodeURIComponent(ingredientId)}`).catch(() => []),
+                ]);
+                const movementList = getListData(movements);
+                renderIngredient(ingredient);
+                renderMovements(movementList);
+                renderStockHistory(movementList, ingredient);
+            } catch (error) {
+                console.error('Failed to load ingredient:', error);
+                ingredientName.textContent = 'Ingredient not found';
+                ingredientDescription.textContent = 'Cannot load this ingredient. Please check the backend server.';
+            }
+        };
+
+        document.getElementById('open-edit-ingredient').addEventListener('click', () => {
+            setStatus(editStatus, '');
+            openModal(editModal);
+        });
+        document.getElementById('open-restock-ingredient').addEventListener('click', () => {
+            setStatus(restockStatus, '');
+            document.getElementById('restock-date').value = toDatetimeLocalValue(new Date());
+            openModal(restockModal);
+        });
+        document.querySelectorAll('.close-edit-ingredient').forEach((button) => {
+            button.addEventListener('click', () => closeModal(editModal));
+        });
+        document.querySelectorAll('.close-restock-ingredient').forEach((button) => {
+            button.addEventListener('click', () => closeModal(restockModal));
+        });
+        [editModal, restockModal].forEach((modal) => {
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    closeModal(modal);
+                }
+            });
+        });
+        editForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            if (!editForm.reportValidity() || !ingredientId) return;
+
+            const payload = {
+                name: document.getElementById('edit-ingredient-name').value.trim(),
+                unit: document.getElementById('edit-ingredient-unit').value.trim(),
+                current_stock: Number(document.getElementById('edit-ingredient-stock').value),
+                cost_per_unit: Number(document.getElementById('edit-ingredient-cost').value),
+                minimum_threshold: Number(document.getElementById('edit-ingredient-threshold').value),
+            };
+
+            saveEditButton.disabled = true;
+            saveEditButton.textContent = 'Saving...';
+            setStatus(editStatus, 'Saving ingredient...');
+
+            try {
+                const ingredient = await fetchApiData(`/ingredients/${encodeURIComponent(ingredientId)}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                });
+                renderIngredient(ingredient);
+                closeModal(editModal);
+            } catch (error) {
+                console.error('Failed to update ingredient:', error);
+                setStatus(editStatus, error.message || 'Cannot update ingredient. Please check the backend server.', 'error');
+            } finally {
+                saveEditButton.disabled = false;
+                saveEditButton.textContent = 'Save Changes';
+            }
+        });
+        restockForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            if (!restockForm.reportValidity() || !ingredientId) return;
+
+            const actorUserId = getCurrentUserId();
+            if (!actorUserId) {
+                setStatus(restockStatus, 'Please log in before recording a restock.', 'error');
+                return;
+            }
+
+            const payload = {
+                ingredient_id: ingredientId,
+                quantity: Number(document.getElementById('restock-quantity').value),
+                cost_per_unit: Number(document.getElementById('restock-cost').value),
+                supplier_name: document.getElementById('restock-supplier').value.trim() || null,
+                notes: document.getElementById('restock-notes').value.trim() || null,
+                purchased_at: new Date(document.getElementById('restock-date').value).toISOString(),
+            };
+
+            saveRestockButton.disabled = true;
+            saveRestockButton.textContent = 'Saving...';
+            setStatus(restockStatus, 'Recording restock...');
+
+            try {
+                await fetchApiData(`/ingredients/${encodeURIComponent(ingredientId)}/purchases`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-User-Id': actorUserId,
+                    },
+                    body: JSON.stringify(payload),
+                });
+                restockForm.reset();
+                closeModal(restockModal);
+                await loadIngredient();
+            } catch (error) {
+                console.error('Failed to record restock:', error);
+                setStatus(restockStatus, error.message || 'Cannot record restock. Please check the backend server.', 'error');
+            } finally {
+                saveRestockButton.disabled = false;
+                saveRestockButton.textContent = 'Save Restock';
+            }
+        });
+        document.getElementById('delete-ingredient').addEventListener('click', async () => {
+            if (!ingredientId || !currentIngredient) return;
+            const confirmed = window.confirm(`Delete ${currentIngredient.name || 'this ingredient'}?`);
+            if (!confirmed) return;
+
+            try {
+                await fetchApiData(`/ingredients/${encodeURIComponent(ingredientId)}`, {
+                    method: 'DELETE',
+                });
+                window.location.href = 'inventory_list.html';
+            } catch (error) {
+                console.error('Failed to delete ingredient:', error);
+                alert(error.message || 'Cannot delete ingredient. Please check whether it is used by a recipe.');
+            }
+        });
+
+        loadIngredient();
+    });
+  </script>
 </body>
 
 </html>

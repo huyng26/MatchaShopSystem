@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&amp;family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="../assets/css/style.css" />
+  <link rel="stylesheet" href="../assets/css/style.css?v=app-font-20260605" />
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <script src="../assets/js/tailwind-config.js"></script>
 </head>
@@ -34,27 +34,28 @@
 </div>
 <h2 class="serif-text text-2xl text-on-surface font-medium mb-8">Sign in to workspace</h2>
 <form action="#" class="space-y-6" method="POST">
-<!-- Username Input -->
-<div class="space-y-2">
-<label class="font-label text-xs font-semibold text-on-surface-variant uppercase tracking-wider block" for="username">Username</label>
-<div class="relative group">
-<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-<span class="material-symbols-outlined text-outline text-lg transition-colors group-focus-within:text-secondary" data-icon="potted_plant">potted_plant</span>
-</div>
-<input class="block w-full pl-11 pr-4 py-3.5 bg-surface-container-low border-none rounded-xl text-on-surface placeholder:text-outline/50 focus:ring-2 focus:ring-secondary/20 focus:bg-white transition-all font-body" id="username" name="username" placeholder="artisan@matcha.atelier" required="" type="text"/>
-</div>
-</div>
+	<!-- Email Input -->
+	<div class="space-y-2">
+	<label class="font-label text-xs font-semibold text-on-surface-variant uppercase tracking-wider block" for="email">Email</label>
+	<div class="relative group">
+	<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+	<span class="material-symbols-outlined text-outline text-lg transition-colors group-focus-within:text-secondary" data-icon="potted_plant">potted_plant</span>
+	</div>
+	<input autocomplete="email" class="block w-full pl-11 pr-4 py-3.5 bg-surface-container-low border-none rounded-xl text-on-surface placeholder:text-outline/50 focus:ring-2 focus:ring-secondary/20 focus:bg-white transition-all font-body" id="email" name="email" placeholder="you@example.com" required="" type="email"/>
+	</div>
+	<p class="hidden text-xs font-body text-red-700" id="loginEmailError">Invalid email or password.</p>
+	</div>
 <!-- Password Input -->
 <div class="space-y-2">
 <div class="flex justify-between items-center">
 <label class="font-label text-xs font-semibold text-on-surface-variant uppercase tracking-wider block" for="password">Password</label>
-<a class="font-label text-xs text-secondary hover:text-primary transition-colors font-semibold" href="#">Forgot password?</a>
+<a class="font-label text-xs text-secondary hover:text-primary transition-colors font-semibold" href="forgot_password_1.html">Forgot password?</a>
 </div>
 <div class="relative group" id="passwordContainer">
 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
 <span class="material-symbols-outlined text-outline text-lg transition-colors group-focus-within:text-secondary" data-icon="lock">lock</span>
 </div>
-<input class="block w-full pl-11 pr-12 py-3.5 bg-surface-container-low border-none rounded-xl text-on-surface placeholder:text-outline/50 focus:ring-2 focus:ring-secondary/20 focus:bg-white transition-all font-body" id="password" name="password" placeholder="••••••••" required="" type="password"/>
+	<input autocomplete="current-password" class="block w-full pl-11 pr-12 py-3.5 bg-surface-container-low border-none rounded-xl text-on-surface placeholder:text-outline/50 focus:ring-2 focus:ring-secondary/20 focus:bg-white transition-all font-body" id="password" minlength="8" name="password" placeholder="••••••••" required="" type="password"/>
 <button class="absolute inset-y-0 right-0 pr-4 flex items-center text-outline hover:text-on-surface-variant transition-colors" onclick="togglePasswordVisibility()" type="button">
 <span class="material-symbols-outlined text-lg" data-icon="visibility" id="passwordToggleIcon">visibility</span>
 </button>
@@ -72,7 +73,7 @@
 <div class="mt-10 pt-8 border-t border-surface-container-low text-center">
 <p class="font-body text-on-surface-variant text-sm">
                     New to the collection? 
-                    <a class="font-bold text-primary hover:text-secondary transition-colors ml-1" href="#">Create an account</a>
+                    <a class="font-bold text-primary hover:text-secondary transition-colors ml-1" href="register.html">Create an account</a>
 </p>
 </div>
 </section>
@@ -95,5 +96,5 @@
 <span class="serif-text italic text-primary text-sm">Handcrafted Precision</span>
 </div>
 </div>
-  <script src="../assets/js/main.js?v=fm-20260530"></script>
+	  <script src="../assets/js/main.js?v=auth-login-20260604"></script>
 </body></html>

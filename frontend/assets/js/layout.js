@@ -31,6 +31,9 @@ const SIDEBAR_HTML = `
     <a class="${_NAV_INACTIVE}" data-nav="delivery-manage" href="delivery_manage.html">
       <span class="material-symbols-outlined">local_shipping</span><span>Delivery Management</span>
     </a>
+    <a class="${_NAV_INACTIVE}" data-nav="shipper" href="shipper.html">
+      <span class="material-symbols-outlined">two_wheeler</span><span>Ship</span>
+    </a>
     <a class="${_NAV_INACTIVE}" data-nav="financial-management" href="financial_management.html">
       <span class="material-symbols-outlined">account_balance</span><span>Financial Management</span>
     </a>
@@ -45,6 +48,9 @@ const SIDEBAR_HTML = `
     </a>
     <a class="${_NAV_INACTIVE}" data-nav="employees" href="employee_list.html">
       <span class="material-symbols-outlined">badge</span><span>Employees</span>
+    </a>
+    <a class="${_NAV_INACTIVE}" data-nav="account" href="account_list.html">
+      <span class="material-symbols-outlined">manage_accounts</span><span>Account</span>
     </a>
   </nav>
   <div class="pt-6 border-t border-[#06440c]/80 space-y-1">
@@ -103,6 +109,8 @@ const PAGE_CONFIG = {
   'product-detail':  { activeNav: 'menu',        searchPlaceholder: 'Search menu items...',               backUrl: 'menu.html' },
   'inventory-list':  { activeNav: 'inventory',   searchPlaceholder: 'Search inventory...',                backUrl: null },
   'inventory-detail':{ activeNav: 'inventory',   searchPlaceholder: 'Search inventory...',                backUrl: 'inventory_list.html' },
+  'account-list':    { activeNav: 'account',     searchPlaceholder: 'Search accounts...',                 backUrl: null },
+  'account-detail':  { activeNav: 'account',     searchPlaceholder: 'Search accounts...',                 backUrl: 'account_list.html' },
   'customer-list':   { activeNav: 'customers',   searchPlaceholder: 'Search customers...',               backUrl: null },
   'customer-detail': { activeNav: 'customers',   searchPlaceholder: 'Search customers...',               backUrl: 'customer_list.html' },
   'employee-list':   { activeNav: 'employees',   searchPlaceholder: 'Search employees...',               backUrl: null },
@@ -110,13 +118,95 @@ const PAGE_CONFIG = {
   'financial-management': { activeNav: 'financial-management', searchPlaceholder: 'Search finance records...', backUrl: null },
   'settings':        { activeNav: 'settings',    searchPlaceholder: 'Search settings...',                backUrl: null },
   'pos-menu':        { activeNav: 'pos-menu',    searchPlaceholder: 'Search menu items...',               backUrl: null },
-  'pos-payment':     { activeNav: 'pos-payment', searchPlaceholder: 'Search payment items...',             backUrl: null },
-  'shipper':         { activeNav: 'shipper',     searchPlaceholder: 'Search shippers...',                  backUrl: null },
+  'pos-payment':     { activeNav: 'pos-menu',    searchPlaceholder: 'Search payment items...',             backUrl: 'POS_menu.html' },
+  'shipper':         { activeNav: 'shipper',     searchPlaceholder: 'Search assigned trips or stops...',    backUrl: null },
   'delivery-manage': { activeNav: 'delivery-manage', searchPlaceholder: 'Search orders, shippers or routes...', backUrl: null },
 };
 
+const LAYOUT_ROLE_DEFAULT_PAGE = {
+  admin: 'dashboard.html',
+  cashier: 'POS_menu.html',
+  delivery_manager: 'delivery_manage.html',
+  inventory_manager: 'inventory_list.html',
+  shipper: 'shipper.html',
+};
+
+const LAYOUT_NAV_PAGE = {
+  dashboard: 'dashboard',
+  'pos-menu': 'pos-menu',
+  'delivery-manage': 'delivery-manage',
+  shipper: 'shipper',
+  'financial-management': 'financial-management',
+  menu: 'menu',
+  inventory: 'inventory-list',
+  customers: 'customer-list',
+  employees: 'employee-list',
+  account: 'account-list',
+  settings: 'settings',
+};
+
+// ─── Frontend Auth Guard ─────────────────────────────────────────────────────
+function buildLayoutLoginRedirectUrl() {
+  const currentPage = window.location.pathname.split('/').pop() || 'dashboard.html';
+  const nextPath = `${currentPage}${window.location.search || ''}${window.location.hash || ''}`;
+  return `login.html?next=${encodeURIComponent(nextPath)}`;
+}
+
+function getLayoutStoredUserRole() {
+  try {
+    const user = JSON.parse(localStorage.getItem('matcha_user') || 'null');
+    return String(user?.role || '').toLowerCase();
+  } catch (error) {
+    return '';
+  }
+}
+
+function canLayoutRoleAccessPage(role, page) {
+  if (!PAGE_CONFIG[page]) return false;
+
+  if (role === 'admin') {
+    return page !== 'shipper';
+  }
+
+  const allowedPagesByRole = {
+    cashier: new Set(['pos-menu', 'pos-payment']),
+    delivery_manager: new Set(['delivery-manage']),
+    inventory_manager: new Set(['inventory-list', 'inventory-detail']),
+    shipper: new Set(['shipper']),
+  };
+
+  return Boolean(allowedPagesByRole[role]?.has(page));
+}
+
+function getLayoutDefaultPageForRole(role) {
+  return LAYOUT_ROLE_DEFAULT_PAGE[role] || 'login.html';
+}
+
+function enforceLayoutAuthGuard() {
+  const page = document.body.dataset.page;
+  const isInternalPage = Boolean(PAGE_CONFIG[page]);
+  const hasAccessToken = Boolean(localStorage.getItem('matcha_access_token'));
+  const role = getLayoutStoredUserRole();
+
+  if (isInternalPage && !hasAccessToken) {
+    window.location.replace(buildLayoutLoginRedirectUrl());
+    return true;
+  }
+
+  if (isInternalPage && !canLayoutRoleAccessPage(role, page)) {
+    window.location.replace(getLayoutDefaultPageForRole(role));
+    return true;
+  }
+
+  return false;
+}
+
+enforceLayoutAuthGuard();
+
 // ─── Init ────────────────────────────────────────────────────────────────────
 function initLayout() {
+  if (enforceLayoutAuthGuard()) return;
+
   const page   = document.body.dataset.page;
   const config = PAGE_CONFIG[page];
   if (!config) return;
@@ -125,6 +215,15 @@ function initLayout() {
   const sidebar = document.getElementById('app-sidebar');
   if (sidebar) {
     sidebar.innerHTML = SIDEBAR_HTML;
+    const role = getLayoutStoredUserRole();
+
+    sidebar.querySelectorAll('[data-nav]').forEach((link) => {
+      const nav = link.dataset.nav;
+      const navPage = LAYOUT_NAV_PAGE[nav];
+      if (navPage && !canLayoutRoleAccessPage(role, navPage)) {
+        link.remove();
+      }
+    });
 
     // Highlight active nav link
     const activeLink = sidebar.querySelector(`[data-nav="${config.activeNav}"]`);

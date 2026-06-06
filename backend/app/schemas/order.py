@@ -3,10 +3,12 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.models.order import OrderPaymentStatus, OrderStatus, OrderType
 from app.models.payment import PaymentMethod
+from app.schemas.common import validate_non_empty
+from app.schemas.customer import normalize_phone
 
 
 class OrderItemCreate(BaseModel):
@@ -42,6 +44,7 @@ class OrderItemRead(BaseModel):
 class OrderCreate(BaseModel):
     customer_id: UUID | None = None
     order_type: OrderType
+    create_customer_profile: bool = False
     discount_amount: Decimal = Field(
         default=Decimal("0"), ge=0, max_digits=12, decimal_places=2
     )
@@ -56,6 +59,16 @@ class OrderCreate(BaseModel):
     )
     note: str | None = None
     items: list[OrderItemCreate] = Field(..., min_length=1)
+
+    @field_validator("customer_name")
+    @classmethod
+    def validate_customer_name(cls, value: str | None) -> str | None:
+        return validate_non_empty(value) if value is not None else value
+
+    @field_validator("customer_phone")
+    @classmethod
+    def validate_customer_phone(cls, value: str | None) -> str | None:
+        return normalize_phone(value)
 
 
 class OrderRead(BaseModel):

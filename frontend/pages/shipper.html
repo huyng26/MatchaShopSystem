@@ -1,272 +1,193 @@
 <!DOCTYPE html>
+<html class="light" lang="en">
 
-<html class="light" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Shipper Interface - Verdant Matcha</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Ship | The Botanical Atelier</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <script src="../assets/js/tailwind-config.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="../assets/css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/style.css?v=header-subtitle-20260605" />
 </head>
-<body class="page-shipper text-on-surface" data-page="shipper">
-<!-- SideNavBar (Execution from JSON) -->
-<aside
-    class="h-screen w-72 fixed left-0 top-0 z-40 bg-[#002c04] dark:bg-[#001a02] shadow-[32px_0_64px_-12px_rgba(0,44,4,0.08)] flex flex-col py-8 px-6">
-    <!-- Brand Header -->
-    <div class="flex items-center gap-3 mb-10 px-2">
-      <div class="w-10 h-10 rounded-full bg-[#06440c] flex items-center justify-center overflow-hidden shrink-0">
-        <img alt="Hoppers' Matcha Shop Logo" class="w-full h-full object-cover"
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXRMPJfgLrAFfB9xLzGUIGMCrcZAR-yQSGNqWTFX9vFRQv4QMXkX4cY5D2ERn3oAAuJGXHblUihyOQlNKg3VZXSwmSuERhdEAYAucZvEdNxam6eCnKauE0fIDaOC9ErE5QlCuozZ6P4YkCI15fn1sopDH0TACLUdkDo0Ykn3yERcrLIrRlQCk8_Lr8PfsLgZ_TnsWMVCgDjGbxOIWyidz2QGyjJ9a05v6jssGYyWHyMzupagZJUtTAKuLyvpvZEFqyp_w1nE_9jh3l" />
-      </div>
-      <div>
-        <h1 class="font-serif text-lg font-bold italic text-[#f9f9f8] leading-tight">Hoppers' Matcha</h1>
-        <p class="text-[10px] text-[#f9f9f8]/60 uppercase tracking-widest">Artisan POS</p>
-      </div>
+
+<body class="page-shipper bg-background text-on-surface antialiased overflow-x-hidden" data-page="shipper">
+  <aside id="app-sidebar" class="h-screen w-72 fixed left-0 top-0 z-40 bg-[#002c04] dark:bg-[#001a02] shadow-[32px_0_64px_-12px_rgba(0,44,4,0.08)] flex flex-col py-8 px-6"></aside>
+  <header id="app-topbar" class="fixed top-0 right-0 left-72 h-20 z-30 bg-[#f9f9f8]/80 dark:bg-[#191c1c]/80 backdrop-blur-2xl flex items-center justify-between px-10"></header>
+
+  <main class="ml-72 min-h-screen">
+    <div class="p-10 pt-24 space-y-8">
+      <section class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 class="font-headline text-4xl text-primary">Ship</h1>
+          <p class="page-header-subtitle">Shipper workspace for assigned trips, route stops, delivery results, and live location updates.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+          <select id="shipper-trip-filter" class="rounded-full border-outline bg-surface px-5 py-2.5 text-sm font-bold text-primary focus:border-secondary focus:ring-secondary">
+            <option value="active">Active trips</option>
+            <option value="assigned">Assigned only</option>
+            <option value="in_transit">In transit only</option>
+            <option value="completed">Completed</option>
+            <option value="all">All trips</option>
+          </select>
+          <button id="shipper-refresh" type="button" class="inline-flex items-center gap-2 rounded-full bg-surface-container-high px-5 py-2.5 text-sm font-bold text-on-surface hover:bg-surface-container-highest">
+            <span class="material-symbols-outlined text-[18px]">refresh</span>
+            Refresh
+          </button>
+        </div>
+      </section>
+
+      <p id="shipper-status" class="hidden rounded-xl px-4 py-3 text-sm font-bold"></p>
+
+      <section class="grid grid-cols-1 gap-6 md:grid-cols-4">
+        <div class="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
+          <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Assigned</p>
+          <p id="shipper-stat-assigned" class="mt-3 text-4xl font-bold text-primary">0</p>
+        </div>
+        <div class="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
+          <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">In transit</p>
+          <p id="shipper-stat-transit" class="mt-3 text-4xl font-bold text-primary">0</p>
+        </div>
+        <div class="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
+          <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Stops left</p>
+          <p id="shipper-stat-stops" class="mt-3 text-4xl font-bold text-primary">0</p>
+        </div>
+        <div class="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
+          <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">COD to collect</p>
+          <p id="shipper-stat-cod" class="mt-3 text-3xl font-bold text-primary">0 VND</p>
+        </div>
+      </section>
+
+      <section class="grid grid-cols-1 gap-8 xl:grid-cols-[420px_minmax(0,1fr)]">
+        <aside class="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
+          <div class="mb-5 flex items-center justify-between gap-3">
+            <div>
+              <h2 class="font-headline text-2xl font-bold text-primary">My Trips</h2>
+              <p class="text-sm text-on-surface-variant">Trips assigned by delivery manager.</p>
+            </div>
+            <span id="shipper-trip-count" class="rounded-full bg-secondary-container/30 px-3 py-1 text-xs font-bold text-secondary">0</span>
+          </div>
+          <div id="shipper-trip-list" class="max-h-[620px] space-y-3 overflow-y-auto pr-1">
+            <p class="rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">Loading trips...</p>
+          </div>
+        </aside>
+
+        <div class="space-y-8">
+          <section class="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
+            <div class="mb-5 flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <h2 id="shipper-trip-title" class="font-headline text-2xl font-bold text-primary">Trip Detail</h2>
+                <p id="shipper-trip-subtitle" class="mt-1 text-sm text-on-surface-variant">Select an assigned trip to start shipping.</p>
+              </div>
+              <button id="shipper-start-trip" type="button" class="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50" disabled>
+                <span class="material-symbols-outlined text-[18px]">play_arrow</span>
+                Start Trip
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div class="rounded-xl bg-surface-container-low p-4">
+                <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Status</p>
+                <div id="shipper-trip-status" class="mt-2">-</div>
+              </div>
+              <div class="rounded-xl bg-surface-container-low p-4">
+                <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Expected COD</p>
+                <p id="shipper-trip-cod" class="mt-2 text-lg font-bold text-primary">0 VND</p>
+              </div>
+              <div class="rounded-xl bg-surface-container-low p-4">
+                <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Started</p>
+                <p id="shipper-trip-started" class="mt-2 text-sm font-bold text-primary">Not started</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="grid grid-cols-1 gap-8 2xl:grid-cols-[minmax(0,1fr)_360px]">
+            <div class="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
+              <div class="mb-5 flex items-center justify-between gap-3">
+                <div>
+                  <h2 class="font-headline text-2xl font-bold text-primary">Stops</h2>
+                  <p class="text-sm text-on-surface-variant">Mark each order delivered or failed after visiting the customer.</p>
+                </div>
+                <span id="shipper-stop-count" class="rounded-full bg-surface-container-high px-3 py-1 text-xs font-bold text-primary">0</span>
+              </div>
+              <div id="shipper-stop-list" class="space-y-3">
+                <p class="rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">Select a trip to see stops.</p>
+              </div>
+            </div>
+
+            <aside class="space-y-8">
+              <section class="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
+                <h2 class="font-headline text-2xl font-bold text-primary">Location</h2>
+                <p class="mt-1 text-sm text-on-surface-variant">Send the latest shipper position for the selected trip.</p>
+                <div class="mt-5 grid grid-cols-1 gap-4">
+                  <label class="space-y-2">
+                    <span class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Latitude</span>
+                    <input id="shipper-latitude" type="number" min="-90" max="90" step="0.0000001" class="w-full rounded-xl border-outline bg-surface px-3 py-2 text-sm focus:border-secondary focus:ring-secondary" placeholder="10.7768890" />
+                  </label>
+                  <label class="space-y-2">
+                    <span class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Longitude</span>
+                    <input id="shipper-longitude" type="number" min="-180" max="180" step="0.0000001" class="w-full rounded-xl border-outline bg-surface px-3 py-2 text-sm focus:border-secondary focus:ring-secondary" placeholder="106.7008060" />
+                  </label>
+                  <button id="shipper-use-current-location" type="button" class="inline-flex items-center justify-center gap-2 rounded-xl bg-surface-container-high px-4 py-3 text-sm font-bold text-primary hover:bg-surface-container-highest">
+                    <span class="material-symbols-outlined text-[18px]">my_location</span>
+                    Use Current Location
+                  </button>
+                  <button id="shipper-send-location" type="button" class="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50" disabled>
+                    <span class="material-symbols-outlined text-[18px]">near_me</span>
+                    Update Location
+                  </button>
+                </div>
+              </section>
+
+              <section class="rounded-xl bg-primary p-6 text-on-primary shadow-sm">
+                <h2 class="font-headline text-2xl font-bold">Current Stop</h2>
+                <div id="shipper-current-stop" class="mt-4 rounded-xl bg-on-primary/10 p-4 text-sm font-bold text-on-primary/80">
+                  Select a stop to prepare delivery update.
+                </div>
+              </section>
+            </aside>
+          </section>
+        </div>
+      </section>
     </div>
-    <!-- Main Navigation -->
-    <nav class="flex-1 space-y-1">
-      <a class="flex items-center gap-4 px-4 py-3 bg-[#06440c] text-[#f9f9f8] rounded-xl font-semibold"
-        href="dashboard.html">
-        <span class="material-symbols-outlined">dashboard</span>
-        <span>Dashboard</span>
-      </a>
-      <a class="flex items-center gap-4 px-4 py-3 text-[#f9f9f8]/70 hover:text-[#f9f9f8] hover:bg-[#06440c]/60 rounded-xl font-medium transition-colors"
-        href="menu.html">
-        <span class="material-symbols-outlined">eco</span>
-        <span>Menu</span>
-      </a>
-      <a class="flex items-center gap-4 px-4 py-3 text-[#f9f9f8]/70 hover:text-[#f9f9f8] hover:bg-[#06440c]/60 rounded-xl font-medium transition-colors"
-        href="inventory_list.html">
-        <span class="material-symbols-outlined">inventory_2</span>
-        <span>Inventory</span>
-      </a>
-      <a class="flex items-center gap-4 px-4 py-3 text-[#f9f9f8]/70 hover:text-[#f9f9f8] hover:bg-[#06440c]/60 rounded-xl font-medium transition-colors"
-        href="customer_list.html">
-        <span class="material-symbols-outlined">group</span>
-        <span>Customers</span>
-      </a>
-      <a class="flex items-center gap-4 px-4 py-3 text-[#f9f9f8]/70 hover:text-[#f9f9f8] hover:bg-[#06440c]/60 rounded-xl font-medium transition-colors"
-        href="employee_list.html">
-        <span class="material-symbols-outlined">badge</span>
-        <span>Employees</span>
-      </a>
-      <a class="flex items-center gap-4 px-4 py-3 text-[#f9f9f8]/70 hover:text-[#f9f9f8] hover:bg-[#06440c]/60 rounded-xl font-medium transition-colors"
-        href="financial_management.html">
-        <span class="material-symbols-outlined">account_balance</span>
-        <span>Financial Management</span>
-      </a>
-      <a class="flex items-center gap-4 px-4 py-3 text-[#f9f9f8]/70 hover:text-[#f9f9f8] hover:bg-[#06440c]/60 rounded-xl font-medium transition-colors"
-        href="#">
-        <span class="material-symbols-outlined">bar_chart</span>
-        <span>Analytics</span>
-      </a>
-    </nav>
-    <!-- Footer Navigation -->
-    <div class="pt-6 border-t border-[#06440c]/80 space-y-1">
-      <a class="flex items-center gap-4 px-4 py-3 text-[#f9f9f8]/70 hover:text-[#f9f9f8] hover:bg-[#06440c]/60 rounded-xl font-medium transition-colors"
-        href="settings.html">
-        <span class="material-symbols-outlined">settings</span>
-        <span>Settings</span>
-      </a>
-      <a class="flex items-center gap-4 px-4 py-3 text-[#f9f9f8]/70 hover:text-[#f9f9f8] hover:bg-[#06440c]/60 rounded-xl font-medium transition-colors"
-        href="#">
-        <span class="material-symbols-outlined">logout</span>
-        <span>Log out</span>
-      </a>
-    </div>
-  </aside>
-<!-- TopAppBar (Execution from JSON) -->
-<header class="sticky top-0 right-0 w-full z-30 flex justify-between items-center px-8 py-4 ml-72 max-w-[calc(100%-18rem)] bg-surface/80 backdrop-blur-xl">
-<div class="flex items-center gap-4">
-<div class="relative">
-<span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant material-symbols-outlined">search</span>
-<input class="pl-10 pr-4 py-2 bg-surface-container rounded-full border-none focus:ring-2 focus:ring-secondary w-64 text-sm font-body" placeholder="Search orders..." type="text"/>
-</div>
-</div>
-<div class="flex items-center gap-6">
-<div class="flex items-center gap-4">
-<span class="material-symbols-outlined text-primary hover:bg-surface-container-highest/50 p-2 rounded-full cursor-pointer transition-all duration-300">notifications</span>
-<span class="material-symbols-outlined text-primary hover:bg-surface-container-highest/50 p-2 rounded-full cursor-pointer transition-all duration-300">settings</span>
-</div>
-<div class="h-8 w-[1px] bg-outline-variant/30"></div>
-<div class="flex items-center gap-3">
-<span class="font-headline text-xl font-bold text-primary">Verdant Matcha</span>
-</div>
-</div>
-</header>
-<!-- Main Content Canvas -->
-<main class="ml-72 p-8 min-h-screen">
-<div class="max-w-7xl mx-auto">
-<!-- Dashboard Header & Wallet Summary -->
-<div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-8">
-<div>
-<h2 class="font-headline text-display-lg text-primary leading-none mb-2">Morning Run</h2>
-<p class="font-body text-on-surface-variant max-w-md">You have 8 active batches assigned for the downtown route. Priority items are highlighted in green.</p>
-</div>
-<div class="flex gap-6 w-full md:w-auto">
-<!-- Wallet Card -->
-<div class="bg-primary text-on-primary p-6 rounded-3xl min-w-[240px] shadow-[32px_0px_64px_rgba(0,44,4,0.04)] relative overflow-hidden group">
-<div class="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-500">
-<span class="material-symbols-outlined text-8xl">payments</span>
-</div>
-<p class="font-label text-label-sm text-on-primary-container uppercase tracking-widest mb-4">COD Wallet Today</p>
-<div class="flex items-baseline gap-1">
-<span class="font-body text-title-md opacity-70">$</span>
-<span class="font-headline text-5xl font-bold">428.50</span>
-</div>
-<div class="mt-4 flex items-center gap-2 text-on-primary-container text-xs">
-<span class="material-symbols-outlined text-xs">history</span>
-<span>Last updated 4m ago</span>
-</div>
-</div>
-<!-- Location Toggle Card -->
-<div class="bg-surface-container-lowest p-6 rounded-3xl flex flex-col justify-between shadow-[32px_0px_64px_rgba(0,44,4,0.04)] min-w-[200px]">
-<div class="flex justify-between items-start">
-<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">my_location</span>
-<label class="relative inline-flex items-center cursor-pointer">
-<input checked="" class="sr-only peer" type="checkbox"/>
-<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary"></div>
-</label>
-</div>
-<div>
-<p class="font-body font-bold text-on-surface">Live Location</p>
-<p class="font-label text-label-sm text-on-surface-variant">Sharing with HQ</p>
-</div>
-</div>
-</div>
-</div>
-<!-- Main Interactive Area: Bento Grid Layout -->
-<div class="grid grid-cols-12 gap-8">
-<!-- My Deliveries List (Col 1-5) -->
-<section class="col-span-12 lg:col-span-5 space-y-6">
-<div class="flex justify-between items-center mb-2">
-<h3 class="font-headline text-2xl text-primary">My Deliveries</h3>
-<span class="px-3 py-1 bg-secondary-container text-on-secondary-container text-xs font-bold rounded-full">8 Pending</span>
-</div>
-<div class="space-y-4 max-h-[716px] overflow-y-auto pr-4 custom-scrollbar">
-<!-- Delivery Card 1 -->
-<div class="bg-surface-container-lowest p-6 rounded-3xl border-l-8 border-secondary shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
-<div class="flex justify-between mb-4">
-<span class="font-label text-xs font-extrabold text-secondary uppercase tracking-tighter">Priority Batch #102</span>
-<span class="font-label text-xs text-on-surface-variant">0.8 mi away</span>
-</div>
-<h4 class="font-body text-title-md font-bold text-on-surface mb-1 group-hover:text-secondary transition-colors">Ceremonial Matcha Tin x4</h4>
-<p class="font-body text-sm text-on-surface-variant mb-4">221B Baker Street, NW1 6XE</p>
-<div class="flex items-center justify-between">
-<div class="flex items-center gap-2 px-3 py-1 bg-surface-container rounded-full text-xs text-on-surface">
-<span class="material-symbols-outlined text-sm">schedule</span>
-<span>Due in 15m</span>
-</div>
-<span class="font-body font-bold text-primary">$124.00 COD</span>
-</div>
-</div>
-<!-- Delivery Card 2 -->
-<div class="bg-surface-container-lowest p-6 rounded-3xl shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-<div class="flex justify-between mb-4">
-<span class="font-label text-xs font-medium text-on-surface-variant">Standard Batch #089</span>
-<span class="font-label text-xs text-on-surface-variant">1.4 mi away</span>
-</div>
-<h4 class="font-body text-title-md font-bold text-on-surface mb-1">Bamboo Whisk &amp; Sifter Set</h4>
-<p class="font-body text-sm text-on-surface-variant mb-4">42 Wallaby Way, Sydney</p>
-<div class="flex items-center justify-between">
-<div class="flex items-center gap-2 px-3 py-1 bg-surface-container rounded-full text-xs text-on-surface">
-<span class="material-symbols-outlined text-sm">payments</span>
-<span>Prepaid</span>
-</div>
-<span class="font-body font-bold text-on-surface-variant">---</span>
-</div>
-</div>
-<!-- Delivery Card 3 -->
-<div class="bg-surface-container-lowest p-6 rounded-3xl shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-<div class="flex justify-between mb-4">
-<span class="font-label text-xs font-medium text-on-surface-variant">Standard Batch #112</span>
-<span class="font-label text-xs text-on-surface-variant">2.1 mi away</span>
-</div>
-<h4 class="font-body text-title-md font-bold text-on-surface mb-1">Hojicha Loose Leaf (500g)</h4>
-<p class="font-body text-sm text-on-surface-variant mb-4">742 Evergreen Terrace</p>
-<div class="flex items-center justify-between">
-<div class="flex items-center gap-2 px-3 py-1 bg-surface-container rounded-full text-xs text-on-surface">
-<span class="material-symbols-outlined text-sm">schedule</span>
-<span>Due in 1h</span>
-</div>
-<span class="font-body font-bold text-primary">$45.50 COD</span>
-</div>
-</div>
-</div>
-</section>
-<!-- Delivery Details & Status Update (Col 6-12) -->
-<section class="col-span-12 lg:col-span-7">
-<div class="bg-surface-container-low rounded-[2rem] p-8 h-full shadow-[32px_0px_64px_rgba(0,44,4,0.04)] relative overflow-hidden">
-<!-- Decorative leaf accent -->
-<div class="absolute -top-12 -right-12 text-primary/5">
-<span class="material-symbols-outlined text-[240px]" style="font-variation-settings: 'FILL' 1;">eco</span>
-</div>
-<div class="relative z-10 h-full flex flex-col">
-<div class="flex justify-between items-start mb-10">
-<div>
-<span class="inline-block px-4 py-1 bg-primary text-on-primary text-[10px] font-bold tracking-widest rounded-full mb-4">CURRENT DELIVERY</span>
-<h3 class="font-headline text-4xl text-primary mb-2">Batch #102 Details</h3>
-<div class="flex items-center gap-3 text-on-surface-variant">
-<span class="material-symbols-outlined text-secondary">location_on</span>
-<span class="font-body text-lg">221B Baker Street, London NW1 6XE</span>
-</div>
-</div>
-<button class="w-14 h-14 bg-surface-container-highest rounded-2xl flex items-center justify-center hover:bg-secondary hover:text-on-secondary transition-all active:scale-90">
-<span class="material-symbols-outlined">directions</span>
-</button>
-</div>
-<!-- Map Placeholder -->
-<div class="w-full h-48 bg-surface-container-highest rounded-3xl mb-8 relative overflow-hidden">
-<img alt="Map view" class="w-full h-full object-cover grayscale brightness-90 opacity-60" data-alt="A stylized, high-contrast digital map showing a city grid layout from an overhead perspective. The map is rendered in a monochromatic palette of soft grays and charcoal blacks, with a vibrant glowing green path tracing a delivery route. The aesthetic is clean and modern, fitting into a premium, tech-forward delivery dashboard." data-location="London" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAcG8rBgaZRsbwP4tt6cvl5W4D902aIM5jaysNJwHc5f0kf595yC0jhNDHIBIXWigygutz4erPsTRMTFrzeWus7V0AzTsAbZca1RBV-GUeM0HX4WOeM5FRJxlnhRISlHby3Nxawztnkq7bl13Lvg0K2VBa8B1Xj0hGkXzIrhutuS1b7RtxFlwArh5NB-HvEGNTSZL3GbkLfSEoUCuM2A1txxqsX7S8qGv9kj8ENEXRApKaqV_L0lH2E7S-_QwGyHflA-UtaKtSDcCgl"/>
-<div class="absolute inset-0 flex items-center justify-center">
-<div class="relative">
-<div class="w-8 h-8 bg-secondary rounded-full animate-ping opacity-25"></div>
-<div class="w-4 h-4 bg-secondary rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-2 border-white"></div>
-</div>
-</div>
-</div>
-<div class="flex-grow grid grid-cols-2 gap-8 mb-10">
-<div class="bg-surface-container-lowest p-6 rounded-2xl">
-<p class="font-label text-xs text-on-surface-variant uppercase tracking-wider mb-2">Recipient</p>
-<p class="font-body font-bold text-lg text-primary">Sherlock Holmes</p>
-<p class="font-body text-sm text-on-surface-variant">+44 20 7946 0958</p>
-</div>
-<div class="bg-surface-container-lowest p-6 rounded-2xl">
-<p class="font-label text-xs text-on-surface-variant uppercase tracking-wider mb-2">Instruction</p>
-<p class="font-body font-bold text-sm text-on-surface">Leave with Mrs. Hudson if not home. Do not ring bell.</p>
-</div>
-</div>
-<!-- Status Actions -->
-<div>
-<p class="font-label text-xs text-on-surface-variant uppercase tracking-widest text-center mb-6">Update Journey Status</p>
-<div class="grid grid-cols-2 gap-4">
-<button class="status-btn flex items-center justify-center gap-3 py-4 bg-surface-container-highest text-primary font-bold rounded-2xl hover:bg-primary-container hover:text-on-primary-container transition-all" data-status="picked_up">
-<span class="material-symbols-outlined">inventory</span>
-<span>Picked up</span>
-</button>
-<button class="status-btn flex items-center justify-center gap-3 py-4 bg-surface-container-highest text-primary font-bold rounded-2xl hover:bg-primary-container hover:text-on-primary-container transition-all" data-status="out_for_delivery">
-<span class="material-symbols-outlined">local_shipping</span>
-<span>Out for Delivery</span>
-</button>
-<button class="status-btn flex items-center justify-center gap-3 py-4 bg-secondary text-on-secondary font-bold rounded-2xl hover:bg-secondary/90 transition-all shadow-lg col-span-2 md:col-span-1" data-status="delivered">
-<span class="material-symbols-outlined">done_all</span>
-<span>Mark Delivered</span>
-</button>
-<button class="status-btn flex items-center justify-center gap-3 py-4 bg-primary text-on-primary font-bold rounded-2xl hover:bg-primary/90 transition-all shadow-lg col-span-2 md:col-span-1" data-status="cod_collected">
-<span class="material-symbols-outlined">payments</span>
-<span>Collected COD</span>
-</button>
-</div>
-</div>
-</div>
-</div>
-</section>
-</div>
-</div>
-</main>
-<!-- Micro-interactions & Interactivity -->
+  </main>
+
+  <div id="shipper-stop-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4 py-8 backdrop-blur-sm">
+    <form id="shipper-stop-form" class="w-full max-w-xl overflow-hidden rounded-2xl bg-surface-container-lowest shadow-2xl">
+      <div class="flex items-start justify-between gap-4 border-b border-outline-variant/20 px-6 py-5">
+        <div>
+          <h2 id="shipper-stop-modal-title" class="font-headline text-2xl font-bold text-primary">Update Stop</h2>
+          <p id="shipper-stop-modal-subtitle" class="mt-1 text-sm text-on-surface-variant">Confirm delivery result.</p>
+        </div>
+        <button id="shipper-close-stop-modal" type="button" class="rounded-full p-2 text-on-surface-variant hover:bg-surface-container-high">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="space-y-5 px-6 py-6">
+        <label id="shipper-cod-field" class="block space-y-2">
+          <span class="text-sm font-bold text-on-surface">COD collected</span>
+          <input id="shipper-cod-collected" type="number" min="0" step="1" class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
+        </label>
+        <label id="shipper-failed-field" class="hidden space-y-2">
+          <span class="text-sm font-bold text-on-surface">Failed reason</span>
+          <textarea id="shipper-failed-reason" rows="3" class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" placeholder="Customer unavailable, wrong address, customer refused..."></textarea>
+        </label>
+        <label class="block space-y-2">
+          <span class="text-sm font-bold text-on-surface">Note</span>
+          <textarea id="shipper-stop-note" rows="3" class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" placeholder="Optional delivery note"></textarea>
+        </label>
+        <p id="shipper-stop-form-status" class="hidden text-sm font-bold"></p>
+      </div>
+      <div class="flex justify-end gap-3 border-t border-outline-variant/20 px-6 py-5">
+        <button id="shipper-cancel-stop-modal" type="button" class="rounded-full bg-surface-container-high px-5 py-2.5 text-sm font-bold text-on-surface hover:bg-surface-container-highest">Cancel</button>
+        <button id="shipper-submit-stop" type="submit" class="rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-white hover:bg-primary/90">Save Update</button>
+      </div>
+    </form>
+  </div>
+
+  <script src="../assets/js/layout.js?v=fm-20260530"></script>
   <script src="../assets/js/main.js?v=fm-20260530"></script>
-</body></html>
+</body>
+
+</html>

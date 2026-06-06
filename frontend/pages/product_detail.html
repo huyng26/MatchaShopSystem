@@ -17,7 +17,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
         rel="stylesheet" />
-      <link rel="stylesheet" href="../assets/css/style.css" />
+      <link rel="stylesheet" href="../assets/css/style.css?v=app-font-20260605" />
 </head>
 
 <body class="page-product-detail bg-background text-on-surface flex min-h-screen" data-page="product-detail">
@@ -26,252 +26,532 @@
     <!-- TopAppBar -->
     <header id="app-topbar" class="fixed top-0 right-0 left-72 h-20 z-30 bg-[#f9f9f8]/80 dark:bg-[#191c1c]/80 backdrop-blur-2xl flex items-center justify-between px-10"></header>
     <!-- Product Detail Content -->
-    <div class="ml-72 pt-20 p-10 space-y-8">
+    <main class="ml-72 min-h-screen w-[calc(100%-18rem)] pt-20 p-10 space-y-8">
         <!-- Hero Header Section (Asymmetric) -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start mb-16">
-            <!-- Gallery Cluster -->
-            <div class="lg:col-span-7 grid grid-cols-4 gap-4">
-                <div class="col-span-4 h-[500px] rounded-xl overflow-hidden shadow-sm">
-                    <img alt="Matcha Cream Cheese Main"
-                        class="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
-                        data-alt="vibrant green matcha latte topped with thick white cream cheese foam in a clear glass on a rustic wooden table with scattered tea leaves"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuAgfS9rC7i_LhWHaCUGYnye4Bo1cgSpqJrHQGI-OmUFwr4PWRdCQLwY-U_Q8RNmHY2TCHSt4w9zYwc9MM9lEm7wyajMUALi9nF3WcRRSvDgY8_-dfI1yc9mDcYmuJtSpWcIZj29mWHtxoduBsSb-vab-d6T5JszcPImPqs3w11ARzDhRv_dOqc1tDnbajjwQl6iqsuI8NtqfK7_HmOosYMd2Kz9GIAhtfZqncbBhpYd7M6hgXBNxwLLs6B6CupIfOxXTcoGvUtYvH2-" />
-                </div>
-                <div
-                    class="col-span-1 h-32 rounded-lg overflow-hidden grayscale hover:grayscale-0 transition-all cursor-pointer border-2 border-transparent hover:border-secondary">
-                    <img alt="Matcha detail" class="w-full h-full object-cover"
-                        data-alt="close-up macro shot of fine emerald green matcha powder texture with organic swirls"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDyXPxX4ARUgDbc8DVBMXFY-gjVuLI8J0rnppDEZD2lDQCksujRrNoTTmbWGX0Sgg3hTo8K62-66qey8vw7TUp9OaFXk8_ZdLEwn9w9BeZZKvHWHaYNzan6HSbXmC4rHl_gHzldoFboHGnvyzXo033HKz93cHG0-uXFEUl4QS-QX9hZKUySodPfzzoZ7Jj7jTB3dtXLA0I0LK74_YfsSXBEZM0dEcfhASrHXztSHLxtEwmtCBTItcbpD1EERCe95VQDzARJfaMwpD1V" />
-                </div>
-                <div
-                    class="col-span-1 h-32 rounded-lg overflow-hidden grayscale hover:grayscale-0 transition-all cursor-pointer border-2 border-transparent hover:border-secondary">
-                    <img alt="Cream cheese foam" class="w-full h-full object-cover"
-                        data-alt="thick whipped white cream cheese foam being poured onto a beverage in slow motion"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCc4kWtoNKkk-1idMdve4vxlI0S1Wfn_E9La1tQGAJpR-7jD5Qtb1va5c4FAFB7jyiOCyWNP437Kis7i4arbRsV-hiJ4ZlOMplXyQoA8nJ_BMp9nzeumujW1Atyj69MNxBxDOFG8r1luWHvnm5lYBMnIjQY5oais9v-qzZi8En2fh15XsMGT4HezOqbmLD3ROR66secsORBPPW2ecLxgB6y1ktq4utCKujNGd8InhvzHoaeGBI5cuICXGCjcEg4TNtGmKrcg45xfIzz" />
-                </div>
-                <div
-                    class="col-span-1 h-32 rounded-lg overflow-hidden grayscale hover:grayscale-0 transition-all cursor-pointer border-2 border-transparent hover:border-secondary">
-                    <img alt="Coffee shop atmosphere" class="w-full h-full object-cover"
-                        data-alt="minimalist modern cafe interior with botanical plants and soft afternoon sunlight hitting the counter"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNElq_N6UzW6KNEcaPqA5_0-g1EtsVyNcADsv6hbdP7SFVd6QMwUJhfn1H1qbEWlGucaU3LBo8CiI5n617nebwZRpSYW3uqNsQmaCBn4xv5ZxQwZTQESO7C4KP9vLpPqqms8RSMzlewBtDHJWgjGMchmy9bRiw_VXsA-W7op1zAJl9OrCsVFjbpj6lOLXT5-h_r31Tgpju-T7aNE2-Zh8Pp4qq7u6yjSax-b7Juogn8wBYNeoTOpKnsSARkS88GdWrOnAnQxtVJsfb" />
-                </div>
-                <div
-                    class="col-span-1 h-32 rounded-lg bg-surface-container flex flex-col items-center justify-center text-secondary hover:bg-surface-container-high transition-colors cursor-pointer border-2 border-dashed border-outline-variant">
-                    <span class="material-symbols-outlined">add_a_photo</span>
-                    <span class="text-[10px] font-bold uppercase mt-1">Add Image</span>
+            <!-- Product Image -->
+            <div class="lg:col-span-5">
+                <div class="h-[520px] rounded-xl overflow-hidden shadow-sm bg-surface-container">
+                    <img id="product-detail-main-image" alt=""
+                        class="hidden w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+                    <div id="product-detail-image-placeholder"
+                        class="flex h-full w-full items-center justify-center text-on-surface-variant">
+                        <span class="material-symbols-outlined text-7xl">restaurant</span>
+                    </div>
                 </div>
             </div>
             <!-- Primary Meta Fields -->
-            <div class="lg:col-span-5 space-y-8">
+            <div class="lg:col-span-7 space-y-8">
                 <div>
                     <span class="text-xs font-bold uppercase tracking-[0.2em] text-secondary mb-2 block">Product
                         Identity</span>
-                    <h1 class="text-5xl font-serif italic text-primary leading-tight">Matcha Cream Cheese</h1>
-                    <p class="text-on-surface-variant mt-4 leading-relaxed font-medium">A signature botanical blend
-                        featuring ceremonial grade matcha topped with a velvety, savory-sweet cream cheese foam cloud.
-                    </p>
+                    <input id="product-detail-name"
+                        class="w-full border-none bg-transparent p-0 text-5xl font-serif italic text-primary leading-tight focus:ring-0"
+                        type="text" value="Loading product..." />
+                    <textarea id="product-detail-description"
+                        class="mt-4 min-h-28 w-full resize-y rounded-xl border-outline bg-surface-container-lowest px-4 py-3 text-on-surface-variant leading-relaxed font-medium focus:border-secondary focus:ring-secondary">Loading product description...</textarea>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div class="p-6 bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/10">
                         <label
                             class="text-[10px] uppercase font-bold text-on-surface/40 tracking-widest block mb-2">Base
                             Price</label>
                         <div class="flex items-baseline gap-1">
-                            <span class="text-2xl font-serif text-primary">$</span>
-                            <input
-                                class="text-3xl font-serif text-primary bg-transparent border-none p-0 w-24 focus:ring-0"
-                                type="text" value="6.50" />
+                            <span class="text-2xl font-serif text-primary">₫</span>
+                            <input id="product-detail-price"
+                                class="min-w-0 flex-1 text-3xl font-serif text-primary bg-transparent border-none p-0 focus:ring-0"
+                                type="text" value="" />
                         </div>
                     </div>
                     <div class="p-6 bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/10">
                         <label
                             class="text-[10px] uppercase font-bold text-on-surface/40 tracking-widest block mb-2">Category</label>
-                        <select
+                        <select id="product-detail-category"
                             class="bg-transparent border-none p-0 w-full text-lg font-serif text-primary focus:ring-0 appearance-none">
-                            <option>Signature Tea</option>
-                            <option>Coffee</option>
-                            <option>Seasonal</option>
+                            <option value="" disabled selected>Loading...</option>
                         </select>
                     </div>
+                    <label class="p-6 bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/10 md:col-span-2">
+                        <span class="text-[10px] uppercase font-bold text-on-surface/40 tracking-widest block mb-2">Image URL</span>
+                        <input id="product-detail-image-url"
+                            class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary"
+                            type="url" placeholder="Enter image URL" />
+                    </label>
                 </div>
                 <div class="space-y-4">
                     <div class="flex items-center justify-between">
                         <span class="text-sm font-bold text-primary">Availability</span>
-                        <div
-                            class="flex items-center gap-2 bg-secondary/10 text-secondary px-3 py-1 rounded-full text-xs font-bold">
-                            <span class="w-2 h-2 bg-secondary rounded-full"></span>
-                            Active
+                        <div id="product-detail-availability"
+                            class="flex items-center gap-2 bg-surface-container text-on-surface-variant px-3 py-1 rounded-full text-xs font-bold">
+                            <span class="w-2 h-2 bg-on-surface-variant rounded-full"></span>
+                            Loading
                         </div>
                     </div>
                     <div class="p-1 bg-surface-container rounded-xl flex gap-1">
-                        <button
-                            class="flex-1 py-3 text-xs font-bold uppercase bg-surface-container-lowest text-primary rounded-lg shadow-sm">In
-                            Stock</button>
-                        <button
-                            class="flex-1 py-3 text-xs font-bold uppercase text-on-surface/40 hover:text-on-surface transition-colors">Out
-                            of Stock</button>
-                        <button
-                            class="flex-1 py-3 text-xs font-bold uppercase text-on-surface/40 hover:text-on-surface transition-colors">Hidden</button>
+                        <button type="button" data-availability="true"
+                            class="flex-1 py-3 text-xs font-bold uppercase bg-surface-container-lowest text-primary rounded-lg shadow-sm">Available</button>
+                        <button type="button" data-availability="false"
+                            class="flex-1 py-3 text-xs font-bold uppercase text-on-surface/40 hover:text-on-surface transition-colors">Unavailable</button>
                     </div>
+                    <p id="product-detail-status" class="hidden text-sm font-bold"></p>
                 </div>
             </div>
         </div>
         <!-- Detailed Management Bento Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Ingredients Section (Bento Card 1) -->
-            <div class="lg:col-span-1 bg-surface-container-lowest rounded-2xl p-8 shadow-sm">
+            <div class="lg:col-span-3 bg-surface-container-lowest rounded-2xl p-8 shadow-sm">
                 <div class="flex justify-between items-center mb-8">
                     <h3 class="text-2xl font-serif italic text-primary">Ingredients</h3>
-                    <button
-                        class="w-10 h-10 bg-secondary/10 text-secondary rounded-full flex items-center justify-center hover:bg-secondary hover:text-white transition-all">
-                        <span class="material-symbols-outlined">add</span>
-                    </button>
-                </div>
-                <ul class="space-y-6">
-                    <li class="flex items-center justify-between pb-4 border-b border-outline-variant/10">
-                        <div>
-                            <p class="text-sm font-bold text-primary">Ceremonial Matcha</p>
-                            <p class="text-[10px] text-on-surface-variant">Grade A Organic</p>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <span class="text-sm font-bold text-secondary">5g</span>
-                            <span
-                                class="material-symbols-outlined text-on-surface/20 text-sm cursor-pointer hover:text-error">close</span>
-                        </div>
-                    </li>
-                    <li class="flex items-center justify-between pb-4 border-b border-outline-variant/10">
-                        <div>
-                            <p class="text-sm font-bold text-primary">Cream Cheese Foam</p>
-                            <p class="text-[10px] text-on-surface-variant">House-made Salty</p>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <span class="text-sm font-bold text-secondary">40ml</span>
-                            <span
-                                class="material-symbols-outlined text-on-surface/20 text-sm cursor-pointer hover:text-error">close</span>
-                        </div>
-                    </li>
-                    <li class="flex items-center justify-between pb-4 border-b border-outline-variant/10">
-                        <div>
-                            <p class="text-sm font-bold text-primary">Oat Milk</p>
-                            <p class="text-[10px] text-on-surface-variant">Barista Edition</p>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <span class="text-sm font-bold text-secondary">180ml</span>
-                            <span
-                                class="material-symbols-outlined text-on-surface/20 text-sm cursor-pointer hover:text-error">close</span>
-                        </div>
-                    </li>
-                    <li class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-bold text-primary">Brown Sugar Syrup</p>
-                            <p class="text-[10px] text-on-surface-variant">Natural Cane</p>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <span class="text-sm font-bold text-secondary">15ml</span>
-                            <span
-                                class="material-symbols-outlined text-on-surface/20 text-sm cursor-pointer hover:text-error">close</span>
-                        </div>
-                    </li>
-                </ul>
-                <div class="mt-10 p-4 bg-primary/5 rounded-xl border border-primary/10">
-                    <div class="flex items-center gap-2 mb-2">
-                        <span class="material-symbols-outlined text-primary text-lg">info</span>
-                        <span class="text-[10px] font-bold uppercase text-primary tracking-wider">Inventory Sync</span>
-                    </div>
-                    <p class="text-xs text-on-surface-variant leading-relaxed">Estimated cost per unit: <strong
-                            class="text-primary">$1.42</strong>. Ingredients are currently in stock for ~450 servings.
-                    </p>
-                </div>
-            </div>
-            <!-- Preparation Steps (Bento Card 2) -->
-            <div class="lg:col-span-2 bg-[#06440c] text-white rounded-2xl p-10 overflow-hidden relative">
-                <!-- Botanical Decoration Overlay -->
-                <div class="absolute -right-20 -bottom-20 opacity-10 pointer-events-none">
-                    <span class="material-symbols-outlined text-[300px]"
-                        style="font-variation-settings: 'FILL' 1;">eco</span>
-                </div>
-                <div class="relative z-10">
-                    <div class="flex justify-between items-start mb-10">
-                        <div>
-                            <h3 class="text-3xl font-serif italic text-[#f9f9f8]">Preparation Guide</h3>
-                            <p class="text-[#f9f9f8]/60 text-sm mt-2 font-medium">Standardized steps for atelier quality
-                                control</p>
-                        </div>
-                        <button
-                            class="px-6 py-2 border border-[#f9f9f8]/20 rounded-full text-xs font-bold uppercase hover:bg-white/10 transition-all flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm">edit</span>
-                            Edit Recipe
+                    <div class="flex items-center gap-3">
+                        <button id="add-recipe-ingredient" type="button"
+                            class="w-10 h-10 bg-secondary/10 text-secondary rounded-full flex items-center justify-center hover:bg-secondary hover:text-white transition-all"
+                            aria-label="Add recipe ingredient">
+                            <span class="material-symbols-outlined">add</span>
+                        </button>
+                        <button id="save-product-recipe" type="button"
+                            class="rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-white hover:bg-primary/90">
+                            Save Recipe
                         </button>
                     </div>
-                    <div class="space-y-10">
-                        <div class="flex gap-6">
-                            <div
-                                class="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-xl font-serif italic shrink-0 border border-white/20">
-                                01</div>
-                            <div>
-                                <h4 class="text-lg font-bold mb-1">Matcha Sifting</h4>
-                                <p class="text-[#f9f9f8]/70 leading-relaxed text-sm">Sift 5g of ceremonial matcha into a
-                                    warmed chawan. Add 20ml of 80°C water and whisk vigorously in a 'W' motion until a
-                                    dense, fine froth forms with no large bubbles.</p>
-                            </div>
-                        </div>
-                        <div class="flex gap-6">
-                            <div
-                                class="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-xl font-serif italic shrink-0 border border-white/20">
-                                02</div>
-                            <div>
-                                <h4 class="text-lg font-bold mb-1">Base Combination</h4>
-                                <p class="text-[#f9f9f8]/70 leading-relaxed text-sm">Combine chilled oat milk and brown
-                                    sugar syrup in the serving glass. Add filtered ice up to 70% of the volume. Gently
-                                    pour the whisked matcha over the back of a spoon to create a layer.</p>
-                            </div>
-                        </div>
-                        <div class="flex gap-6">
-                            <div
-                                class="w-12 h-12 rounded-full bg-[#3ba633] flex items-center justify-center text-xl font-serif italic shrink-0 border border-white/20">
-                                03</div>
-                            <div>
-                                <h4 class="text-lg font-bold mb-1">Foam Crowning</h4>
-                                <p class="text-[#f9f9f8]/70 leading-relaxed text-sm">Slowly top with 40ml of chilled
-                                    cream cheese foam. The foam should sit cleanly on the matcha layer without immediate
-                                    bleeding. Dust lightly with matcha powder for garnish.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mt-12 flex items-center gap-10 border-t border-white/10 pt-8">
-                        <div>
-                            <span
-                                class="text-[10px] uppercase font-bold text-[#f9f9f8]/40 tracking-widest block mb-1">Prep
-                                Time</span>
-                            <p class="text-lg font-serif">180 Seconds</p>
-                        </div>
-                        <div>
-                            <span
-                                class="text-[10px] uppercase font-bold text-[#f9f9f8]/40 tracking-widest block mb-1">Temperature</span>
-                            <p class="text-lg font-serif">4°C (Served Cold)</p>
-                        </div>
-                        <div>
-                            <span
-                                class="text-[10px] uppercase font-bold text-[#f9f9f8]/40 tracking-widest block mb-1">Glassware</span>
-                            <p class="text-lg font-serif">Tall Fluted Glass</p>
-                        </div>
-                    </div>
                 </div>
+                <ul id="product-recipe-list" class="space-y-6">
+                    <li class="rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">
+                        Loading recipe ingredients...
+                    </li>
+                </ul>
             </div>
         </div>
         <!-- Footer Actions -->
         <div class="mt-12 pt-8 border-t border-outline-variant/20 flex justify-end gap-4">
-            <button
+            <button id="delete-product-detail" type="button"
+                class="px-10 py-4 text-error font-bold hover:bg-error-container/30 rounded-xl transition-all">Delete
+                Product</button>
+            <button id="discard-product-detail" type="button"
                 class="px-10 py-4 text-on-surface-variant font-bold hover:bg-surface-container rounded-xl transition-all">Discard
                 Changes</button>
-            <button
+            <button id="save-product-detail" type="button"
                 class="px-12 py-4 bg-secondary text-white font-bold rounded-xl shadow-lg shadow-secondary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">Save
                 Product Details</button>
         </div>
-    </div>
     </main>
   <script src="../assets/js/layout.js?v=fm-20260530"></script>
   <script src="../assets/js/main.js?v=fm-20260530"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const API_BASE_URL = window.MATCHA_API_BASE_URL || 'http://localhost:8000/api/v1';
+        const productId = new URLSearchParams(window.location.search).get('id');
+        const nameElement = document.getElementById('product-detail-name');
+        const descriptionElement = document.getElementById('product-detail-description');
+        const priceInput = document.getElementById('product-detail-price');
+        const categorySelect = document.getElementById('product-detail-category');
+        const imageUrlInput = document.getElementById('product-detail-image-url');
+        const statusElement = document.getElementById('product-detail-status');
+        const saveButton = document.getElementById('save-product-detail');
+        const discardButton = document.getElementById('discard-product-detail');
+        const deleteButton = document.getElementById('delete-product-detail');
+        const recipeList = document.getElementById('product-recipe-list');
+        const addRecipeIngredientButton = document.getElementById('add-recipe-ingredient');
+        const saveRecipeButton = document.getElementById('save-product-recipe');
+        let currentProduct = null;
+        let productCategories = [];
+        let ingredients = [];
+
+        const fetchApiData = async (path, options = {}) => {
+            const response = await fetch(`${API_BASE_URL}${path}`, options);
+            const payload = await response.json().catch(() => null);
+
+            if (!response.ok || payload?.success === false) {
+                throw new Error(payload?.message || 'Request failed');
+            }
+
+            return payload?.data ?? payload;
+        };
+
+        const getListData = (data) => {
+            if (Array.isArray(data)) return data;
+            if (Array.isArray(data?.items)) return data.items;
+            return [];
+        };
+        const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+        }[character]));
+
+        const formatPriceValue = (value) => new Intl.NumberFormat('vi-VN').format(Number(value) || 0);
+        const parsePriceValue = (value) => {
+            const normalized = String(value || '').trim();
+            if (!normalized) return 0;
+
+            const localeNumber = normalized.includes(',')
+                ? normalized.replace(/\./g, '').replace(',', '.')
+                : normalized.replace(/\./g, '');
+            return Number(localeNumber.replace(/[^\d.-]/g, '')) || 0;
+        };
+        const setFieldValue = (element, value) => {
+            if (!element) return;
+            if ('value' in element) {
+                element.value = value;
+            } else {
+                element.textContent = value;
+            }
+        };
+        const setStatus = (message, type = 'info') => {
+            if (!statusElement) return;
+            statusElement.textContent = message;
+            statusElement.className = `text-sm font-bold ${type === 'error' ? 'text-error' : 'text-secondary'}`;
+            statusElement.classList.toggle('hidden', !message);
+        };
+
+        const deriveCategories = (products) => (
+            [...new Set(products.map((product) => product.category).filter(Boolean))]
+                .sort((first, second) => first.localeCompare(second))
+        );
+
+        const populateCategorySelect = (categories, selectedCategory) => {
+            categorySelect.innerHTML = '';
+
+            categories.forEach((category) => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                option.selected = category === selectedCategory;
+                categorySelect.appendChild(option);
+            });
+
+            if (selectedCategory && !categories.includes(selectedCategory)) {
+                const option = document.createElement('option');
+                option.value = selectedCategory;
+                option.textContent = selectedCategory;
+                option.selected = true;
+                categorySelect.appendChild(option);
+            }
+
+            if (!categorySelect.options.length) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'No category';
+                option.disabled = true;
+                option.selected = true;
+                categorySelect.appendChild(option);
+            }
+        };
+
+        const setAvailability = (isAvailable) => {
+            const availability = document.getElementById('product-detail-availability');
+            if (!availability || typeof isAvailable !== 'boolean') return;
+
+            const dotClass = isAvailable ? 'bg-secondary' : 'bg-error';
+            availability.className = isAvailable
+                ? 'flex items-center gap-2 bg-secondary/10 text-secondary px-3 py-1 rounded-full text-xs font-bold'
+                : 'flex items-center gap-2 bg-error-container/30 text-error px-3 py-1 rounded-full text-xs font-bold';
+            availability.innerHTML = `<span class="w-2 h-2 ${dotClass} rounded-full"></span>${isAvailable ? 'Active' : 'Inactive'}`;
+
+            document.querySelectorAll('[data-availability]').forEach((button) => {
+                const buttonValue = button.dataset.availability === 'true';
+                const isSelected = buttonValue === isAvailable;
+                button.className = isSelected
+                    ? 'flex-1 py-3 text-xs font-bold uppercase bg-surface-container-lowest text-primary rounded-lg shadow-sm'
+                    : 'flex-1 py-3 text-xs font-bold uppercase text-on-surface/40 hover:text-on-surface transition-colors';
+            });
+        };
+
+        const getIngredient = (ingredientId) => ingredients.find((ingredient) => ingredient.id === ingredientId);
+
+        const showRecipeEmptyState = () => {
+            recipeList.innerHTML = `
+                <li class="recipe-empty-state rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">
+                    No recipe ingredients configured.
+                </li>
+            `;
+        };
+
+        const createRecipeRow = (item = {}) => {
+            if (!ingredients.length) {
+                recipeList.innerHTML = `
+                    <li class="recipe-empty-state rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">
+                        No ingredients available. Add ingredients in inventory first.
+                    </li>
+                `;
+                return;
+            }
+
+            recipeList.querySelector('.recipe-empty-state')?.remove();
+
+            const selectedIngredientId = item.ingredient_id || ingredients[0].id;
+            const selectedIngredient = getIngredient(selectedIngredientId);
+            const row = document.createElement('li');
+            row.className = 'recipe-ingredient-row grid grid-cols-1 gap-4 rounded-2xl border border-outline-variant bg-surface-container-low p-4 md:grid-cols-[minmax(0,1fr)_170px_56px]';
+            row.innerHTML = `
+                <label class="space-y-2">
+                    <span class="text-xs font-bold text-on-surface-variant">Ingredient</span>
+                    <select class="recipe-ingredient-select w-full rounded-xl border-outline bg-surface px-3 py-2 text-sm focus:border-secondary focus:ring-secondary"></select>
+                    <span class="recipe-ingredient-unit text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">${escapeHtml(selectedIngredient?.unit || item.unit || '')}</span>
+                </label>
+                <label class="space-y-2">
+                    <span class="text-xs font-bold text-on-surface-variant">Quantity per serving</span>
+                    <input class="recipe-ingredient-quantity w-full rounded-xl border-outline bg-surface px-3 py-2 text-sm focus:border-secondary focus:ring-secondary"
+                        type="number" min="0.001" step="0.001" value="${escapeHtml(item.quantity_per_serving ?? '')}" />
+                </label>
+                <button type="button"
+                    class="remove-recipe-ingredient mt-6 flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant hover:bg-error-container/30 hover:text-error"
+                    aria-label="Remove recipe ingredient">
+                    <span class="material-symbols-outlined text-sm">delete</span>
+                </button>
+            `;
+
+            const select = row.querySelector('.recipe-ingredient-select');
+            const unit = row.querySelector('.recipe-ingredient-unit');
+            ingredients.forEach((ingredient) => {
+                const option = document.createElement('option');
+                option.value = ingredient.id;
+                option.textContent = `${ingredient.name} (${ingredient.unit || '-'})`;
+                option.selected = ingredient.id === selectedIngredientId;
+                select.appendChild(option);
+            });
+
+            select.addEventListener('change', () => {
+                unit.textContent = getIngredient(select.value)?.unit || '';
+            });
+            row.querySelector('.remove-recipe-ingredient').addEventListener('click', () => {
+                row.remove();
+                if (!recipeList.querySelector('.recipe-ingredient-row')) {
+                    showRecipeEmptyState();
+                }
+            });
+
+            recipeList.appendChild(row);
+        };
+
+        const renderRecipe = (recipe) => {
+            const items = Array.isArray(recipe?.items) ? recipe.items : [];
+            recipeList.innerHTML = '';
+
+            if (!items.length) {
+                showRecipeEmptyState();
+                return;
+            }
+
+            items.forEach((item) => createRecipeRow(item));
+        };
+
+        const renderProduct = (product) => {
+            currentProduct = product;
+            const name = product.name || 'Unnamed Product';
+            const description = product.description || 'No description available.';
+
+            setFieldValue(nameElement, name);
+            setFieldValue(descriptionElement, description);
+            priceInput.value = formatPriceValue(product.selling_price);
+            imageUrlInput.value = product.image_url || '';
+            populateCategorySelect(productCategories, product.category);
+
+            const mainImage = document.getElementById('product-detail-main-image');
+            const imagePlaceholder = document.getElementById('product-detail-image-placeholder');
+            if (mainImage) {
+                mainImage.alt = name;
+                if (product.image_url) {
+                    mainImage.src = product.image_url;
+                    mainImage.classList.remove('hidden');
+                    imagePlaceholder?.classList.add('hidden');
+                } else {
+                    mainImage.removeAttribute('src');
+                    mainImage.classList.add('hidden');
+                    imagePlaceholder?.classList.remove('hidden');
+                }
+            }
+
+            setAvailability(Boolean(product.is_available));
+        };
+
+        const renderProductDetail = async () => {
+            if (!productId) {
+                setFieldValue(nameElement, 'Product not found');
+                setFieldValue(descriptionElement, 'Missing product id in the URL.');
+                return;
+            }
+
+            try {
+                const [productsResponse, product, recipe, ingredientsResponse] = await Promise.all([
+                    fetchApiData('/products').catch(() => []),
+                    fetchApiData(`/products/${encodeURIComponent(productId)}`),
+                    fetchApiData(`/products/${encodeURIComponent(productId)}/recipe`).catch(() => ({ items: [] })),
+                    fetchApiData('/ingredients').catch(() => []),
+                ]);
+                ingredients = getListData(ingredientsResponse);
+                productCategories = deriveCategories(getListData(productsResponse));
+                if (product.category && !productCategories.includes(product.category)) {
+                    productCategories = [...productCategories, product.category].sort((first, second) => first.localeCompare(second));
+                }
+                renderProduct(product);
+                renderRecipe(recipe);
+            } catch (error) {
+                console.error('Failed to load product detail:', error);
+                setFieldValue(nameElement, 'Product not found');
+                setFieldValue(descriptionElement, 'Cannot load this product. Please return to the menu and check the backend server.');
+                setStatus('Cannot load product. Please check the backend server.', 'error');
+            }
+        };
+
+        const saveProduct = async () => {
+            if (!productId || !currentProduct) return;
+
+            const payload = {
+                category: categorySelect.value || currentProduct.category,
+                name: nameElement.value.trim(),
+                description: descriptionElement.value.trim() || null,
+                selling_price: parsePriceValue(priceInput.value),
+                is_available: Boolean(currentProduct.is_available),
+                image_url: imageUrlInput.value.trim() || null,
+            };
+
+            if (!payload.name) {
+                setStatus('Product name is required.', 'error');
+                nameElement.focus();
+                return;
+            }
+
+            if (!payload.category) {
+                setStatus('Product category is required.', 'error');
+                categorySelect.focus();
+                return;
+            }
+
+            if (payload.selling_price <= 0) {
+                setStatus('Selling price must be greater than 0.', 'error');
+                priceInput.focus();
+                return;
+            }
+
+            saveButton.disabled = true;
+            saveButton.textContent = 'Saving...';
+            setStatus('Saving product...');
+
+            try {
+                const product = await fetchApiData(`/products/${encodeURIComponent(productId)}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                });
+                renderProduct(product);
+                setStatus('Product details saved.');
+            } catch (error) {
+                console.error('Failed to save product:', error);
+                setStatus(error.message || 'Cannot save product. Please check the backend server.', 'error');
+            } finally {
+                saveButton.disabled = false;
+                saveButton.textContent = 'Save Product Details';
+            }
+        };
+
+        const updateAvailability = async (isAvailable) => {
+            if (!productId || !currentProduct) return;
+
+            try {
+                setStatus('Updating availability...');
+                const product = await fetchApiData(`/products/${encodeURIComponent(productId)}/availability`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ is_available: isAvailable }),
+                });
+                renderProduct(product);
+                setStatus('Availability updated.');
+            } catch (error) {
+                console.error('Failed to update product availability:', error);
+                setStatus(error.message || 'Cannot update product availability. Please check the backend server.', 'error');
+            }
+        };
+
+        const saveRecipe = async () => {
+            if (!productId || !currentProduct) return;
+
+            const rows = [...recipeList.querySelectorAll('.recipe-ingredient-row')];
+            if (!rows.length) {
+                setStatus('Recipe must include at least one ingredient.', 'error');
+                return;
+            }
+
+            const items = rows.map((row) => ({
+                ingredient_id: row.querySelector('.recipe-ingredient-select')?.value,
+                quantity_per_serving: Number(row.querySelector('.recipe-ingredient-quantity')?.value),
+            }));
+
+            if (items.some((item) => !item.ingredient_id || item.quantity_per_serving <= 0)) {
+                setStatus('Choose an ingredient and enter a positive quantity for every recipe row.', 'error');
+                return;
+            }
+
+            const ingredientIds = items.map((item) => item.ingredient_id);
+            if (new Set(ingredientIds).size !== ingredientIds.length) {
+                setStatus('Recipe cannot contain duplicate ingredients.', 'error');
+                return;
+            }
+
+            saveRecipeButton.disabled = true;
+            saveRecipeButton.textContent = 'Saving...';
+            setStatus('Saving recipe...');
+
+            try {
+                const recipe = await fetchApiData(`/products/${encodeURIComponent(productId)}/recipe`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ items }),
+                });
+                renderRecipe(recipe);
+                setStatus('Recipe saved.');
+            } catch (error) {
+                console.error('Failed to save recipe:', error);
+                setStatus(error.message || 'Cannot save recipe. Please check the backend server.', 'error');
+            } finally {
+                saveRecipeButton.disabled = false;
+                saveRecipeButton.textContent = 'Save Recipe';
+            }
+        };
+
+        const deleteProduct = async () => {
+            if (!productId || !currentProduct) return;
+            const confirmed = window.confirm(`Delete ${currentProduct.name || 'this product'}?`);
+            if (!confirmed) return;
+
+            deleteButton.disabled = true;
+            deleteButton.textContent = 'Deleting...';
+
+            try {
+                await fetchApiData(`/products/${encodeURIComponent(productId)}`, {
+                    method: 'DELETE',
+                });
+                window.location.href = 'menu.html';
+            } catch (error) {
+                console.error('Failed to delete product:', error);
+                alert(error.message || 'Cannot delete product. Please check the backend server.');
+                deleteButton.disabled = false;
+                deleteButton.textContent = 'Delete Product';
+            }
+        };
+
+        saveButton?.addEventListener('click', saveProduct);
+        saveRecipeButton?.addEventListener('click', saveRecipe);
+        addRecipeIngredientButton?.addEventListener('click', () => createRecipeRow());
+        discardButton?.addEventListener('click', renderProductDetail);
+        deleteButton?.addEventListener('click', deleteProduct);
+        document.querySelectorAll('[data-availability]').forEach((button) => {
+            button.addEventListener('click', () => {
+                updateAvailability(button.dataset.availability === 'true');
+            });
+        });
+
+        renderProductDetail();
+    });
+  </script>
 </body>
 
 </html>

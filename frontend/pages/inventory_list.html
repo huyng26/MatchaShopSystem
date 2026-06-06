@@ -16,7 +16,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
         rel="stylesheet" />
-      <link rel="stylesheet" href="../assets/css/style.css" />
+        <link rel="stylesheet" href="../assets/css/style.css?v=header-subtitle-20260605" />
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
       <script src="../assets/js/tailwind-config.js"></script>
 </head>
@@ -32,78 +32,24 @@
         <section class="mb-10 flex justify-between items-end">
             <div>
                 <h2 class="serif text-4xl text-primary mb-2">Inventory Management</h2>
-                <div class="flex items-center gap-4 text-on-surface-variant">
-                    <div class="flex items-center gap-1.5 bg-surface-container px-3 py-1 rounded-full">
-                        <span class="material-symbols-outlined text-sm"
-                            data-icon="account_balance_wallet">account_balance_wallet</span>
-                        <span class="text-sm font-medium">Total Value: $42,850.20</span>
-                    </div>
-                    <div
-                        class="flex items-center gap-1.5 bg-error-container text-on-error-container px-3 py-1 rounded-full">
-                        <span class="material-symbols-outlined text-sm" data-icon="warning">warning</span>
-                        <span class="text-sm font-bold">4 Items Low Stock</span>
-                    </div>
-                </div>
+                <p class="page-header-subtitle">Track ingredient stock levels, unit costs, and restock activity.</p>
             </div>
             <button
+                id="open-ingredient-modal"
                 class="management-primary-action bg-secondary text-on-secondary px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-secondary/20 hover:scale-[1.02] transition-transform active:scale-95">
                 <span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
                 Add New Item
             </button>
         </section>
-        <!-- Bento Stats / Summary -->
-        <section class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-            <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
-                <p class="text-on-surface-variant text-sm font-medium mb-1">Tea Stock</p>
-                <p class="text-2xl font-serif text-primary">124 kg</p>
-                <div class="mt-4 h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
-                    <div class="h-full bg-primary w-[85%]"></div>
-                </div>
-            </div>
-            <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
-                <p class="text-on-surface-variant text-sm font-medium mb-1">Dairy/Milk</p>
-                <p class="text-2xl font-serif text-primary">480 L</p>
-                <div class="mt-4 h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
-                    <div class="h-full bg-secondary w-[42%]"></div>
-                </div>
-            </div>
-            <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
-                <p class="text-on-surface-variant text-sm font-medium mb-1">Packaging</p>
-                <p class="text-2xl font-serif text-primary">2,100 units</p>
-                <div class="mt-4 h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
-                    <div class="h-full bg-primary w-[92%]"></div>
-                </div>
-            </div>
-            <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
-                <p class="text-on-surface-variant text-sm font-medium mb-1">Monthly Restocks</p>
-                <p class="text-2xl font-serif text-primary">12 Orders</p>
-                <div class="mt-4 h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
-                    <div class="h-full bg-secondary w-[65%]"></div>
-                </div>
-            </div>
-        </section>
-        <!-- Filters -->
-        <section class="management-filter-bar mb-6 flex flex-wrap items-center gap-3">
-            <span class="text-sm font-bold text-on-surface-variant mr-2 uppercase tracking-widest">Filter by:</span>
-            <button class="px-5 py-2 bg-primary text-white rounded-full text-sm font-medium">All Ingredients</button>
-            <button
-                class="px-5 py-2 bg-surface-container-high text-on-surface-variant rounded-full text-sm font-medium hover:bg-surface-container-highest transition-colors">Matcha
-                Powder</button>
-            <button
-                class="px-5 py-2 bg-surface-container-high text-on-surface-variant rounded-full text-sm font-medium hover:bg-surface-container-highest transition-colors">Milk
-                &amp; Dairy</button>
-            <button
-                class="px-5 py-2 bg-surface-container-high text-on-surface-variant rounded-full text-sm font-medium hover:bg-surface-container-highest transition-colors">Sweeteners</button>
-            <button
-                class="px-5 py-2 bg-surface-container-high text-on-surface-variant rounded-full text-sm font-medium hover:bg-surface-container-highest transition-colors">Packaging</button>
-            <div class="ml-auto flex items-center gap-2">
+        <section class="flex flex-wrap items-center justify-between gap-4">
+            <div class="flex flex-wrap items-center gap-3">
                 <button
-                    class="p-2 bg-surface-container text-on-surface-variant rounded-lg hover:bg-surface-container-highest">
-                    <span class="material-symbols-outlined" data-icon="filter_list">filter_list</span>
-                </button>
-                <button
-                    class="p-2 bg-surface-container text-on-surface-variant rounded-lg hover:bg-surface-container-highest">
-                    <span class="material-symbols-outlined" data-icon="grid_view">grid_view</span>
+                    id="low-stock-filter"
+                    type="button"
+                    class="inline-flex items-center gap-2 rounded-full bg-surface-container-high px-5 py-2.5 text-sm font-extrabold text-primary transition-colors hover:bg-error-container hover:text-error"
+                    aria-pressed="false">
+                    <span class="material-symbols-outlined text-[20px]" data-icon="warning">warning</span>
+                    Low Stock
                 </button>
             </div>
         </section>
@@ -112,236 +58,313 @@
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-surface-container-low/50 border-b border-outline-variant/10">
-                        <th class="px-6 py-5 text-sm font-bold text-primary-container/60 uppercase tracking-wider">Item
-                            Name</th>
-                        <th class="px-6 py-5 text-sm font-bold text-primary-container/60 uppercase tracking-wider">
-                            Category</th>
-                        <th class="px-6 py-5 text-sm font-bold text-primary-container/60 uppercase tracking-wider">
-                            Current Stock</th>
-                        <th class="px-6 py-5 text-sm font-bold text-primary-container/60 uppercase tracking-wider">Unit
-                            Price</th>
-                        <th class="px-6 py-5 text-sm font-bold text-primary-container/60 uppercase tracking-wider">Last
-                            Restocked</th>
-                        <th class="px-6 py-5 text-sm font-bold text-primary-container/60 uppercase tracking-wider">
-                            Supplier</th>
-                        <th
-                            class="px-6 py-5 text-sm font-bold text-primary-container/60 uppercase tracking-wider text-right">
-                            Actions</th>
+                        <th class="px-6 py-5 text-sm font-bold text-primary-container/60 uppercase tracking-wider">Ingredient Name</th>
+                        <th class="px-6 py-5 text-sm font-bold text-primary-container/60 uppercase tracking-wider">Unit</th>
+                        <th class="px-6 py-5 text-sm font-bold text-primary-container/60 uppercase tracking-wider">Current Stock</th>
+                        <th class="px-6 py-5 text-sm font-bold text-primary-container/60 uppercase tracking-wider">Minimum Threshold</th>
+                        <th class="px-6 py-5 text-sm font-bold text-primary-container/60 uppercase tracking-wider">Unit Price</th>
+                        <th class="px-6 py-5 text-sm font-bold text-primary-container/60 uppercase tracking-wider">Status</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-outline-variant/5">
-                    <!-- Row 1 -->
-                    <tr class="hover:bg-surface-container-low transition-colors group cursor-pointer"
-                        onclick="window.location='inventory_detail.html'">
-                        <td class="px-6 py-5">
-                            <div class="flex items-center gap-3">
-                                <div
-                                    class="w-10 h-10 rounded-lg bg-primary-container/5 flex items-center justify-center">
-                                    <span class="material-symbols-outlined text-primary" data-icon="eco">eco</span>
-                                </div>
-                                <div>
-                                    <a class="font-bold text-on-surface hover:text-secondary"
-                                        href="inventory_detail.html">Ceremonial Grade Matcha</a>
-                                    <p class="text-xs text-on-surface-variant">Uji, Kyoto Origin</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-5">
-                            <span class="px-3 py-1 bg-primary/5 text-primary text-xs font-bold rounded-md">Tea</span>
-                        </td>
-                        <td class="px-6 py-5">
-                            <div class="flex items-center gap-2">
-                                <div class="w-2 h-2 rounded-full bg-secondary"></div>
-                                <span class="text-sm font-bold">12.5 kg</span>
-                                <span
-                                    class="text-[10px] bg-secondary/10 text-secondary px-2 py-0.5 rounded uppercase font-bold">In
-                                    Stock</span>
-                            </div>
-                        </td>
-                        <td class="px-6 py-5 text-sm font-medium">$185.00/kg</td>
-                        <td class="px-6 py-5 text-sm text-on-surface-variant">Oct 12, 2023</td>
-                        <td class="px-6 py-5 text-sm text-on-surface-variant">Kyoto Tea Collective</td>
-                        <td class="px-6 py-5 text-right">
-                            <button
-                                class="text-secondary font-bold text-sm hover:underline flex items-center justify-end gap-1 ml-auto">
-                                <span class="material-symbols-outlined text-lg" data-icon="autorenew">autorenew</span>
-                                Restock
-                            </button>
-                        </td>
-                    </tr>
-                    <!-- Row 2 -->
-                    <tr class="hover:bg-surface-container-low transition-colors group cursor-pointer"
-                        onclick="window.location='inventory_detail.html'">
-                        <td class="px-6 py-5">
-                            <div class="flex items-center gap-3">
-                                <div
-                                    class="w-10 h-10 rounded-lg bg-primary-container/5 flex items-center justify-center">
-                                    <span class="material-symbols-outlined text-primary"
-                                        data-icon="opacity">opacity</span>
-                                </div>
-                                <div>
-                                    <a class="font-bold text-on-surface hover:text-secondary"
-                                        href="inventory_detail.html">Oat Milk Barista Edition</a>
-                                    <p class="text-xs text-on-surface-variant">Case of 12x1L</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-5">
-                            <span class="px-3 py-1 bg-primary/5 text-primary text-xs font-bold rounded-md">Milk</span>
-                        </td>
-                        <td class="px-6 py-5">
-                            <div class="flex items-center gap-2">
-                                <div class="w-2 h-2 rounded-full bg-error"></div>
-                                <span class="text-sm font-bold">14 Cases</span>
-                                <span
-                                    class="text-[10px] bg-error-container text-error px-2 py-0.5 rounded uppercase font-bold">Low
-                                    Stock</span>
-                            </div>
-                        </td>
-                        <td class="px-6 py-5 text-sm font-medium">$42.00/case</td>
-                        <td class="px-6 py-5 text-sm text-on-surface-variant">Oct 28, 2023</td>
-                        <td class="px-6 py-5 text-sm text-on-surface-variant">Oatly Distribution</td>
-                        <td class="px-6 py-5 text-right">
-                            <button
-                                class="bg-primary-container text-on-primary px-4 py-2 rounded-lg font-bold text-sm flex items-center justify-end gap-1 ml-auto">
-                                <span class="material-symbols-outlined text-lg" data-icon="autorenew">autorenew</span>
-                                Restock
-                            </button>
-                        </td>
-                    </tr>
-                    <!-- Row 3 -->
-                    <tr class="hover:bg-surface-container-low transition-colors group cursor-pointer"
-                        onclick="window.location='inventory_detail.html'">
-                        <td class="px-6 py-5">
-                            <div class="flex items-center gap-3">
-                                <div
-                                    class="w-10 h-10 rounded-lg bg-primary-container/5 flex items-center justify-center">
-                                    <span class="material-symbols-outlined text-primary"
-                                        data-icon="shopping_bag">shopping_bag</span>
-                                </div>
-                                <div>
-                                    <a class="font-bold text-on-surface hover:text-secondary"
-                                        href="inventory_detail.html">Takeaway Cups (12oz)</a>
-                                    <p class="text-xs text-on-surface-variant">Biodegradable PLA</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-5">
-                            <span
-                                class="px-3 py-1 bg-primary/5 text-primary text-xs font-bold rounded-md">Packaging</span>
-                        </td>
-                        <td class="px-6 py-5">
-                            <div class="flex items-center gap-2">
-                                <div class="w-2 h-2 rounded-full bg-secondary"></div>
-                                <span class="text-sm font-bold">2,500 pcs</span>
-                                <span
-                                    class="text-[10px] bg-secondary/10 text-secondary px-2 py-0.5 rounded uppercase font-bold">In
-                                    Stock</span>
-                            </div>
-                        </td>
-                        <td class="px-6 py-5 text-sm font-medium">$0.18/unit</td>
-                        <td class="px-6 py-5 text-sm text-on-surface-variant">Sep 15, 2023</td>
-                        <td class="px-6 py-5 text-sm text-on-surface-variant">EcoPack Global</td>
-                        <td class="px-6 py-5 text-right">
-                            <button
-                                class="text-secondary font-bold text-sm hover:underline flex items-center justify-end gap-1 ml-auto">
-                                <span class="material-symbols-outlined text-lg" data-icon="autorenew">autorenew</span>
-                                Restock
-                            </button>
-                        </td>
-                    </tr>
-                    <!-- Row 4 -->
-                    <tr class="hover:bg-surface-container-low transition-colors group cursor-pointer"
-                        onclick="window.location='inventory_detail.html'">
-                        <td class="px-6 py-5">
-                            <div class="flex items-center gap-3">
-                                <div
-                                    class="w-10 h-10 rounded-lg bg-primary-container/5 flex items-center justify-center">
-                                    <span class="material-symbols-outlined text-primary"
-                                        data-icon="calendar_month">calendar_month</span>
-                                </div>
-                                <div>
-                                    <a class="font-bold text-on-surface hover:text-secondary"
-                                        href="inventory_detail.html">Organic Agave Syrup</a>
-                                    <p class="text-xs text-on-surface-variant">5 Gallon Pail</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-5">
-                            <span
-                                class="px-3 py-1 bg-primary/5 text-primary text-xs font-bold rounded-md">Sweeteners</span>
-                        </td>
-                        <td class="px-6 py-5">
-                            <div class="flex items-center gap-2">
-                                <div class="w-2 h-2 rounded-full bg-outline"></div>
-                                <span class="text-sm font-bold">0 Pails</span>
-                                <span
-                                    class="text-[10px] bg-surface-container-highest text-on-surface-variant px-2 py-0.5 rounded uppercase font-bold">Out
-                                    of Stock</span>
-                            </div>
-                        </td>
-                        <td class="px-6 py-5 text-sm font-medium">$85.00/pail</td>
-                        <td class="px-6 py-5 text-sm text-on-surface-variant">Aug 30, 2023</td>
-                        <td class="px-6 py-5 text-sm text-on-surface-variant">Naturals Wholesale</td>
-                        <td class="px-6 py-5 text-right">
-                            <button
-                                class="bg-secondary text-on-secondary px-4 py-2 rounded-lg font-bold text-sm flex items-center justify-end gap-1 ml-auto">
-                                <span class="material-symbols-outlined text-lg"
-                                    data-icon="shopping_cart">shopping_cart</span>
-                                Order Now
-                            </button>
-                        </td>
+                <tbody id="ingredients-table-body" class="divide-y divide-outline-variant/5">
+                    <tr>
+                        <td class="px-6 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="6">Loading ingredients...</td>
                     </tr>
                 </tbody>
             </table>
             <!-- Pagination / Footer -->
             <div
                 class="management-table-footer px-6 py-4 bg-surface-container-low/30 flex justify-between items-center border-t border-outline-variant/10">
-                <p class="text-xs text-on-surface-variant font-medium">Showing 1-4 of 24 items</p>
-                <div class="flex gap-2">
-                    <button class="p-2 rounded-lg border border-outline-variant/20 hover:bg-white transition-colors">
-                        <span class="material-symbols-outlined text-sm" data-icon="chevron_left">chevron_left</span>
-                    </button>
-                    <button class="px-3 py-1 rounded-lg bg-primary text-white text-sm font-bold">1</button>
-                    <button class="px-3 py-1 rounded-lg hover:bg-white text-sm font-medium">2</button>
-                    <button class="px-3 py-1 rounded-lg hover:bg-white text-sm font-medium">3</button>
-                    <button class="p-2 rounded-lg border border-outline-variant/20 hover:bg-white transition-colors">
-                        <span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
-                    </button>
-                </div>
+                <p id="ingredients-table-count" class="text-xs text-on-surface-variant font-medium">Loading ingredients...</p>
             </div>
-        </div>
-        <!-- Glassmorphism Floating Order Panel (Optional Designer Touch) -->
-        <div
-            style="display: none",
-            class="fixed bottom-8 right-8 w-80 bg-white/70 backdrop-blur-2xl border border-white/40 p-6 rounded-2xl shadow-[0_32px_64px_-12px_rgba(0,44,4,0.15)] hidden lg:block">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="serif text-xl font-bold text-primary">Draft Restock</h3>
-                <span class="material-symbols-outlined text-on-surface-variant cursor-pointer"
-                    data-icon="close">close</span>
-            </div>
-            <div class="space-y-4 mb-6">
-                <div class="flex justify-between items-center">
-                    <span class="text-sm font-medium">Oat Milk Barista</span>
-                    <span class="text-sm font-bold">10 Cases</span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-sm font-medium">Organic Agave</span>
-                    <span class="text-sm font-bold">2 Pails</span>
-                </div>
-                <div class="border-t border-primary/10 pt-4 flex justify-between items-center">
-                    <span class="text-sm font-bold">Estimated Total</span>
-                    <span class="text-lg font-serif text-secondary">$590.00</span>
-                </div>
-            </div>
-            <button
-                class="w-full bg-primary text-white py-3 rounded-xl font-bold hover:shadow-lg transition-all active:scale-95">
-                Review &amp; Confirm Order
-            </button>
         </div>
     </main>
+    <div id="ingredient-modal"
+        class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4 py-8 backdrop-blur-sm">
+        <div class="w-full max-w-2xl rounded-2xl bg-surface-container-lowest shadow-2xl">
+            <div class="flex items-center justify-between border-b border-outline-variant px-8 py-5">
+                <div>
+                    <h2 class="font-serif text-3xl text-primary">New Ingredient</h2>
+                    <p class="text-sm text-on-surface-variant">Create a tracked inventory ingredient.</p>
+                </div>
+                <button id="close-ingredient-modal" type="button"
+                    class="flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
+                    aria-label="Close ingredient modal">
+                    <span class="material-symbols-outlined" data-icon="close">close</span>
+                </button>
+            </div>
+            <form id="ingredient-form" class="space-y-5 px-8 py-7">
+                <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                    <label class="space-y-2 md:col-span-2">
+                        <span class="text-sm font-bold text-on-surface">Ingredient Name</span>
+                        <input id="ingredient-name" type="text" required
+                            class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary"
+                            placeholder="E.g. Matcha powder" />
+                    </label>
+                    <label class="space-y-2">
+                        <span class="text-sm font-bold text-on-surface">Unit</span>
+                        <input id="ingredient-unit" type="text" required
+                            class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary"
+                            placeholder="kg, liter, unit" />
+                    </label>
+                    <label class="space-y-2">
+                        <span class="text-sm font-bold text-on-surface">Unit Price</span>
+                        <input id="ingredient-cost" type="number" min="0" step="0.01" required
+                            class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary"
+                            placeholder="E.g. 120000" />
+                    </label>
+                    <label class="space-y-2">
+                        <span class="text-sm font-bold text-on-surface">Current Stock</span>
+                        <input id="ingredient-stock" type="number" min="0" step="0.001" value="0" required
+                            class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
+                    </label>
+                    <label class="space-y-2">
+                        <span class="text-sm font-bold text-on-surface">Minimum Threshold</span>
+                        <input id="ingredient-threshold" type="number" min="0" step="0.001" value="0" required
+                            class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
+                    </label>
+                </div>
+                <p id="ingredient-form-status" class="hidden text-sm font-bold"></p>
+                <div class="flex justify-end gap-3 border-t border-outline-variant pt-5">
+                    <button id="cancel-ingredient-modal" type="button"
+                        class="rounded-full bg-surface-container-high px-6 py-2.5 text-sm font-bold text-on-surface hover:bg-surface-container-highest">
+                        Cancel
+                    </button>
+                    <button id="save-ingredient" type="submit"
+                        class="rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-white hover:bg-primary/90">
+                        Save Ingredient
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
   <script src="../assets/js/layout.js?v=fm-20260530"></script>
   <script src="../assets/js/main.js?v=fm-20260530"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const tableBody = document.getElementById('ingredients-table-body');
+        const tableCount = document.getElementById('ingredients-table-count');
+        const openModalButton = document.getElementById('open-ingredient-modal');
+        const modal = document.getElementById('ingredient-modal');
+        const closeModalButton = document.getElementById('close-ingredient-modal');
+        const cancelModalButton = document.getElementById('cancel-ingredient-modal');
+        const ingredientForm = document.getElementById('ingredient-form');
+        const saveIngredientButton = document.getElementById('save-ingredient');
+        const ingredientFormStatus = document.getElementById('ingredient-form-status');
+        const lowStockFilterButton = document.getElementById('low-stock-filter');
+        const API_BASE_URL = window.MATCHA_API_BASE_URL || 'http://localhost:8000/api/v1';
+        let lowStockOnly = false;
+
+        const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+        }[character]));
+
+        const formatNumber = (value) => new Intl.NumberFormat('vi-VN').format(Number(value) || 0);
+        const formatUnitPrice = (value) => new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND',
+            maximumFractionDigits: 0,
+        }).format(Number(value) || 0);
+
+        const setFormStatus = (message, type = 'info') => {
+            ingredientFormStatus.textContent = message;
+            ingredientFormStatus.className = `text-sm font-bold ${type === 'error' ? 'text-error' : 'text-secondary'}`;
+            ingredientFormStatus.classList.toggle('hidden', !message);
+        };
+
+        const openModal = () => {
+            setFormStatus('');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.classList.add('overflow-hidden');
+        };
+
+        const closeModal = () => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.classList.remove('overflow-hidden');
+        };
+
+        const getListData = (data) => {
+            if (Array.isArray(data)) return data;
+            if (Array.isArray(data?.items)) return data.items;
+            return [];
+        };
+
+        const fetchApiData = async (path, options = {}) => {
+            const response = await fetch(`${API_BASE_URL}${path}`, options);
+            const payload = await response.json().catch(() => null);
+
+            if (!response.ok || payload?.success === false) {
+                throw new Error(payload?.message || 'Request failed');
+            }
+
+            return payload?.data ?? payload;
+        };
+
+        const getIngredientStatus = (ingredient) => {
+            const currentStock = Number(ingredient.current_stock) || 0;
+            const minimumThreshold = Number(ingredient.minimum_threshold) || 0;
+
+            if (currentStock <= 0) {
+                return {
+                    label: 'Out of Stock',
+                    dotClass: 'bg-outline',
+                    badgeClass: 'bg-surface-container-highest text-on-surface-variant',
+                };
+            }
+
+            if (currentStock <= minimumThreshold) {
+                return {
+                    label: 'Low Stock',
+                    dotClass: 'bg-error',
+                    badgeClass: 'bg-error-container text-error',
+                };
+            }
+
+            return {
+                label: 'In Stock',
+                dotClass: 'bg-secondary',
+                badgeClass: 'bg-secondary/10 text-secondary',
+            };
+        };
+
+        const updateLowStockFilterState = () => {
+            lowStockFilterButton.setAttribute('aria-pressed', String(lowStockOnly));
+            lowStockFilterButton.classList.toggle('bg-error-container', lowStockOnly);
+            lowStockFilterButton.classList.toggle('text-error', lowStockOnly);
+            lowStockFilterButton.classList.toggle('bg-surface-container-high', !lowStockOnly);
+            lowStockFilterButton.classList.toggle('text-primary', !lowStockOnly);
+        };
+
+        const fetchIngredients = async () => {
+            return fetchApiData(lowStockOnly ? '/inventory/low-stock' : '/ingredients');
+        };
+
+        const renderIngredients = (ingredients) => {
+            tableBody.innerHTML = '';
+            tableCount.textContent = lowStockOnly
+                ? `Showing ${ingredients.length} ingredient${ingredients.length === 1 ? '' : 's'} that need restocking`
+                : `Showing ${ingredients.length} ingredient${ingredients.length === 1 ? '' : 's'}`;
+
+            if (!ingredients.length) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td class="px-6 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="6">${lowStockOnly ? 'No low-stock ingredients found.' : 'No ingredients found.'}</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            ingredients.forEach((ingredient) => {
+                const status = getIngredientStatus(ingredient);
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-surface-container-low transition-colors group cursor-pointer';
+                row.addEventListener('click', () => {
+                    window.location.href = ingredient.id
+                        ? `inventory_detail.html?id=${encodeURIComponent(ingredient.id)}`
+                        : 'inventory_detail.html';
+                });
+                row.innerHTML = `
+                    <td class="px-6 py-5">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-primary-container/5 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-primary" data-icon="inventory_2">inventory_2</span>
+                            </div>
+                            <div>
+                                <div class="font-extrabold text-primary group-hover:text-secondary">${escapeHtml(ingredient.name)}</div>
+                                <p class="text-xs text-on-surface-variant">${escapeHtml(ingredient.id)}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-5 text-sm font-medium text-on-surface-variant">${escapeHtml(ingredient.unit)}</td>
+                    <td class="px-6 py-5 text-sm font-bold">${escapeHtml(formatNumber(ingredient.current_stock))}</td>
+                    <td class="px-6 py-5 text-sm font-bold">${escapeHtml(formatNumber(ingredient.minimum_threshold))}</td>
+                    <td class="px-6 py-5 text-sm font-medium">${escapeHtml(formatUnitPrice(ingredient.cost_per_unit))}</td>
+                    <td class="px-6 py-5">
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 rounded-full ${status.dotClass}"></div>
+                            <span class="text-[10px] ${status.badgeClass} px-2 py-0.5 rounded uppercase font-bold">${status.label}</span>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        };
+
+        const loadIngredients = async () => {
+            try {
+                const ingredients = await fetchIngredients();
+                renderIngredients(getListData(ingredients));
+            } catch (error) {
+                console.error('Failed to load ingredients:', error);
+                tableCount.textContent = 'Cannot load ingredients';
+                tableBody.innerHTML = `
+                    <tr>
+                        <td class="px-6 py-8 text-center text-sm font-bold text-error" colspan="6">Cannot load ingredients. Please check the backend server.</td>
+                    </tr>
+                `;
+            }
+        };
+
+        openModalButton.addEventListener('click', openModal);
+        closeModalButton.addEventListener('click', closeModal);
+        cancelModalButton.addEventListener('click', closeModal);
+        lowStockFilterButton.addEventListener('click', async () => {
+            lowStockOnly = !lowStockOnly;
+            updateLowStockFilterState();
+            await loadIngredients();
+        });
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        ingredientForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            if (!ingredientForm.reportValidity()) return;
+
+            const payload = {
+                name: document.getElementById('ingredient-name').value.trim(),
+                unit: document.getElementById('ingredient-unit').value.trim(),
+                current_stock: Number(document.getElementById('ingredient-stock').value),
+                cost_per_unit: Number(document.getElementById('ingredient-cost').value),
+                minimum_threshold: Number(document.getElementById('ingredient-threshold').value),
+            };
+
+            saveIngredientButton.disabled = true;
+            saveIngredientButton.textContent = 'Saving...';
+            setFormStatus('Saving ingredient...');
+
+            try {
+                await fetchApiData('/ingredients', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                });
+                ingredientForm.reset();
+                closeModal();
+                await loadIngredients();
+            } catch (error) {
+                console.error('Failed to create ingredient:', error);
+                setFormStatus(error.message || 'Cannot create ingredient. Please check the backend server.', 'error');
+            } finally {
+                saveIngredientButton.disabled = false;
+                saveIngredientButton.textContent = 'Save Ingredient';
+            }
+        });
+
+        updateLowStockFilterState();
+        loadIngredients();
+    });
+  </script>
 </body>
 
 </html>

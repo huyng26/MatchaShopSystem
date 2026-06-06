@@ -1,242 +1,684 @@
 <!DOCTYPE html>
+<html class="light" lang="en">
 
-<html class="light" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Delivery Dashboard | The Botanical Atelier</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-  <script src="../assets/js/tailwind-config.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,600;6..72,700;6..72,800&amp;family=Manrope:wght@300;400;500;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="../assets/css/style.css" />
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Delivery Management | The Botanical Atelier</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="../assets/js/tailwind-config.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,600;6..72,700;6..72,800&amp;family=Manrope:wght@300;400;500;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../assets/css/style.css?v=header-subtitle-20260605" />
 </head>
+
 <body class="page-delivery-manage bg-background text-on-surface antialiased overflow-x-hidden" data-page="delivery-manage">
-<!-- SideNavBar -->
-<aside id="app-sidebar" class="h-screen w-72 fixed left-0 top-0 z-40 bg-[#002c04] dark:bg-[#001a02] shadow-[32px_0_64px_-12px_rgba(0,44,4,0.08)] flex flex-col py-8 px-6"></aside>
-<!-- Main Content Area -->
-<main class="ml-72 min-h-screen">
-<!-- TopAppBar -->
-<header id="app-topbar" class="fixed top-0 right-0 left-72 h-20 z-30 bg-[#f9f9f8]/80 dark:bg-[#191c1c]/80 backdrop-blur-2xl flex items-center justify-between px-10"></header>
-<!-- Dashboard Canvas -->
-<div class="p-8 pt-24 grid grid-cols-12 gap-8">
-<!-- Bento Grid Section: Stats & Map -->
-<div class="col-span-12 lg:col-span-8 space-y-8">
-<!-- Quick Insights -->
-<div class="grid grid-cols-3 gap-6">
-<div class="bg-surface-container-lowest p-6 rounded-xl shadow-[32px_0px_64px_rgba(0,44,4,0.02)]">
-<p class="font-label text-label-sm text-on-surface-variant uppercase tracking-widest mb-2">Pending Batches</p>
-<div class="flex items-end gap-2">
-<span class="font-headline text-4xl font-bold text-primary">12</span>
-<span class="text-secondary font-bold text-sm mb-1">+2 from 1h ago</span>
-</div>
-</div>
-<div class="bg-surface-container-lowest p-6 rounded-xl shadow-[32px_0px_64px_rgba(0,44,4,0.02)]">
-<p class="font-label text-label-sm text-on-surface-variant uppercase tracking-widest mb-2">Active Shippers</p>
-<div class="flex items-end gap-2">
-<span class="font-headline text-4xl font-bold text-primary">08</span>
-<span class="text-on-surface-variant font-medium text-sm mb-1">out of 10</span>
-</div>
-</div>
-<div class="bg-surface-container-lowest p-6 rounded-xl shadow-[32px_0px_64px_rgba(0,44,4,0.02)]">
-<p class="font-label text-label-sm text-on-surface-variant uppercase tracking-widest mb-2">Avg. Delivery</p>
-<div class="flex items-end gap-2">
-<span class="font-headline text-4xl font-bold text-primary">24</span>
-<span class="text-on-surface-variant font-medium text-sm mb-1">minutes</span>
-</div>
-</div>
-</div>
-<!-- Stylized Real-time Map -->
-<section class="bg-surface-container-lowest rounded-xl p-2 shadow-[32px_0px_64px_rgba(0,44,4,0.02)] overflow-hidden relative group">
-<div class="absolute top-6 left-6 z-10 glass-panel px-4 py-2 rounded-full flex items-center gap-2 border border-white/20">
-<span class="w-2 h-2 bg-secondary rounded-full animate-pulse"></span>
-<span class="font-label text-label-sm font-bold text-primary">Active Delivery Routes</span>
-</div>
-<div class="h-[400px] w-full rounded-lg bg-surface-container flex items-center justify-center relative overflow-hidden">
-<!-- Simulated Map Background -->
-<div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle at 2px 2px, #002c04 1px, transparent 0); background-size: 24px 24px;"></div>
-<!-- Stylized Paths -->
-<svg class="absolute inset-0 w-full h-full" viewbox="0 0 800 400">
-<path class="opacity-40" d="M100,300 Q200,100 400,200 T700,100" fill="none" stroke="#006e08" stroke-dasharray="8 4" stroke-width="2"></path>
-<path class="opacity-20" d="M50,50 L300,350 L750,200" fill="none" stroke="#002c04" stroke-dasharray="10 5" stroke-width="2"></path>
-<!-- Active Units -->
-<circle class="animate-bounce" cx="280" cy="180" fill="#3ba633" r="6">
-<title>Shipper: Leo - Transit</title>
-</circle>
-<circle cx="550" cy="150" fill="#3ba633" r="6">
-<title>Shipper: Sarah - Arrived</title>
-</circle>
-</svg>
-<img class="absolute inset-0 object-cover opacity-10 mix-blend-multiply pointer-events-none" data-alt="A minimalist, high-contrast urban map pattern seen from a bird's eye view. The map features clean geometric lines and blocks representing a sophisticated city layout. The color palette is restricted to shades of parchment, soft grays, and deep botanical greens. The aesthetic is editorial and professional, avoiding cluttered cartography for a clean, brand-aligned visual." data-location="Tokyo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZvfprQGj-IkznITM7PSUFdxlMkMyuCnyxHRdictir8oSOXkgRLxAJ5fxy6Vr6UWtoxp8jCKQbxAhTK5ZovWyMVv4QTSk-YyCbig_ihHrXAnMHYoEiupulvHUowTsejeiJlgCsjvvKY9ck30eXohbEpSQtVGggeDFk7gqKTPoM4EJ59uZ0LXBy54d2dBXPd_99kZI-W--FYs6D7RKxwUsWYXzzX4APkAUQ9N4iH0fjIp7yLSQCFsGkHk9HK0KjkdLG764DGPoOR9ko"/>
-<span class="text-on-surface-variant/40 font-headline italic">Fleet Tracking Live System</span>
-</div>
-</section>
-<!-- COD Reconciliation Table -->
-<section class="bg-surface-container-lowest rounded-xl p-8 shadow-[32px_0px_64px_rgba(0,44,4,0.02)]">
-<div class="flex justify-between items-end mb-8">
-<div>
-<h3 class="font-headline text-2xl font-bold text-primary">COD Reconciliation</h3>
-<p class="font-body text-body-md text-on-surface-variant">Verify collected payments for today's completed deliveries.</p>
-</div>
-<button class="bg-secondary text-on-secondary px-6 py-2 rounded-full font-bold text-sm flex items-center gap-2 hover:opacity-90 transition-all">
-<span class="material-symbols-outlined text-sm" data-icon="check_circle">check_circle</span>
-                            Finalize All
-                        </button>
-</div>
-<div class="overflow-hidden">
-<table class="w-full">
-<thead>
-<tr class="text-left border-b border-surface-container-high">
-<th class="pb-4 font-label text-label-sm text-on-surface-variant uppercase tracking-widest">Order ID</th>
-<th class="pb-4 font-label text-label-sm text-on-surface-variant uppercase tracking-widest">Shipper</th>
-<th class="pb-4 font-label text-label-sm text-on-surface-variant uppercase tracking-widest">Amount</th>
-<th class="pb-4 font-label text-label-sm text-on-surface-variant uppercase tracking-widest">Method</th>
-<th class="pb-4 font-label text-label-sm text-on-surface-variant uppercase tracking-widest">Status</th>
-<th class="pb-4"></th>
-</tr>
-</thead>
-<tbody class="divide-y divide-surface-container">
-<tr class="group hover:bg-surface-container-low transition-colors">
-<td class="py-4 font-body font-bold text-primary">#VER-9402</td>
-<td class="py-4">Marcus Reed</td>
-<td class="py-4 font-body font-bold">$124.50</td>
-<td class="py-4 text-on-surface-variant">Cash</td>
-<td class="py-4">
-<span class="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-xs font-bold uppercase tracking-tighter">Collected</span>
-</td>
-<td class="py-4 text-right">
-<button class="p-2 rounded-full hover:bg-white text-on-surface-variant opacity-0 group-hover:opacity-100 transition-all">
-<span class="material-symbols-outlined">receipt_long</span>
-</button>
-</td>
-</tr>
-<tr class="group hover:bg-surface-container-low transition-colors">
-<td class="py-4 font-body font-bold text-primary">#VER-9405</td>
-<td class="py-4">Elena Thorne</td>
-<td class="py-4 font-body font-bold">$89.00</td>
-<td class="py-4 text-on-surface-variant">Link/QR</td>
-<td class="py-4">
-<span class="px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-xs font-bold uppercase tracking-tighter">Pending</span>
-</td>
-<td class="py-4 text-right">
-<button class="p-2 rounded-full hover:bg-white text-on-surface-variant opacity-0 group-hover:opacity-100 transition-all">
-<span class="material-symbols-outlined">receipt_long</span>
-</button>
-</td>
-</tr>
-<tr class="group hover:bg-surface-container-low transition-colors">
-<td class="py-4 font-body font-bold text-primary">#VER-9408</td>
-<td class="py-4">Marcus Reed</td>
-<td class="py-4 font-body font-bold">$210.20</td>
-<td class="py-4 text-on-surface-variant">Cash</td>
-<td class="py-4">
-<span class="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-xs font-bold uppercase tracking-tighter">Collected</span>
-</td>
-<td class="py-4 text-right">
-<button class="p-2 rounded-full hover:bg-white text-on-surface-variant opacity-0 group-hover:opacity-100 transition-all">
-<span class="material-symbols-outlined">receipt_long</span>
-</button>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</section>
-</div>
-<!-- Right Sidebar: Batching & Shippers -->
-<div class="col-span-12 lg:col-span-4 space-y-8">
-<!-- Batch Orders Panel -->
-<section class="bg-primary dark:bg-primary-container text-on-primary p-8 rounded-xl shadow-xl">
-<div class="flex justify-between items-center mb-6">
-<h3 class="font-headline text-2xl font-bold">Batch Orders</h3>
-<span class="bg-secondary px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">New</span>
-</div>
-<p class="text-on-primary-container/80 text-sm mb-6">Grouping pending orders by district for optimized delivery.</p>
-<div class="space-y-4 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
-<!-- Batch Card 1 -->
-<div class="bg-on-primary-fixed-variant/20 p-4 rounded-xl border border-on-primary-fixed-variant/10 hover:border-secondary/50 transition-all cursor-pointer group">
-<div class="flex justify-between items-start mb-3">
-<span class="font-body font-bold">District A: Minato-ku</span>
-<span class="text-xs bg-primary px-2 py-0.5 rounded border border-on-primary-container/20">6 Orders</span>
-</div>
-<div class="flex -space-x-2 mb-4">
-<div class="w-8 h-8 rounded-full border-2 border-primary bg-surface-container-highest flex items-center justify-center text-[10px] font-bold text-primary">TM</div>
-<div class="w-8 h-8 rounded-full border-2 border-primary bg-surface-container-highest flex items-center justify-center text-[10px] font-bold text-primary">SC</div>
-<div class="w-8 h-8 rounded-full border-2 border-primary bg-surface-container-highest flex items-center justify-center text-[10px] font-bold text-primary">+4</div>
-</div>
-<button class="w-full bg-on-primary text-primary py-2 rounded-lg text-xs font-bold group-hover:bg-secondary group-hover:text-on-secondary transition-all">Create Group</button>
-</div>
-<!-- Batch Card 2 -->
-<div class="bg-on-primary-fixed-variant/20 p-4 rounded-xl border border-on-primary-fixed-variant/10 hover:border-secondary/50 transition-all cursor-pointer group">
-<div class="flex justify-between items-start mb-3">
-<span class="font-body font-bold">District B: Shibuya</span>
-<span class="text-xs bg-primary px-2 py-0.5 rounded border border-on-primary-container/20">4 Orders</span>
-</div>
-<div class="flex -space-x-2 mb-4">
-<div class="w-8 h-8 rounded-full border-2 border-primary bg-surface-container-highest flex items-center justify-center text-[10px] font-bold text-primary">KA</div>
-<div class="w-8 h-8 rounded-full border-2 border-primary bg-surface-container-highest flex items-center justify-center text-[10px] font-bold text-primary">RY</div>
-</div>
-<button class="w-full bg-on-primary text-primary py-2 rounded-lg text-xs font-bold group-hover:bg-secondary group-hover:text-on-secondary transition-all">Create Group</button>
-</div>
-</div>
-</section>
-<!-- Shipper Assignment Panel -->
-<section class="bg-surface-container-lowest p-8 rounded-xl shadow-[32px_0px_64px_rgba(0,44,4,0.02)]">
-<div class="flex justify-between items-center mb-6">
-<h3 class="font-headline text-2xl font-bold text-primary">Active Shippers</h3>
-<button class="text-secondary text-sm font-bold hover:underline">View All</button>
-</div>
-<div class="space-y-6">
-<!-- Shipper 1 -->
-<div class="flex items-center gap-4">
-<img alt="Shipper Avatar" class="w-12 h-12 rounded-full object-cover grayscale hover:grayscale-0 transition-all" data-alt="A close-up high-resolution portrait of a young professional delivery driver, looking friendly and energetic. The style is bright and clean with a minimalist background. The lighting is crisp, emphasizing professional reliability. Soft green color accents in the clothing align with a high-end botanical brand aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxKD7HXvQ1oDto-Sx0LA_HrWsoiXQzukWlnBTorVIDVJxtnl_YKmZjIwhMRXCHkZ9eo1nkfz1m8hn92LtBKoVdXR2zjiHsqsuwLqgXENWZyIEvEWf2W96BMsB43Fi06YDQdlc4aynJvI8BnXEzqLZcPVEoSr_zD2aiVnm4c__JXd1mktNaMRh549qjpTfpelvXcxgOpty7Ws_3ebVZVIMcAlHxVT_fZ9mIbowDCU9g97D7DFefZeOtbEVawnBbvNXUOBCDf7lvdPzo"/>
-<div class="flex-1">
-<div class="flex justify-between">
-<p class="font-body font-bold text-sm">Marcus Reed</p>
-<span class="text-[10px] font-bold text-secondary uppercase tracking-widest">Active</span>
-</div>
-<div class="mt-1 w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
-<div class="bg-secondary h-full rounded-full" style="width: 75%;"></div>
-</div>
-<p class="text-[10px] text-on-surface-variant mt-1">Load: 3/4 Deliveries</p>
-</div>
-</div>
-<!-- Shipper 2 -->
-<div class="flex items-center gap-4">
-<img alt="Shipper Avatar" class="w-12 h-12 rounded-full object-cover grayscale hover:grayscale-0 transition-all" data-alt="A portrait of a female delivery professional smiling confidently at the camera. She is set against a clean, soft-lit studio background with organic green elements. The mood is trustworthy and premium. Her attire is modern and professional. High-end photography with a shallow depth of field." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAsHoH8qFM9q5nfidQaDNMCbgxHnxrxHO_8va4ZDeF6zhmyN5etMioG9_d_MJ2bs7a_jzrY9zrhhf3v3rziju73O_Ytv0JOWajAliGIHrxl7Mh8GpvqRkMixTCpDGAVU2XEy3MPeoxiDc3t6P3BPEiqJjyd67oT1zc6UX9XSgfr7ztSKW4b670ZOV1DMI7h6Vnf4hNcmOJJRScJBa1QIIEpD3v4U2HPuX0JLLMIadWcsJLvdEar9hue8hK2vLCPdDRReCGyUIkZveDt"/>
-<div class="flex-1">
-<div class="flex justify-between">
-<p class="font-body font-bold text-sm">Elena Thorne</p>
-<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">At Hub</span>
-</div>
-<div class="mt-1 w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
-<div class="bg-outline h-full rounded-full" style="width: 25%;"></div>
-</div>
-<p class="text-[10px] text-on-surface-variant mt-1">Load: 1/4 Deliveries</p>
-</div>
-</div>
-<!-- Shipper 3 -->
-<div class="flex items-center gap-4">
-<img alt="Shipper Avatar" class="w-12 h-12 rounded-full object-cover grayscale hover:grayscale-0 transition-all" data-alt="A focused portrait of an experienced delivery person in their late 30s. The lighting is sophisticated and natural, highlighting a reliable and serene character. The environment suggests an upscale retail logistics setting with subtle botanical textures in the background. Digital art style with professional clean lines." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQ6g5U53Vne5lkPyGKTKy1L21Y9wHmr3BP_oNhKbciliARGtzMxeM_bSUZkvP42MaQGkesangRKNtUAw3fMu0_vOpOy1DivjBsG89Oc2CBzg21OOIOXec71Tp82X90GB4-wdKwJlPVe5vl_nr8hDhYemtkf53cFpb5eLBKLkzQGkbUYakN55SMPtOPrLjgP2_z1erSiEG_7FGkA0ahQp9dfddOWZQOig_R6-aDKAP42YvKTSnI1Wqe0XZvlyKPfMjDonKIww441Xes"/>
-<div class="flex-1">
-<div class="flex justify-between">
-<p class="font-body font-bold text-sm">Kenji Sato</p>
-<span class="text-[10px] font-bold text-error uppercase tracking-widest">Delayed</span>
-</div>
-<div class="mt-1 w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
-<div class="bg-error h-full rounded-full" style="width: 100%;"></div>
-</div>
-<p class="text-[10px] text-on-surface-variant mt-1">Load: 4/4 Deliveries</p>
-</div>
-</div>
-</div>
-<button class="w-full mt-8 border border-outline-variant/30 py-3 rounded-xl font-bold text-sm hover:bg-surface-container-low transition-all">
-                        Assign New Driver
+    <aside id="app-sidebar" class="h-screen w-72 fixed left-0 top-0 z-40 bg-[#002c04] dark:bg-[#001a02] shadow-[32px_0_64px_-12px_rgba(0,44,4,0.08)] flex flex-col py-8 px-6"></aside>
+    <header id="app-topbar" class="fixed top-0 right-0 left-72 h-20 z-30 bg-[#f9f9f8]/80 dark:bg-[#191c1c]/80 backdrop-blur-2xl flex items-center justify-between px-10"></header>
+
+    <main class="ml-72 min-h-screen">
+
+        <div class="p-10 pt-24 space-y-8">
+            <section class="flex flex-wrap items-end justify-between gap-4">
+                <div>
+                    <h1 id="delivery-management-title" class="font-serif text-4xl text-primary" style="font-family: 'Newsreader', serif !important; font-weight: 400 !important; letter-spacing: 0 !important;">Delivery Management</h1>
+                    <p class="page-header-subtitle">Queue orders, build delivery trips, assign shippers, and reconcile COD.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button id="refresh-delivery-data" type="button" class="inline-flex items-center gap-2 rounded-full bg-surface-container-high px-5 py-2.5 text-sm font-bold text-on-surface hover:bg-surface-container-highest">
+                        <span class="material-symbols-outlined text-[18px]" data-icon="refresh">refresh</span>
+                        Refresh
                     </button>
-</section>
-</div>
-</div>
-</main>
-<!-- Interactive micro-interactions -->
-  <script src="../assets/js/layout.js?v=fm-20260530"></script>
-  <script src="../assets/js/main.js?v=fm-20260530"></script>
-</body></html>
+                    <select id="trip-status-filter" class="rounded-full border-outline bg-surface px-5 py-2.5 text-sm font-bold text-primary focus:border-secondary focus:ring-secondary">
+                        <option value="">All trips</option>
+                        <option value="pending_dispatch">Pending dispatch</option>
+                        <option value="assigned">Assigned</option>
+                        <option value="in_transit">In transit</option>
+                        <option value="completed">Completed</option>
+                        <option value="reconciled">Reconciled</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+            </section>
+
+            <p id="delivery-page-status" class="hidden rounded-xl px-4 py-3 text-sm font-bold"></p>
+
+            <section class="grid grid-cols-1 gap-6 lg:grid-cols-4">
+                <div class="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
+                    <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Queue orders</p>
+                    <p id="stat-queue" class="mt-3 text-4xl font-bold text-primary">0</p>
+                </div>
+                <div class="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
+                    <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Pending trips</p>
+                    <p id="stat-pending" class="mt-3 text-4xl font-bold text-primary">0</p>
+                </div>
+                <div class="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
+                    <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">In transit</p>
+                    <p id="stat-transit" class="mt-3 text-4xl font-bold text-primary">0</p>
+                </div>
+                <div class="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
+                    <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">COD awaiting</p>
+                    <p id="stat-cod" class="mt-3 text-3xl font-bold text-primary">0 VND</p>
+                </div>
+            </section>
+
+            <div class="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_420px]">
+                <div class="space-y-8">
+                    <section class="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
+                        <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
+                            <div>
+                                <h2 class="font-headline text-2xl font-bold text-primary">Ready For Delivery</h2>
+                                <p class="text-sm text-on-surface-variant">Select orders from the queue, request a route suggestion, then create a trip.</p>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-3">
+                                <button id="suggest-selected-orders" type="button" class="inline-flex items-center gap-2 rounded-full bg-surface-container-high px-4 py-2 text-sm font-bold text-on-surface hover:bg-surface-container-highest">
+                                    <span class="material-symbols-outlined text-[18px]" data-icon="route">route</span>
+                                    Suggest
+                                </button>
+                                <button id="create-trip-selected" type="button" class="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary/90">
+                                    <span class="material-symbols-outlined text-[18px]" data-icon="local_shipping">local_shipping</span>
+                                    Create Trip
+                                </button>
+                            </div>
+                        </div>
+                        <div class="overflow-hidden rounded-xl border border-outline-variant/30">
+                            <table class="w-full text-left">
+                                <thead class="bg-surface-container-low">
+                                    <tr>
+                                        <th class="w-12 px-4 py-3">
+                                            <input id="select-all-queue" type="checkbox" class="rounded border-outline text-secondary focus:ring-secondary" />
+                                        </th>
+                                        <th class="px-4 py-3 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Order</th>
+                                        <th class="px-4 py-3 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Customer</th>
+                                        <th class="px-4 py-3 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Address</th>
+                                        <th class="px-4 py-3 text-right text-xs font-bold uppercase tracking-widest text-on-surface-variant">COD</th>
+                                        <th class="px-4 py-3 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Waiting</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="delivery-queue-body" class="divide-y divide-outline-variant/20">
+                                    <tr>
+                                        <td class="px-4 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="6">Loading queue...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                </div>
+
+                <aside class="space-y-8">
+                    <section class="rounded-xl bg-primary p-6 text-on-primary shadow-xl">
+                        <div class="mb-5 flex items-center justify-between gap-4">
+                            <div>
+                                <h2 class="font-headline text-2xl font-bold">Suggested Batches</h2>
+                                <p class="mt-1 text-sm text-on-primary/80">Distance-based grouping from the delivery queue.</p>
+                            </div>
+                            <label class="space-y-1">
+                                <span class="block text-[10px] font-bold uppercase tracking-widest text-on-primary/70">Max stops</span>
+                                <input id="max-orders-per-trip" type="number" min="1" max="20" step="1" value="4" class="w-20 rounded-lg border-on-primary/20 bg-on-primary px-3 py-2 text-sm font-bold text-primary focus:border-secondary focus:ring-secondary" />
+                            </label>
+                        </div>
+                        <button id="suggest-all-orders" type="button" class="mb-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-on-primary px-4 py-3 text-sm font-bold text-primary hover:bg-secondary hover:text-on-secondary">
+                            <span class="material-symbols-outlined text-[18px]" data-icon="auto_awesome">auto_awesome</span>
+                            Suggest From Queue
+                        </button>
+                        <div id="suggested-batches" class="max-h-[360px] space-y-3 overflow-y-auto pr-1">
+                            <p class="rounded-xl bg-on-primary/10 p-4 text-sm font-bold text-on-primary/80">No suggestions yet.</p>
+                        </div>
+                    </section>
+
+                    <section class="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
+                        <h2 class="font-headline text-2xl font-bold text-primary">Active Shippers</h2>
+                        <p class="mt-1 text-sm text-on-surface-variant">Available staff with shipper role.</p>
+                        <div id="active-shippers-list" class="mt-5 space-y-3">
+                            <p class="text-sm font-bold text-on-surface-variant">Loading shippers...</p>
+                        </div>
+                    </section>
+
+                </aside>
+            </div>
+
+            <section class="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
+                <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <h2 class="font-headline text-2xl font-bold text-primary">Delivery Trips</h2>
+                        <p class="text-sm text-on-surface-variant">Manager view for dispatch, progress tracking, and COD reconciliation.</p>
+                    </div>
+                </div>
+                <div class="overflow-x-auto rounded-xl border border-outline-variant/30">
+                    <table class="w-full min-w-[960px] table-fixed text-left">
+                        <thead class="bg-surface-container-low">
+                            <tr>
+                                <th class="w-[30%] px-4 py-3 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Trip</th>
+                                <th class="w-[14%] px-4 py-3 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Status</th>
+                                <th class="w-[18%] px-4 py-3 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Shipper</th>
+                                <th class="w-[15%] px-4 py-3 text-right text-xs font-bold uppercase tracking-widest text-on-surface-variant">Expected COD</th>
+                                <th class="w-[13%] px-4 py-3 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Created</th>
+                                <th class="w-[10%] px-4 py-3 text-right text-xs font-bold uppercase tracking-widest text-on-surface-variant">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="delivery-trips-body" class="divide-y divide-outline-variant/20">
+                            <tr>
+                                <td class="px-4 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="6">Loading trips...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
+                <div class="mb-5">
+                    <h2 class="font-headline text-2xl font-bold text-primary">Trip Detail</h2>
+                    <p id="selected-trip-caption" class="mt-1 text-sm text-on-surface-variant">Select a trip to manage dispatch and COD.</p>
+                </div>
+                <div id="trip-detail-panel" class="space-y-5">
+                    <p class="rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">No trip selected.</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="../assets/js/layout.js?v=fm-20260530"></script>
+    <script src="../assets/js/main.js?v=fm-20260530"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const API_BASE_URL = window.MATCHA_API_BASE_URL || 'http://localhost:8000/api/v1';
+            const queueBody = document.getElementById('delivery-queue-body');
+            const tripsBody = document.getElementById('delivery-trips-body');
+            const pageStatus = document.getElementById('delivery-page-status');
+            const selectAllQueue = document.getElementById('select-all-queue');
+            const suggestedBatches = document.getElementById('suggested-batches');
+            const maxOrdersInput = document.getElementById('max-orders-per-trip');
+            const tripStatusFilter = document.getElementById('trip-status-filter');
+            const tripDetailPanel = document.getElementById('trip-detail-panel');
+            const selectedTripCaption = document.getElementById('selected-trip-caption');
+            const shippersList = document.getElementById('active-shippers-list');
+
+            let deliveryQueue = [];
+            let deliveryTrips = [];
+            let shippers = [];
+            let selectedTrip = null;
+
+            const statusMeta = {
+                pending_dispatch: { label: 'Pending dispatch', className: 'bg-tertiary-fixed text-on-tertiary-fixed-variant' },
+                assigned: { label: 'Assigned', className: 'bg-secondary-container/30 text-secondary' },
+                in_transit: { label: 'In transit', className: 'bg-primary/10 text-primary' },
+                completed: { label: 'Completed', className: 'bg-surface-container-high text-on-surface' },
+                reconciled: { label: 'Reconciled', className: 'bg-secondary text-on-secondary' },
+                cancelled: { label: 'Cancelled', className: 'bg-error-container/30 text-error' },
+            };
+
+            const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;',
+            }[character]));
+
+            const formatMoney = (value) => new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND',
+                maximumFractionDigits: 0,
+            }).format(Number(value) || 0);
+
+            const formatDateTime = (value) => {
+                if (!value) return '-';
+                const date = new Date(value);
+                if (Number.isNaN(date.getTime())) return '-';
+                return new Intl.DateTimeFormat('vi-VN', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                }).format(date);
+            };
+
+            const getTokenHeaders = () => {
+                const token = localStorage.getItem('matcha_access_token');
+                return token ? { Authorization: `Bearer ${token}` } : {};
+            };
+
+            const fetchApiData = async (path, options = {}) => {
+                const response = await fetch(`${API_BASE_URL}${path}`, {
+                    ...options,
+                    headers: {
+                        ...getTokenHeaders(),
+                        ...(options.headers || {}),
+                    },
+                });
+                const payload = await response.json().catch(() => null);
+
+                if (!response.ok || payload?.success === false) {
+                    throw new Error(payload?.message || 'Request failed');
+                }
+
+                return payload?.data ?? payload;
+            };
+
+            const getListData = (data) => {
+                if (Array.isArray(data)) return data;
+                if (Array.isArray(data?.items)) return data.items;
+                return [];
+            };
+
+            const setPageStatus = (message, type = 'info') => {
+                pageStatus.textContent = message;
+                pageStatus.className = `rounded-xl px-4 py-3 text-sm font-bold ${type === 'error' ? 'bg-error-container/30 text-error' : 'bg-secondary-container/30 text-secondary'}`;
+                pageStatus.classList.toggle('hidden', !message);
+            };
+
+            const getSelectedOrderIds = () => [...document.querySelectorAll('.queue-order-checkbox:checked')]
+                .map((checkbox) => checkbox.value);
+
+            const getShipperName = (shipperId) => {
+                if (!shipperId) return 'Unassigned';
+                return shippers.find((shipper) => shipper.id === shipperId)?.full_name || 'Assigned shipper';
+            };
+
+            const getBadge = (status) => {
+                const meta = statusMeta[status] || { label: status || '-', className: 'bg-surface-container-high text-on-surface-variant' };
+                return `<span class="inline-flex rounded-full px-3 py-1 text-xs font-bold ${meta.className}">${escapeHtml(meta.label)}</span>`;
+            };
+
+            const renderStats = () => {
+                document.getElementById('stat-queue').textContent = deliveryQueue.length;
+                document.getElementById('stat-pending').textContent = deliveryTrips.filter((trip) => trip.status === 'pending_dispatch').length;
+                document.getElementById('stat-transit').textContent = deliveryTrips.filter((trip) => trip.status === 'in_transit').length;
+
+                const codAwaiting = deliveryTrips
+                    .filter((trip) => trip.status === 'completed')
+                    .reduce((total, trip) => total + Number(trip.expected_cod_amount || 0), 0);
+                document.getElementById('stat-cod').textContent = formatMoney(codAwaiting);
+            };
+
+            const renderQueue = () => {
+                selectAllQueue.checked = false;
+                queueBody.innerHTML = '';
+
+                if (!deliveryQueue.length) {
+                    queueBody.innerHTML = '<tr><td class="px-4 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="6">No orders are ready for delivery.</td></tr>';
+                    return;
+                }
+
+                deliveryQueue.forEach((order) => {
+                    const hasCoordinates = order.delivery_latitude !== null && order.delivery_longitude !== null;
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-surface-container-low';
+                    row.innerHTML = `
+                        <td class="px-4 py-4">
+                            <input class="queue-order-checkbox rounded border-outline text-secondary focus:ring-secondary" type="checkbox" value="${escapeHtml(order.order_id)}" ${hasCoordinates ? '' : 'disabled'} />
+                        </td>
+                        <td class="px-4 py-4">
+                            <p class="font-bold text-primary">${escapeHtml(order.order_code)}</p>
+                            <p class="text-xs text-on-surface-variant">${escapeHtml(order.payment_status)}</p>
+                        </td>
+                        <td class="px-4 py-4">
+                            <p class="font-bold">${escapeHtml(order.customer_name || 'Walk-in customer')}</p>
+                            <p class="text-xs text-on-surface-variant">${escapeHtml(order.customer_phone || '-')}</p>
+                        </td>
+                        <td class="max-w-[280px] px-4 py-4">
+                            <p class="line-clamp-2 text-sm">${escapeHtml(order.delivery_address || '-')}</p>
+                            ${hasCoordinates ? '' : '<p class="mt-1 text-xs font-bold text-error">Missing coordinates</p>'}
+                        </td>
+                        <td class="px-4 py-4 text-right font-bold">${escapeHtml(formatMoney(order.amount_to_collect))}</td>
+                        <td class="px-4 py-4 text-sm text-on-surface-variant">${escapeHtml(order.waiting_time)}</td>
+                    `;
+                    queueBody.appendChild(row);
+                });
+            };
+
+            const renderTrips = () => {
+                tripsBody.innerHTML = '';
+
+                if (!deliveryTrips.length) {
+                    tripsBody.innerHTML = '<tr><td class="px-4 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="6">No delivery trips found.</td></tr>';
+                    return;
+                }
+
+                deliveryTrips.forEach((trip) => {
+                    const row = document.createElement('tr');
+                    row.className = `hover:bg-surface-container-low ${selectedTrip?.id === trip.id ? 'bg-secondary-container/20' : ''}`;
+                    row.innerHTML = `
+                        <td class="px-4 py-4">
+                            <p class="break-words font-bold leading-snug text-primary">${escapeHtml(trip.trip_code)}</p>
+                            <p class="mt-1 truncate text-xs text-on-surface-variant" title="${escapeHtml(trip.id)}">${escapeHtml(String(trip.id || '').slice(0, 8))}</p>
+                        </td>
+                        <td class="px-4 py-4">${getBadge(trip.status)}</td>
+                        <td class="px-4 py-4 text-sm"><span class="line-clamp-2">${escapeHtml(getShipperName(trip.shipper_id))}</span></td>
+                        <td class="px-4 py-4 text-right font-bold">${escapeHtml(formatMoney(trip.expected_cod_amount))}</td>
+                        <td class="px-4 py-4 text-sm text-on-surface-variant">${escapeHtml(formatDateTime(trip.created_at))}</td>
+                        <td class="px-4 py-4 text-right">
+                            <button class="view-trip-detail inline-flex items-center justify-center gap-1 rounded-full bg-surface-container-high px-3 py-2 text-xs font-bold text-primary hover:bg-surface-container-highest" type="button" data-trip-id="${escapeHtml(trip.id)}">
+                                <span class="material-symbols-outlined text-[16px]">manage_search</span>
+                                Open
+                            </button>
+                        </td>
+                    `;
+                    tripsBody.appendChild(row);
+                });
+            };
+
+            const renderShippers = () => {
+                shippersList.innerHTML = '';
+
+                if (!shippers.length) {
+                    shippersList.innerHTML = '<p class="rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">No active shippers found.</p>';
+                    return;
+                }
+
+                shippers.forEach((shipper) => {
+                    const activeTrip = deliveryTrips.find((trip) => trip.shipper_id === shipper.id && ['assigned', 'in_transit'].includes(trip.status));
+                    const item = document.createElement('div');
+                    item.className = 'flex items-center gap-3 rounded-xl bg-surface-container-low p-4';
+                    item.innerHTML = `
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary-container/40 text-sm font-bold text-secondary">${escapeHtml(getInitials(shipper.full_name))}</div>
+                        <div class="min-w-0 flex-1">
+                            <p class="truncate text-sm font-bold text-on-surface">${escapeHtml(shipper.full_name)}</p>
+                            <p class="truncate text-xs text-on-surface-variant">${activeTrip ? `On ${activeTrip.trip_code}` : 'Available for assignment'}</p>
+                        </div>
+                        <span class="rounded-full px-2.5 py-1 text-[10px] font-bold ${activeTrip ? 'bg-tertiary-fixed text-on-tertiary-fixed-variant' : 'bg-secondary-container/30 text-secondary'}">${activeTrip ? 'Busy' : 'Active'}</span>
+                    `;
+                    shippersList.appendChild(item);
+                });
+            };
+
+            const getInitials = (name) => String(name || 'S')
+                .split(/\s+/)
+                .filter(Boolean)
+                .slice(0, 2)
+                .map((part) => part[0]?.toUpperCase())
+                .join('') || 'S';
+
+            const renderSuggestions = (batches) => {
+                suggestedBatches.innerHTML = '';
+
+                if (!batches.length) {
+                    suggestedBatches.innerHTML = '<p class="rounded-xl bg-on-primary/10 p-4 text-sm font-bold text-on-primary/80">No suggested batches available.</p>';
+                    return;
+                }
+
+                batches.forEach((batch, index) => {
+                    const orderIds = batch.orders.map((order) => order.order_id);
+                    const item = document.createElement('div');
+                    item.className = 'rounded-xl border border-on-primary/15 bg-on-primary/10 p-4';
+                    item.innerHTML = `
+                        <div class="mb-3 flex items-start justify-between gap-3">
+                            <div>
+                                <p class="font-bold">Batch ${index + 1}</p>
+                                <p class="text-xs text-on-primary/70">${batch.orders.length} stops - ${Number(batch.total_distance_km || 0).toFixed(2)} km</p>
+                            </div>
+                            <p class="text-sm font-bold">${escapeHtml(formatMoney(batch.expected_cod_amount))}</p>
+                        </div>
+                        <ol class="mb-4 space-y-2">
+                            ${batch.orders.map((order) => `
+                                <li class="flex items-center justify-between rounded-lg bg-primary/30 px-3 py-2 text-xs">
+                                    <span>${order.stop_order}. ${escapeHtml(order.order_code)}</span>
+                                    <span>${Number(order.distance_from_previous_km || 0).toFixed(2)} km</span>
+                                </li>
+                            `).join('')}
+                        </ol>
+                        <button class="create-trip-from-batch w-full rounded-lg bg-on-primary px-4 py-2 text-sm font-bold text-primary hover:bg-secondary hover:text-on-secondary" type="button" data-order-ids="${escapeHtml(orderIds.join(','))}">Create This Trip</button>
+                    `;
+                    suggestedBatches.appendChild(item);
+                });
+            };
+
+            const deliveredCodForTrip = (trip) => (trip?.orders || [])
+                .filter((order) => order.status === 'delivered')
+                .reduce((total, order) => total + Number(order.cod_collected || 0), 0);
+
+            const renderTripDetail = () => {
+                if (!selectedTrip) {
+                    selectedTripCaption.textContent = 'Select a trip to manage dispatch and COD.';
+                    tripDetailPanel.innerHTML = '<p class="rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">No trip selected.</p>';
+                    return;
+                }
+
+                selectedTripCaption.textContent = `${selectedTrip.trip_code} - ${statusMeta[selectedTrip.status]?.label || selectedTrip.status}`;
+                const canAssign = selectedTrip.status === 'pending_dispatch';
+                const canReconcile = selectedTrip.status === 'completed';
+                const deliveredCod = deliveredCodForTrip(selectedTrip);
+
+                tripDetailPanel.innerHTML = `
+                    <div class="grid grid-cols-1 gap-5 xl:grid-cols-2">
+                        <div class="space-y-5">
+                            <div class="rounded-xl border border-outline-variant/30 p-4">
+                                <div class="mb-3 flex items-center justify-between gap-3">
+                                    <p class="font-bold text-primary">Assign Shipper</p>
+                                    <span class="text-xs font-bold text-on-surface-variant">${escapeHtml(getShipperName(selectedTrip.shipper_id))}</span>
+                                </div>
+                                <div class="flex gap-2">
+                                    <select id="assign-shipper-select" class="min-w-0 flex-1 rounded-xl border-outline bg-surface px-3 py-2 text-sm focus:border-secondary focus:ring-secondary" ${canAssign ? '' : 'disabled'}>
+                                        <option value="">Select active shipper</option>
+                                        ${shippers.map((shipper) => `<option value="${escapeHtml(shipper.id)}">${escapeHtml(shipper.full_name)}</option>`).join('')}
+                                    </select>
+                                    <button id="assign-shipper-button" type="button" class="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50" ${canAssign ? '' : 'disabled'}>Assign</button>
+                                </div>
+                            </div>
+
+                            <div class="rounded-xl border border-outline-variant/30 p-4">
+                                <p class="mb-3 font-bold text-primary">Stops</p>
+                                <div class="max-h-[420px] space-y-2 overflow-y-auto pr-1">
+                                    ${(selectedTrip.orders || []).map((order) => `
+                                        <div class="rounded-lg bg-surface-container-low p-3">
+                                            <div class="flex items-start justify-between gap-3">
+                                                <div>
+                                                    <p class="text-sm font-bold">${order.stop_order}. ${escapeHtml(order.order_code)}</p>
+                                                    <p class="line-clamp-1 text-xs text-on-surface-variant">${escapeHtml(order.delivery_address || '-')}</p>
+                                                </div>
+                                                ${getBadge(order.status)}
+                                            </div>
+                                            <div class="mt-2 flex justify-between text-xs text-on-surface-variant">
+                                                <span>Collect: ${escapeHtml(formatMoney(order.amount_to_collect))}</span>
+                                                <span>Collected: ${escapeHtml(formatMoney(order.cod_collected))}</span>
+                                            </div>
+                                            ${order.failed_reason ? `<p class="mt-2 text-xs font-bold text-error">${escapeHtml(order.failed_reason)}</p>` : ''}
+                                        </div>
+                                    `).join('') || '<p class="text-sm font-bold text-on-surface-variant">No stops found.</p>'}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="rounded-xl border border-outline-variant/30 p-4">
+                            <p class="mb-3 font-bold text-primary">COD Reconciliation</p>
+                            <div class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                <div class="rounded-xl bg-surface-container-low p-4">
+                                    <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Status</p>
+                                    <div class="mt-2">${getBadge(selectedTrip.status)}</div>
+                                </div>
+                                <div class="rounded-xl bg-surface-container-low p-4">
+                                    <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">COD delivered</p>
+                                    <p class="mt-2 text-lg font-bold text-primary">${escapeHtml(formatMoney(deliveredCod))}</p>
+                                </div>
+                            </div>
+                            <label class="block space-y-2">
+                                <span class="text-xs font-bold text-on-surface-variant">Actual amount submitted by shipper</span>
+                                <input id="cod-actual-amount" type="number" min="0" step="1" value="${canReconcile ? deliveredCod : ''}" class="w-full rounded-xl border-outline bg-surface px-3 py-2 text-sm focus:border-secondary focus:ring-secondary" ${canReconcile ? '' : 'disabled'} />
+                            </label>
+                            <label class="mt-3 block space-y-2">
+                                <span class="text-xs font-bold text-on-surface-variant">Discrepancy reason</span>
+                                <textarea id="cod-discrepancy-reason" rows="6" class="w-full rounded-xl border-outline bg-surface px-3 py-2 text-sm focus:border-secondary focus:ring-secondary" placeholder="Required if actual amount differs" ${canReconcile ? '' : 'disabled'}></textarea>
+                            </label>
+                            <button id="reconcile-cod-button" type="button" class="mt-4 w-full rounded-xl bg-secondary px-4 py-3 text-sm font-bold text-on-secondary hover:bg-secondary/90 disabled:cursor-not-allowed disabled:opacity-50" ${canReconcile ? '' : 'disabled'}>Reconcile COD</button>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('assign-shipper-button')?.addEventListener('click', assignSelectedShipper);
+                document.getElementById('reconcile-cod-button')?.addEventListener('click', reconcileSelectedTrip);
+            };
+
+            const refreshAll = async ({ keepSelectedTrip = true } = {}) => {
+                setPageStatus('Loading delivery data...');
+                try {
+                    const status = tripStatusFilter.value;
+                    const [queueData, tripsData, shippersData] = await Promise.all([
+                        fetchApiData('/deliveries/queue'),
+                        fetchApiData(`/deliveries/trips${status ? `?status=${encodeURIComponent(status)}` : ''}`),
+                        fetchApiData('/staff?role=shipper&status=active&page_size=100').catch(() => ({ items: [] })),
+                    ]);
+
+                    deliveryQueue = getListData(queueData);
+                    deliveryTrips = getListData(tripsData);
+                    shippers = getListData(shippersData);
+
+                    if (keepSelectedTrip && selectedTrip) {
+                        const stillVisible = deliveryTrips.some((trip) => trip.id === selectedTrip.id);
+                        selectedTrip = stillVisible ? await fetchApiData(`/deliveries/trips/${encodeURIComponent(selectedTrip.id)}`) : null;
+                    }
+
+                    renderStats();
+                    renderQueue();
+                    renderTrips();
+                    renderShippers();
+                    renderTripDetail();
+                    setPageStatus('');
+                } catch (error) {
+                    console.error('Failed to load delivery data:', error);
+                    setPageStatus(error.message || 'Cannot load delivery data.', 'error');
+                }
+            };
+
+            const suggestBatches = async (orderIds = null) => {
+                const maxOrdersPerTrip = Number(maxOrdersInput.value) || 4;
+                setPageStatus('Suggesting delivery batches...');
+                try {
+                    const payload = { max_orders_per_trip: maxOrdersPerTrip };
+                    if (orderIds?.length) {
+                        payload.order_ids = orderIds;
+                    }
+                    const batches = getListData(await fetchApiData('/deliveries/batch/suggest', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                    }));
+                    renderSuggestions(batches);
+                    setPageStatus('');
+                } catch (error) {
+                    console.error('Failed to suggest batches:', error);
+                    setPageStatus(error.message || 'Cannot suggest delivery batches.', 'error');
+                }
+            };
+
+            const createTrip = async (orderIds) => {
+                if (!orderIds.length) {
+                    setPageStatus('Select at least one queued order.', 'error');
+                    return;
+                }
+
+                setPageStatus('Creating delivery trip...');
+                try {
+                    const trip = await fetchApiData('/deliveries/trips', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            order_ids: orderIds,
+                            use_auto_route: true,
+                        }),
+                    });
+                    selectedTrip = trip;
+                    renderSuggestions([]);
+                    await refreshAll();
+                    setPageStatus('Delivery trip created.');
+                } catch (error) {
+                    console.error('Failed to create trip:', error);
+                    setPageStatus(error.message || 'Cannot create delivery trip.', 'error');
+                }
+            };
+
+            const loadTripDetail = async (tripId) => {
+                setPageStatus('Loading trip detail...');
+                try {
+                    selectedTrip = await fetchApiData(`/deliveries/trips/${encodeURIComponent(tripId)}`);
+                    renderTrips();
+                    renderTripDetail();
+                    setPageStatus('');
+                } catch (error) {
+                    console.error('Failed to load trip detail:', error);
+                    setPageStatus(error.message || 'Cannot load trip detail.', 'error');
+                }
+            };
+
+            const assignSelectedShipper = async () => {
+                const shipperId = document.getElementById('assign-shipper-select')?.value;
+                if (!selectedTrip || !shipperId) {
+                    setPageStatus('Select a shipper first.', 'error');
+                    return;
+                }
+
+                setPageStatus('Assigning shipper...');
+                try {
+                    selectedTrip = await fetchApiData(`/deliveries/trips/${encodeURIComponent(selectedTrip.id)}/assign`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ shipper_id: shipperId }),
+                    });
+                    await refreshAll();
+                    setPageStatus('Delivery trip assigned.');
+                } catch (error) {
+                    console.error('Failed to assign shipper:', error);
+                    setPageStatus(error.message || 'Cannot assign shipper.', 'error');
+                }
+            };
+
+            const reconcileSelectedTrip = async () => {
+                if (!selectedTrip) return;
+                const actualAmount = Number(document.getElementById('cod-actual-amount')?.value || 0);
+                const reason = String(document.getElementById('cod-discrepancy-reason')?.value || '').trim();
+                const expected = deliveredCodForTrip(selectedTrip);
+
+                if (actualAmount !== expected && !reason) {
+                    setPageStatus('Enter a discrepancy reason when COD does not match.', 'error');
+                    return;
+                }
+
+                setPageStatus('Reconciling COD...');
+                try {
+                    await fetchApiData(`/deliveries/trips/${encodeURIComponent(selectedTrip.id)}/reconcile`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            actual_amount: actualAmount,
+                            discrepancy_reason: reason || null,
+                        }),
+                    });
+                    await refreshAll({ keepSelectedTrip: false });
+                    setPageStatus('COD reconciled.');
+                } catch (error) {
+                    console.error('Failed to reconcile COD:', error);
+                    setPageStatus(error.message || 'Cannot reconcile COD.', 'error');
+                }
+            };
+
+            document.getElementById('refresh-delivery-data').addEventListener('click', () => refreshAll());
+            tripStatusFilter.addEventListener('change', () => {
+                selectedTrip = null;
+                refreshAll({ keepSelectedTrip: false });
+            });
+            selectAllQueue.addEventListener('change', () => {
+                document.querySelectorAll('.queue-order-checkbox:not(:disabled)').forEach((checkbox) => {
+                    checkbox.checked = selectAllQueue.checked;
+                });
+            });
+            document.getElementById('suggest-all-orders').addEventListener('click', () => suggestBatches());
+            document.getElementById('suggest-selected-orders').addEventListener('click', () => suggestBatches(getSelectedOrderIds()));
+            document.getElementById('create-trip-selected').addEventListener('click', () => createTrip(getSelectedOrderIds()));
+            suggestedBatches.addEventListener('click', (event) => {
+                const button = event.target.closest('.create-trip-from-batch');
+                if (!button) return;
+                const orderIds = String(button.dataset.orderIds || '').split(',').filter(Boolean);
+                createTrip(orderIds);
+            });
+            tripsBody.addEventListener('click', (event) => {
+                const button = event.target.closest('.view-trip-detail');
+                if (!button) return;
+                loadTripDetail(button.dataset.tripId);
+            });
+
+            refreshAll({ keepSelectedTrip: false });
+        });
+    </script>
+</body>
+
+</html>

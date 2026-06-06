@@ -1,294 +1,200 @@
 <!DOCTYPE html>
 
-<html class="light" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Matcha Atelier | Checkout</title>
+<html class="light" lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Checkout | The Matcha Atelier</title>
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Manrope:wght@200..800&amp;display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet" />
+    <link rel="stylesheet" href="../assets/css/style.css?v=header-subtitle-20260605" />
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <script src="../assets/js/tailwind-config.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="../assets/css/style.css" />
 </head>
-<body class="page-pos-payment bg-surface text-on-surface overflow-hidden" data-page="pos-payment">
-<!-- Sidebar Shell -->
-<aside
+
+<body class="page-pos-payment bg-surface text-on-surface min-h-screen" data-page="pos-payment">
+  <aside id="app-sidebar"
     class="h-screen w-72 fixed left-0 top-0 z-40 bg-[#002c04] dark:bg-[#001a02] shadow-[32px_0_64px_-12px_rgba(0,44,4,0.08)] flex flex-col py-8 px-6">
-    <!-- Brand Header -->
-    <div class="flex items-center gap-3 mb-10 px-2">
-      <div class="w-10 h-10 rounded-full bg-[#06440c] flex items-center justify-center overflow-hidden shrink-0">
-        <img alt="Hoppers' Matcha Shop Logo" class="w-full h-full object-cover"
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXRMPJfgLrAFfB9xLzGUIGMCrcZAR-yQSGNqWTFX9vFRQv4QMXkX4cY5D2ERn3oAAuJGXHblUihyOQlNKg3VZXSwmSuERhdEAYAucZvEdNxam6eCnKauE0fIDaOC9ErE5QlCuozZ6P4YkCI15fn1sopDH0TACLUdkDo0Ykn3yERcrLIrRlQCk8_Lr8PfsLgZ_TnsWMVCgDjGbxOIWyidz2QGyjJ9a05v6jssGYyWHyMzupagZJUtTAKuLyvpvZEFqyp_w1nE_9jh3l" />
-      </div>
-      <div>
-        <h1 class="font-serif text-lg font-bold italic text-[#f9f9f8] leading-tight">Hoppers' Matcha</h1>
-        <p class="text-[10px] text-[#f9f9f8]/60 uppercase tracking-widest">Artisan POS</p>
-      </div>
-    </div>
-    <!-- Main Navigation -->
-    <nav class="flex-1 space-y-1">
-      <a class="flex items-center gap-4 px-4 py-3 bg-[#06440c] text-[#f9f9f8] rounded-xl font-semibold"
-        href="dashboard.html">
-        <span class="material-symbols-outlined">dashboard</span>
-        <span>Dashboard</span>
-      </a>
-      <a class="flex items-center gap-4 px-4 py-3 text-[#f9f9f8]/70 hover:text-[#f9f9f8] hover:bg-[#06440c]/60 rounded-xl font-medium transition-colors"
-        href="menu.html">
-        <span class="material-symbols-outlined">eco</span>
-        <span>Menu</span>
-      </a>
-      <a class="flex items-center gap-4 px-4 py-3 text-[#f9f9f8]/70 hover:text-[#f9f9f8] hover:bg-[#06440c]/60 rounded-xl font-medium transition-colors"
-        href="inventory_list.html">
-        <span class="material-symbols-outlined">inventory_2</span>
-        <span>Inventory</span>
-      </a>
-      <a class="flex items-center gap-4 px-4 py-3 text-[#f9f9f8]/70 hover:text-[#f9f9f8] hover:bg-[#06440c]/60 rounded-xl font-medium transition-colors"
-        href="customer_list.html">
-        <span class="material-symbols-outlined">group</span>
-        <span>Customers</span>
-      </a>
-      <a class="flex items-center gap-4 px-4 py-3 text-[#f9f9f8]/70 hover:text-[#f9f9f8] hover:bg-[#06440c]/60 rounded-xl font-medium transition-colors"
-        href="employee_list.html">
-        <span class="material-symbols-outlined">badge</span>
-        <span>Employees</span>
-      </a>
-      <a class="flex items-center gap-4 px-4 py-3 text-[#f9f9f8]/70 hover:text-[#f9f9f8] hover:bg-[#06440c]/60 rounded-xl font-medium transition-colors"
-        href="financial_management.html">
-        <span class="material-symbols-outlined">account_balance</span>
-        <span>Financial Management</span>
-      </a>
-      <a class="flex items-center gap-4 px-4 py-3 text-[#f9f9f8]/70 hover:text-[#f9f9f8] hover:bg-[#06440c]/60 rounded-xl font-medium transition-colors"
-        href="#">
-        <span class="material-symbols-outlined">bar_chart</span>
-        <span>Analytics</span>
-      </a>
-    </nav>
-    <!-- Footer Navigation -->
-    <div class="pt-6 border-t border-[#06440c]/80 space-y-1">
-      <a class="flex items-center gap-4 px-4 py-3 text-[#f9f9f8]/70 hover:text-[#f9f9f8] hover:bg-[#06440c]/60 rounded-xl font-medium transition-colors"
-        href="settings.html">
-        <span class="material-symbols-outlined">settings</span>
-        <span>Settings</span>
-      </a>
-      <a class="flex items-center gap-4 px-4 py-3 text-[#f9f9f8]/70 hover:text-[#f9f9f8] hover:bg-[#06440c]/60 rounded-xl font-medium transition-colors"
-        href="#">
-        <span class="material-symbols-outlined">logout</span>
-        <span>Log out</span>
-      </a>
-    </div>
   </aside>
-<!-- Top App Bar -->
-<header class="fixed top-0 right-0 w-[calc(100%-16rem)] h-16 bg-surface dark:bg-surface-dim z-40 flex justify-between items-center px-12">
-<div class="flex items-center gap-8 w-1/2">
-<div class="relative w-full">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
-<input class="w-full bg-surface-container border-none rounded-full py-2 pl-10 pr-4 focus:ring-2 focus:ring-secondary/20 placeholder:text-on-surface-variant/50 text-sm" placeholder="Search menu, orders, or customers..." type="text"/>
-</div>
-</div>
-<div class="flex items-center gap-6">
-<button class="text-on-surface-variant hover:text-secondary transition-colors cursor-pointer active:opacity-70">
-<span class="material-symbols-outlined">notifications</span>
-</button>
-<button class="text-on-surface-variant hover:text-secondary transition-colors cursor-pointer active:opacity-70">
-<span class="material-symbols-outlined">history</span>
-</button>
-<div class="h-8 w-[1px] bg-outline-variant opacity-20"></div>
-<div class="flex items-center gap-3 cursor-pointer group">
-<span class="material-symbols-outlined text-secondary text-3xl">account_circle</span>
-<span class="font-body text-sm font-bold group-hover:text-secondary transition-colors">Register 01</span>
-</div>
-</div>
-</header>
-<!-- Main Content Area -->
-<main class="ml-64 pt-16 h-screen overflow-hidden flex flex-col md:flex-row gap-0">
-<!-- Left: Summary Grid -->
-<section class="flex-1 p-8 order-scroll overflow-y-auto">
-<div class="max-w-4xl mx-auto">
-<div class="flex items-center justify-between mb-8">
-<div>
-<h2 class="serif-text text-4xl text-primary mb-1">Order Summary</h2>
-<p class="text-on-surface-variant text-sm">Review items before final transaction</p>
-</div>
-<div class="bg-surface-container-high px-4 py-2 rounded-lg text-right">
-<p class="text-[10px] uppercase tracking-tighter font-bold opacity-50">Transaction ID</p>
-<p class="font-mono text-sm font-bold">#MA-9823-POS</p>
-</div>
-</div>
-<!-- Bento Style Item List -->
-<div class="grid grid-cols-1 gap-4 mb-12">
-<!-- Item 1 -->
-<div class="bg-surface-container-lowest rounded-xl p-5 flex items-center gap-6 shadow-[0_4px_24px_-8px_rgba(0,44,4,0.08)] group hover:translate-x-1 transition-transform">
-<div class="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
-<img class="w-full h-full object-cover" data-alt="A vibrant, frothy iced Matcha Latte in a clean glass, featuring a rich layer of green tea over creamy white milk. The scene is set in a minimalist, bright cafe with soft morning light illuminating the textures. The color palette centers on earthy greens and creamy whites, evoking a fresh, artisanal tea culture." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCbnwUhEabGWzSyJiK-VfjmaZIf5AsUTh1NSFlB_nfeOoIg-xzRKp3-M_1xMPdiYJZJWPosS9Jiwzwzmv4sZrn3GKrCYYEkRy4KHXBuPycG8qCk8o5eyzDCM2OuxtD4k8Cflwu0dJyiW6F62BPPqLj7baNeOu6lJ9LFEIKVNGjvzRpAzmZRquW7dtmV6rCEs2ssI82eEK6Fr11KCAol4g1lL1zJWeW26KE6wSj18rDLSqRXXVzN3WZswxsztRx9eJW3005gBBv59oc6"/>
-</div>
-<div class="flex-1">
-<div class="flex justify-between items-start">
-<div>
-<h3 class="font-headline text-xl text-primary">Matcha Đá Xay</h3>
-<p class="text-sm text-on-surface-variant italic">Note: 70% Ice, Extra Foam</p>
-</div>
-<div class="text-right">
-<p class="text-sm text-on-surface-variant mb-1">2 x 60.000 VND</p>
-<p class="font-bold text-secondary text-lg">120.000 VND</p>
-</div>
-</div>
-</div>
-</div>
-<!-- Item 2 -->
-<div class="bg-surface-container-lowest rounded-xl p-5 flex items-center gap-6 shadow-[0_4px_24px_-8px_rgba(0,44,4,0.08)] group hover:translate-x-1 transition-transform">
-<div class="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
-<img class="w-full h-full object-cover" data-alt="Premium traditional Japanese matcha being whisked in a ceramic bowl with a bamboo whisk. The scene is intimate and moody, with focused lighting highlighting the deep chlorophyll green of the powdered tea and the fine bubbles on the surface. The background is a soft, dark forest green texture." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCRM-ibS_9hnRgYppZzeFe02zmsKwKXlbsrDMmzcwFeikvu_fQ02Ury77zFmFnvgu_UJ-qZQiCL5d9gkXLInDGjJv5dkZJ3NC5UHgw7N8R4DMe_qYp-s9quLceG3gM6kgnQHFYYM_HYUivexBBfQF0tCGK-0Vk61zYmjDxN4VL0aXWTbhbAbjRibOgpYrVHSykERwy_-9hqbcgHJbh-PhPwFZ6rcF9ahl07B1Lm-ME1GvWokB5EzM2bHH0Y5voiYZ8e304L7qXq_-_H"/>
-</div>
-<div class="flex-1">
-<div class="flex justify-between items-start">
-<div>
-<h3 class="font-headline text-xl text-primary">Matcha Truyền Thống</h3>
-<p class="text-sm text-on-surface-variant italic">Ceremony Grade, Hot</p>
-</div>
-<div class="text-right">
-<p class="text-sm text-on-surface-variant mb-1">1 x 50.000 VND</p>
-<p class="font-bold text-secondary text-lg">50.000 VND</p>
-</div>
-</div>
-</div>
-</div>
-<!-- Item 3 -->
-<div class="bg-surface-container-lowest rounded-xl p-5 flex items-center gap-6 shadow-[0_4px_24px_-8px_rgba(0,44,4,0.08)] group hover:translate-x-1 transition-transform">
-<div class="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
-<img class="w-full h-full object-cover" data-alt="A delicate Matcha Cream Cheese dessert served in a modern glass cup, featuring a dense green tea base topped with a thick, velvety layer of white cream cheese foam. The composition is clean and elegant, styled with a high-contrast palette of forest green and brilliant white under soft gallery lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDSss-uPODqdrkBJH5MvOhU6GTzpgTDQ0O4Ef5MLvLh2HYsZgewo-SaV14jpaau8W1yYLbSpYs5NrMEMUyA1kOMopLS-ngK_I2VQ0HTZEhpTtZNvqAetC7ayPZqcAWNAs9ey2NYbCmP6y2Cwv4-wz9uZn0gaFNMVWjl2q0OIvaM8X8imbcQ6-RMAsggQmMYpHq6tJJJRDj7QUliAfvBmnoKmot6-n6YDSWCy4TCN-BcnU623n0_d0v1WHlVLjlhpoCzn2cZLFb9XTCN"/>
-</div>
-<div class="flex-1">
-<div class="flex justify-between items-start">
-<div>
-<h3 class="font-headline text-xl text-primary">Matcha Cream Cheese</h3>
-<p class="text-sm text-on-surface-variant italic">Limited Edition Topping</p>
-</div>
-<div class="text-right">
-<p class="text-sm text-on-surface-variant mb-1">1 x 60.000 VND</p>
-<p class="font-bold text-secondary text-lg">60.000 VND</p>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Totals Section -->
-<div class="bg-surface-container-low rounded-2xl p-8 border border-white/40">
-<div class="flex flex-col gap-3">
-<div class="flex justify-between items-center text-on-surface-variant">
-<span>Subtotal (4 items)</span>
-<span class="font-bold">230.000 VND</span>
-</div>
-<div class="flex justify-between items-center text-on-surface-variant">
-<span>Tax (VAT 8%)</span>
-<span class="font-bold">18.400 VND</span>
-</div>
-<div class="flex justify-between items-center text-error">
-<span>Promotional Discount (10% OFF)</span>
-<span class="font-bold">-23.000 VND</span>
-</div>
-<div class="h-[1px] bg-outline-variant/20 my-2"></div>
-<div class="flex justify-between items-end">
-<div>
-<p class="text-[10px] uppercase tracking-widest font-bold text-primary/50">Total Amount Due</p>
-<h4 class="serif-text text-5xl text-primary">225.400 <span class="text-xl">VND</span></h4>
-</div>
-<div class="text-right">
-<p class="text-xs text-on-surface-variant italic">Approx. $9.15 USD</p>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-<!-- Right: Payment & Action Sidebar -->
-<section class="w-full md:w-96 bg-white/40 backdrop-blur-3xl border-l border-outline-variant/10 p-8 flex flex-col">
-<h3 class="font-headline text-2xl text-primary mb-6">Payment Method</h3>
-<div class="flex-1 space-y-4">
-<!-- Payment Options -->
-<label class="relative block cursor-pointer group">
-<input checked="" class="peer hidden" name="payment" type="radio"/>
-<div class="flex items-center gap-4 p-5 rounded-xl bg-surface-container-low border-2 border-transparent peer-checked:border-secondary peer-checked:bg-secondary-container/10 transition-all">
-<div class="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
-<span class="material-symbols-outlined text-secondary">payments</span>
-</div>
-<div class="flex-1">
-<p class="font-bold text-primary">Cash Payment</p>
-<p class="text-xs text-on-surface-variant">Manual register entry</p>
-</div>
-<div class="w-6 h-6 rounded-full border-2 border-outline-variant peer-checked:border-secondary flex items-center justify-center">
-<div class="w-3 h-3 rounded-full bg-secondary scale-0 peer-checked:scale-100 transition-transform"></div>
-</div>
-</div>
-</label>
-<label class="relative block cursor-pointer group">
-<input class="peer hidden" name="payment" type="radio"/>
-<div class="flex items-center gap-4 p-5 rounded-xl bg-surface-container-low border-2 border-transparent peer-checked:border-secondary peer-checked:bg-secondary-container/10 transition-all">
-<div class="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
-<span class="material-symbols-outlined text-secondary">credit_card</span>
-</div>
-<div class="flex-1">
-<p class="font-bold text-primary">Debit / Credit Card</p>
-<p class="text-xs text-on-surface-variant">Swipe or Tap terminal</p>
-</div>
-<div class="w-6 h-6 rounded-full border-2 border-outline-variant peer-checked:border-secondary flex items-center justify-center">
-<div class="w-3 h-3 rounded-full bg-secondary scale-0 peer-checked:scale-100 transition-transform"></div>
-</div>
-</div>
-</label>
-<label class="relative block cursor-pointer group">
-<input class="peer hidden" name="payment" type="radio"/>
-<div class="flex items-center gap-4 p-5 rounded-xl bg-surface-container-low border-2 border-transparent peer-checked:border-secondary peer-checked:bg-secondary-container/10 transition-all">
-<div class="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
-<span class="material-symbols-outlined text-secondary">qr_code_2</span>
-</div>
-<div class="flex-1">
-<p class="font-bold text-primary">QR Code / Transfer</p>
-<p class="text-xs text-on-surface-variant">Scan to pay instantly</p>
-</div>
-<div class="w-6 h-6 rounded-full border-2 border-outline-variant peer-checked:border-secondary flex items-center justify-center">
-<div class="w-3 h-3 rounded-full bg-secondary scale-0 peer-checked:scale-100 transition-transform"></div>
-</div>
-</div>
-</label>
-<!-- Additional Actions -->
-<div class="pt-6 grid grid-cols-2 gap-3">
-<button class="bg-surface-container py-4 rounded-xl text-primary font-bold hover:bg-surface-container-high transition-colors flex flex-col items-center gap-1">
-<span class="material-symbols-outlined">receipt</span>
-<span class="text-xs">Add Note</span>
-</button>
-<button class="bg-surface-container py-4 rounded-xl text-primary font-bold hover:bg-surface-container-high transition-colors flex flex-col items-center gap-1">
-<span class="material-symbols-outlined">person_add</span>
-<span class="text-xs">Add Loyalty</span>
-</button>
-</div>
-</div>
-<!-- Final Action CTA -->
-<div class="mt-auto pt-8">
-<button class="w-full bg-secondary text-on-secondary py-5 rounded-xl font-bold text-xl shadow-[0_12px_40px_-8px_rgba(0,110,8,0.3)] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3" id="payBtn" onclick="handleComplete()">
-<span>Complete Transaction</span>
-<span class="material-symbols-outlined">arrow_forward</span>
-</button>
-<button class="w-full mt-4 py-3 text-on-surface-variant hover:text-error transition-colors flex items-center justify-center gap-2">
-<span class="material-symbols-outlined text-sm">cancel</span>
-<span class="text-sm font-bold">Discard Order</span>
-</button>
-</div>
-</section>
-</main>
-<!-- Success Modal Overlay (Hidden) -->
-<div class="fixed inset-0 bg-primary/40 backdrop-blur-md z-[100] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-500" id="successOverlay">
-<div class="bg-surface-container-lowest rounded-3xl p-12 max-w-sm w-full text-center shadow-2xl scale-90 transition-transform duration-500" id="successCard">
-<div class="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mx-auto mb-6">
-<span class="material-symbols-outlined text-white text-4xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
-</div>
-<h2 class="serif-text text-3xl text-primary mb-2">Order Finalized</h2>
-<p class="text-on-surface-variant mb-8">Transaction #MA-9823 completed successfully. Printing receipt...</p>
-<div class="space-y-3">
-<button class="w-full bg-secondary text-white py-4 rounded-xl font-bold" onclick="resetFlow()">New Order</button>
-<button class="w-full border border-outline-variant py-4 rounded-xl font-bold text-on-surface-variant" onclick="resetFlow()">View Receipt</button>
-</div>
-</div>
-</div>
-  <script src="../assets/js/main.js?v=fm-20260530"></script>
-</body></html>
+  <header id="app-topbar"
+    class="fixed top-0 right-0 left-72 h-20 z-30 bg-[#f9f9f8]/80 dark:bg-[#191c1c]/80 backdrop-blur-2xl flex items-center justify-between px-10"></header>
+
+  <main class="ml-72 pt-24 p-10 min-h-screen">
+    <div class="max-w-7xl mx-auto">
+      <header class="mb-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <h2 class="serif-text text-5xl text-primary mb-2" id="paymentModeTitle">Checkout</h2>
+          <p class="page-header-subtitle" id="paymentModeSubtitle">Review selected items and choose a payment method.</p>
+        </div>
+        <div class="bg-surface-container-high px-4 py-3 rounded-xl text-right">
+          <p class="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">Order Type</p>
+          <p class="text-sm font-bold text-secondary" id="paymentOrderType">In-shop</p>
+          <p class="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">Transaction ID</p>
+          <p class="font-mono text-sm font-bold text-primary" id="paymentOrderCode">Generated on submit</p>
+          <p class="mt-2 text-[10px] uppercase tracking-widest font-bold text-on-surface-variant">Customer</p>
+          <p class="text-sm font-bold text-primary" id="paymentCustomerName">Walk-in customer</p>
+        </div>
+      </header>
+
+      <div class="grid grid-cols-1 xl:grid-cols-[1fr_420px] gap-8">
+        <section class="space-y-6">
+          <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/10 shadow-sm overflow-hidden">
+            <div class="px-6 py-5 border-b border-outline-variant/10 flex items-center justify-between">
+              <h3 class="font-headline text-2xl text-primary">Order Details</h3>
+              <a class="text-sm font-bold text-secondary hover:text-primary transition-colors" href="POS_menu.html">Edit Order</a>
+            </div>
+            <div class="divide-y divide-outline-variant/10" id="paymentItemList"></div>
+            <div class="hidden p-10 text-center" id="paymentEmptyState">
+              <span class="material-symbols-outlined text-5xl text-on-surface-variant/40 mb-3">shopping_basket</span>
+              <h3 class="font-headline text-2xl text-primary mb-2">No order items</h3>
+              <p class="text-on-surface-variant mb-6">Go back to Point of Sale and add items before checkout.</p>
+              <a class="inline-flex items-center gap-2 bg-primary text-white px-5 py-3 rounded-xl font-bold" href="POS_menu.html">
+                <span class="material-symbols-outlined">arrow_back</span>
+                Back to POS
+              </a>
+            </div>
+          </div>
+
+          <div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/10 shadow-sm overflow-hidden" id="deliveryDetailsPanel">
+            <div class="px-6 py-5 border-b border-outline-variant/10">
+              <h3 class="font-headline text-2xl text-primary">Delivery Details</h3>
+              <p class="mt-1 text-sm text-on-surface-variant">Required for phone orders so the delivery manager can route the trip later.</p>
+            </div>
+            <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
+              <label class="space-y-2">
+                <span class="text-sm font-bold text-on-surface">Customer Name</span>
+                <input id="deliveryCustomerName" type="text" class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" placeholder="Enter customer name" />
+              </label>
+              <label class="space-y-2">
+                <span class="text-sm font-bold text-on-surface">Phone</span>
+                <input id="deliveryCustomerPhone" type="tel" class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" placeholder="Enter phone number" />
+              </label>
+              <label class="space-y-2 md:col-span-2">
+                <span class="text-sm font-bold text-on-surface">Delivery Address</span>
+                <textarea id="deliveryAddress" rows="3" class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" placeholder="Enter delivery address"></textarea>
+              </label>
+              <label class="space-y-2">
+                <span class="text-sm font-bold text-on-surface">Latitude</span>
+                <input id="deliveryLatitude" type="number" min="-90" max="90" step="0.0000001" class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" placeholder="10.7768890" />
+              </label>
+              <label class="space-y-2">
+                <span class="text-sm font-bold text-on-surface">Longitude</span>
+                <input id="deliveryLongitude" type="number" min="-180" max="180" step="0.0000001" class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" placeholder="106.7008060" />
+              </label>
+              <label class="space-y-2 md:col-span-2">
+                <span class="text-sm font-bold text-on-surface">Order Note</span>
+                <textarea id="deliveryOrderNote" rows="2" class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" placeholder="Gate code, delivery instruction, requested time..."></textarea>
+              </label>
+              <label class="md:col-span-2 flex items-start gap-3 rounded-xl bg-surface-container-low p-4">
+                <input id="deliveryReadyForQueue" type="checkbox" checked class="mt-1 rounded border-outline text-secondary focus:ring-secondary" />
+                <span>
+                  <span class="block text-sm font-bold text-primary">Send to delivery queue after checkout</span>
+                  <span class="block text-xs text-on-surface-variant">Turn this off if the order still needs preparation before delivery dispatch.</span>
+                </span>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <aside class="bg-surface-container-lowest rounded-2xl border border-outline-variant/10 shadow-sm p-8 h-fit sticky top-28">
+          <h3 class="font-headline text-2xl text-primary mb-6">Payment Method</h3>
+          <div class="space-y-4 mb-8" id="paymentMethodGroup">
+            <label class="relative block cursor-pointer group" data-payment-option="cod">
+              <input class="peer sr-only" name="payment" type="radio" value="cod" />
+              <div class="flex items-center gap-4 p-5 rounded-xl bg-surface-container-low border-2 border-transparent peer-checked:border-secondary peer-checked:bg-secondary-container/10 transition-all">
+                <div class="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
+                  <span class="material-symbols-outlined text-secondary">local_shipping</span>
+                </div>
+                <div class="flex-1">
+                  <p class="font-bold text-primary">COD</p>
+                  <p class="text-xs text-on-surface-variant">Shipper collects cash on delivery</p>
+                </div>
+              </div>
+            </label>
+            <label class="relative block cursor-pointer group">
+              <input checked="" class="peer sr-only" name="payment" type="radio" value="qr" />
+              <div class="flex items-center gap-4 p-5 rounded-xl bg-surface-container-low border-2 border-transparent peer-checked:border-secondary peer-checked:bg-secondary-container/10 transition-all">
+                <div class="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
+                  <span class="material-symbols-outlined text-secondary">qr_code_2</span>
+                </div>
+                <div class="flex-1">
+                  <p class="font-bold text-primary">QR Bank Transfer</p>
+                  <p class="text-xs text-on-surface-variant">Scan and transfer instantly</p>
+                </div>
+              </div>
+            </label>
+            <label class="relative block cursor-pointer group">
+              <input class="peer sr-only" name="payment" type="radio" value="cash" />
+              <div class="flex items-center gap-4 p-5 rounded-xl bg-surface-container-low border-2 border-transparent peer-checked:border-secondary peer-checked:bg-secondary-container/10 transition-all">
+                <div class="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
+                  <span class="material-symbols-outlined text-secondary">payments</span>
+                </div>
+                <div class="flex-1">
+                  <p class="font-bold text-primary">Cash</p>
+                  <p class="text-xs text-on-surface-variant">Manual register payment</p>
+                </div>
+              </div>
+            </label>
+            <label class="relative block cursor-pointer group">
+              <input class="peer sr-only" name="payment" type="radio" value="card" />
+              <div class="flex items-center gap-4 p-5 rounded-xl bg-surface-container-low border-2 border-transparent peer-checked:border-secondary peer-checked:bg-secondary-container/10 transition-all">
+                <div class="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
+                  <span class="material-symbols-outlined text-secondary">credit_card</span>
+                </div>
+                <div class="flex-1">
+                  <p class="font-bold text-primary">Credit Card</p>
+                  <p class="text-xs text-on-surface-variant">Swipe, insert, or tap</p>
+                </div>
+              </div>
+            </label>
+          </div>
+
+          <div class="rounded-2xl bg-surface-container-low p-6 space-y-4 mb-8">
+            <div class="flex justify-between text-sm text-on-surface-variant">
+              <span>Subtotal</span>
+              <span class="font-bold" id="paymentSubtotal">0 VND</span>
+            </div>
+            <div class="h-px bg-outline-variant/20"></div>
+            <div class="flex justify-between items-end">
+              <span class="font-headline text-2xl text-primary">Total</span>
+              <span class="font-headline text-3xl text-secondary" id="paymentTotal">0 VND</span>
+            </div>
+          </div>
+
+          <p class="hidden text-sm font-bold mb-4" id="paymentStatus"></p>
+
+          <button class="w-full bg-secondary text-on-secondary py-5 rounded-2xl font-bold text-lg shadow-[0_12px_40px_-8px_rgba(0,110,8,0.3)] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed" id="payBtn" type="button">
+            <span>Complete Transaction</span>
+            <span class="material-symbols-outlined">arrow_forward</span>
+          </button>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <div class="fixed inset-0 bg-primary/40 backdrop-blur-md z-[100] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-500" id="successOverlay">
+    <div class="bg-surface-container-lowest rounded-3xl p-12 max-w-sm w-full text-center shadow-2xl scale-90 transition-transform duration-500" id="successCard">
+      <div class="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mx-auto mb-6">
+        <span class="material-symbols-outlined text-white text-4xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+      </div>
+      <h2 class="serif-text text-3xl text-primary mb-2">Order Finalized</h2>
+      <p class="text-on-surface-variant mb-8" id="successPaymentText">Transaction completed successfully.</p>
+      <button class="w-full bg-secondary text-white py-4 rounded-xl font-bold" id="newOrderBtn" type="button">New Order</button>
+    </div>
+  </div>
+
+  <script src="../assets/js/layout.js?v=fm-20260530"></script>
+  <script src="../assets/js/main.js?v=pos-orders-20260605"></script>
+</body>
+
+</html>

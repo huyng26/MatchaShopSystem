@@ -14,7 +14,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
         rel="stylesheet" />
-      <link rel="stylesheet" href="../assets/css/style.css" />
+      <link rel="stylesheet" href="../assets/css/style.css?v=app-font-20260605-customer-detail-2" />
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
       <script src="../assets/js/tailwind-config.js"></script>
 </head>
@@ -33,27 +33,26 @@
                 <div
                     class="lg:col-span-8 bg-surface-container-lowest rounded-xl p-8 shadow-[32px_0_64px_-12px_rgba(0,44,4,0.04)] flex flex-col md:flex-row gap-8 items-start">
                     <div class="relative">
-                        <div class="w-32 h-32 rounded-2xl overflow-hidden bg-stone-100">
-                            <img alt="Họ Tên" class="w-full h-full object-cover"
-                                data-alt="Portrait of a sophisticated person in a boutique tea shop, warm lighting, botanical elements in soft focus background"
-                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSmxKaeRAp-qgrv7enYG7BSfsw6eU_tq7JMm2S05DQLFACsx0-NAg2J-nCmsKXu_ySs_UmiiB_OoRajJuRuzb1m2GHNdjMxRpyRF3jeuqdzGTq4oHv-GPJ4CouhlIGdI5YPF0Ksl-jVF6rSxg7phDKXj3YeGeB5oRtemIcv7KUbxLIZFsv0_rTsrnt-9DHq6wYoNApaAwAmJK_g46qIO5fqPwFGKX7bq6w_g21b82X9l5ZcfqkT1tvLqCqxo65hKbZVpupTIQb40ID" />
+                        <div id="customer-avatar" class="w-32 h-32 rounded-2xl overflow-hidden bg-primary-fixed flex items-center justify-center text-on-primary-fixed text-4xl font-bold">
+                            CU
                         </div>
                         <div
+                            id="customer-tier-badge"
                             class="absolute -bottom-2 -right-2 bg-secondary text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter">
-                            Diamond Tier
+                            Loading
                         </div>
                     </div>
                     <div class="flex-1">
                         <div class="flex justify-between items-start mb-4">
                             <div>
-                                <h2 class="text-3xl font-serif text-primary leading-none mb-2">Name: Minh Anh Nguyễn
-                                </h2>
+                                <h2 id="customer-name-heading" class="text-3xl font-serif text-primary leading-none mb-2" style="font-weight: 600;">Loading customer...</h2>
                                 <p class="text-stone-500 font-medium flex items-center gap-2">
                                     <span class="material-symbols-outlined text-[16px]">fingerprint</span>
-                                    Customer ID: #CUST-8829-VN
+                                    Customer ID: <span id="customer-id-label">--</span>
                                 </p>
                             </div>
                             <button
+                                id="open-edit-customer"
                                 class="bg-secondary text-on-secondary px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-secondary/10 hover:opacity-90 transition-opacity">
                                 Edit Profile
                             </button>
@@ -62,22 +61,22 @@
                             <div>
                                 <p class="text-[10px] uppercase font-bold text-stone-400 tracking-wider mb-1">Loyalty
                                     Points</p>
-                                <p class="text-2xl font-serif text-primary">2,450 pts</p>
+                                <p id="customer-loyalty-points" class="text-2xl font-serif text-primary">0 pts</p>
                             </div>
                             <div>
                                 <p class="text-[10px] uppercase font-bold text-stone-400 tracking-wider mb-1">Total
                                     Spent</p>
-                                <p class="text-2xl font-serif text-primary">12.5M VND</p>
+                                <p id="customer-total-spent" class="text-2xl font-serif text-primary">0 ₫</p>
                             </div>
                             <div>
                                 <p class="text-[10px] uppercase font-bold text-stone-400 tracking-wider mb-1">Total
                                     Orders</p>
-                                <p class="text-2xl font-serif text-primary">48</p>
+                                <p id="customer-total-orders" class="text-2xl font-serif text-primary">0</p>
                             </div>
                             <div>
                                 <p class="text-[10px] uppercase font-bold text-stone-400 tracking-wider mb-1">Avg. Order
                                 </p>
-                                <p class="text-2xl font-serif text-primary">260k VND</p>
+                                <p id="customer-average-order" class="text-2xl font-serif text-primary">0 ₫</p>
                             </div>
                         </div>
                     </div>
@@ -88,11 +87,11 @@
                         <div class="relative z-10">
                             <h3 class="text-emerald-200 text-[10px] font-bold uppercase tracking-widest mb-4">Next Tier
                                 Progress</h3>
-                            <p class="text-xl font-serif mb-2">Artisan Curator</p>
+                            <p id="customer-next-tier" class="text-xl font-serif mb-2">Loading tier</p>
                             <div class="w-full bg-white/10 h-1.5 rounded-full overflow-hidden mb-2">
-                                <div class="bg-secondary-container h-full w-[75%]"></div>
+                                <div id="customer-tier-progress" class="bg-secondary-container h-full" style="width: 0%"></div>
                             </div>
-                            <p class="text-xs text-emerald-100/70">550 pts until next milestone</p>
+                            <p id="customer-tier-copy" class="text-xs text-emerald-100/70">Loading loyalty progress</p>
                         </div>
                         <span class="material-symbols-outlined absolute -bottom-4 -right-4 text-white/5 text-[120px]"
                             style="font-variation-settings: 'FILL' 1;">eco</span>
@@ -100,7 +99,7 @@
                     <div class="bg-surface-container-high p-6 rounded-xl flex-1 flex items-center justify-between">
                         <div>
                             <p class="text-[10px] uppercase font-bold text-stone-500 mb-1">Last Active</p>
-                            <p class="font-bold text-primary">Today, 10:45 AM</p>
+                            <p id="customer-last-active" class="font-bold text-primary">Loading...</p>
                         </div>
                         <span
                             class="w-3 h-3 bg-secondary rounded-full animate-pulse shadow-[0_0_12px_rgba(59,166,51,0.5)]"></span>
@@ -119,15 +118,15 @@
                                     class="material-symbols-outlined text-secondary bg-secondary/5 p-2 rounded-lg">phone</span>
                                 <div>
                                     <p class="text-[10px] uppercase font-bold text-stone-400">Phone</p>
-                                    <p class="text-sm font-semibold text-primary">+84 902 334 112</p>
+                                    <p id="customer-phone" class="text-sm font-semibold text-primary">--</p>
                                 </div>
                             </div>
                             <div class="flex items-start gap-4">
                                 <span
-                                    class="material-symbols-outlined text-secondary bg-secondary/5 p-2 rounded-lg">mail</span>
+                                    class="material-symbols-outlined text-secondary bg-secondary/5 p-2 rounded-lg">notes</span>
                                 <div>
-                                    <p class="text-[10px] uppercase font-bold text-stone-400">Email</p>
-                                    <p class="text-sm font-semibold text-primary">minhanh.n@gmail.com</p>
+                                    <p class="text-[10px] uppercase font-bold text-stone-400">Note</p>
+                                    <p id="customer-note-summary" class="text-sm font-semibold text-primary">--</p>
                                 </div>
                             </div>
                             <div class="flex items-start gap-4">
@@ -135,16 +134,15 @@
                                     class="material-symbols-outlined text-secondary bg-secondary/5 p-2 rounded-lg">location_on</span>
                                 <div>
                                     <p class="text-[10px] uppercase font-bold text-stone-400">Address</p>
-                                    <p class="text-sm font-semibold text-primary">215 Lê Lợi, Quận 1, TP. Hồ Chí Minh
-                                    </p>
+                                    <p id="customer-address" class="text-sm font-semibold text-primary">--</p>
                                 </div>
                             </div>
                             <div class="flex items-start gap-4">
                                 <span
-                                    class="material-symbols-outlined text-secondary bg-secondary/5 p-2 rounded-lg">cake</span>
+                                    class="material-symbols-outlined text-secondary bg-secondary/5 p-2 rounded-lg">military_tech</span>
                                 <div>
-                                    <p class="text-[10px] uppercase font-bold text-stone-400">Date of Birth</p>
-                                    <p class="text-sm font-semibold text-primary">August 12, 1994</p>
+                                    <p class="text-[10px] uppercase font-bold text-stone-400">Loyalty Tier</p>
+                                    <p id="customer-tier-label" class="text-sm font-semibold text-primary">--</p>
                                 </div>
                             </div>
                             <div class="flex items-start gap-4">
@@ -152,7 +150,7 @@
                                     class="material-symbols-outlined text-secondary bg-secondary/5 p-2 rounded-lg">calendar_today</span>
                                 <div>
                                     <p class="text-[10px] uppercase font-bold text-stone-400">Registered</p>
-                                    <p class="text-sm font-semibold text-primary">Jan 15, 2023</p>
+                                    <p id="customer-registered" class="text-sm font-semibold text-primary">--</p>
                                 </div>
                             </div>
                         </div>
@@ -160,17 +158,7 @@
                     <!-- Preferences Section -->
                     <section class="bg-emerald-900/5 rounded-xl p-6 border border-emerald-900/10">
                         <h3 class="text-primary font-serif text-xl mb-4">Preferences &amp; Notes</h3>
-                        <div class="flex flex-wrap gap-2 mb-4">
-                            <span
-                                class="px-3 py-1 bg-white text-secondary text-[11px] font-bold rounded-full border border-secondary/20">Ceremonial
-                                Grade</span>
-                            <span
-                                class="px-3 py-1 bg-white text-secondary text-[11px] font-bold rounded-full border border-secondary/20">No
-                                Sugar</span>
-                            <span
-                                class="px-3 py-1 bg-white text-secondary text-[11px] font-bold rounded-full border border-secondary/20">Eco-conscious</span>
-                        </div>
-                        <p class="text-xs text-stone-600 leading-relaxed italic">"Prefers eco-friendly packaging. Usually orders on weekend mornings."</p>
+                        <p id="customer-note" class="text-xs text-stone-600 leading-relaxed italic">Loading customer notes...</p>
                     </section>
                 </div>
                 <!-- Purchase History & Activity -->
@@ -180,10 +168,6 @@
                         class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm border border-stone-100">
                         <div class="px-6 py-5 flex justify-between items-center border-b border-stone-50">
                             <h3 class="text-primary font-serif text-xl">Order History</h3>
-                            <button class="text-secondary text-sm font-bold flex items-center gap-1 hover:underline">
-                                View All
-                                <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
-                            </button>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left">
@@ -197,46 +181,9 @@
                                         <th class="px-6 py-4">Status</th>
                                     </tr>
                                 </thead>
-                                <tbody class="text-sm divide-y divide-stone-50">
-                                    <tr class="hover:bg-stone-50 transition-colors">
-                                        <td class="px-6 py-4 font-bold text-primary">#ORD-99102</td>
-                                        <td class="px-6 py-4 text-stone-500">22/05/2024</td>
-                                        <td class="px-6 py-4 font-medium">Uji Ceremonial Matcha</td>
-                                        <td class="px-6 py-4 font-bold">450,000 VND</td>
-                                        <td class="px-6 py-4">
-                                            <span
-                                                class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase">Completed</span>
-                                        </td>
-                                    </tr>
-                                    <tr class="hover:bg-stone-50 transition-colors">
-                                        <td class="px-6 py-4 font-bold text-primary">#ORD-98845</td>
-                                        <td class="px-6 py-4 text-stone-500">14/05/2024</td>
-                                        <td class="px-6 py-4 font-medium">Chasen Bamboo Whisk</td>
-                                        <td class="px-6 py-4 font-bold">280,000 VND</td>
-                                        <td class="px-6 py-4">
-                                            <span
-                                                class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase">Completed</span>
-                                        </td>
-                                    </tr>
-                                    <tr class="hover:bg-stone-50 transition-colors">
-                                        <td class="px-6 py-4 font-bold text-primary">#ORD-97331</td>
-                                        <td class="px-6 py-4 text-stone-500">02/05/2024</td>
-                                        <td class="px-6 py-4 font-medium">Matcha Latte Mix (Set of 3)</td>
-                                        <td class="px-6 py-4 font-bold">1,250,000 VND</td>
-                                        <td class="px-6 py-4">
-                                            <span
-                                                class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase">Completed</span>
-                                        </td>
-                                    </tr>
-                                    <tr class="hover:bg-stone-50 transition-colors">
-                                        <td class="px-6 py-4 font-bold text-primary">#ORD-96552</td>
-                                        <td class="px-6 py-4 text-stone-500">20/04/2024</td>
-                                        <td class="px-6 py-4 font-medium">Genmaicha Loose Leaf</td>
-                                        <td class="px-6 py-4 font-bold">320,000 VND</td>
-                                        <td class="px-6 py-4">
-                                            <span
-                                                class="px-2.5 py-0.5 rounded-full bg-stone-100 text-stone-500 text-[10px] font-bold uppercase">Cancelled</span>
-                                        </td>
+                                <tbody id="customer-orders-body" class="text-sm divide-y divide-stone-50">
+                                    <tr>
+                                        <td class="px-6 py-8 text-center text-sm font-bold text-stone-500" colspan="5">Loading orders...</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -246,42 +193,10 @@
                     <section class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-stone-100">
                         <h3 class="text-primary font-serif text-xl mb-6">Recent Activity</h3>
                         <div
+                            id="customer-activity"
                             class="relative pl-8 space-y-8 before:content-[''] before:absolute before:left-[11px] before:top-0 before:bottom-0 before:w-[2px] before:bg-stone-100">
-                            <!-- Activity Item 1 -->
                             <div class="relative">
-                                <span
-                                    class="absolute -left-[30px] top-0 w-6 h-6 rounded-full bg-secondary flex items-center justify-center text-white text-[14px] z-10">
-                                    <span class="material-symbols-outlined text-[16px]">stars</span>
-                                </span>
-                                <div>
-                                    <p class="text-sm font-bold text-primary">Promoted to Diamond Tier</p>
-                                    <p class="text-xs text-stone-500 mt-1">May 20, 2024 • 09:15 AM</p>
-                                    <p
-                                        class="text-xs mt-2 bg-secondary/5 text-secondary inline-block px-3 py-1 rounded-lg">
-                                        +1,500 Reward Points earned this month</p>
-                                </div>
-                            </div>
-                            <!-- Activity Item 2 -->
-                            <div class="relative">
-                                <span
-                                    class="absolute -left-[30px] top-0 w-6 h-6 rounded-full bg-stone-200 flex items-center justify-center text-stone-500 text-[14px] z-10">
-                                    <span class="material-symbols-outlined text-[16px]">reviews</span>
-                                </span>
-                                <div>
-                                    <p class="text-sm font-bold text-primary">Wrote a 5-star review for "Uji Ceremonial Matcha"</p>
-                                    <p class="text-xs text-stone-500 mt-1">May 18, 2024 • 03:40 PM</p>
-                                </div>
-                            </div>
-                            <!-- Activity Item 3 -->
-                            <div class="relative">
-                                <span
-                                    class="absolute -left-[30px] top-0 w-6 h-6 rounded-full bg-stone-200 flex items-center justify-center text-stone-500 text-[14px] z-10">
-                                    <span class="material-symbols-outlined text-[16px]">local_shipping</span>
-                                </span>
-                                <div>
-                                    <p class="text-sm font-bold text-primary">Order #ORD-99102 was delivered successfully</p>
-                                    <p class="text-xs text-stone-500 mt-1">May 15, 2024 • 11:20 AM</p>
-                                </div>
+                                <p class="text-sm font-bold text-primary">Loading activity...</p>
                             </div>
                         </div>
                     </section>
@@ -289,16 +204,397 @@
             </div>
         </div>
     </main>
-    <!-- Contextual FAB for high-level customer action -->
-    <button
-        class="fixed bottom-8 right-8 w-14 h-14 bg-secondary text-white rounded-full flex items-center justify-center shadow-2xl shadow-secondary/40 hover:scale-105 active:scale-95 transition-transform group">
-        <span class="material-symbols-outlined group-hover:rotate-90 transition-transform">add</span>
-        <span
-            class="absolute right-16 bg-primary text-white text-xs py-2 px-4 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">Create
-            New Order</span>
-    </button>
+    <div id="edit-customer-modal"
+        class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4 py-8 backdrop-blur-sm">
+        <div class="w-full max-w-2xl rounded-2xl bg-surface-container-lowest shadow-2xl">
+            <div class="flex items-center justify-between border-b border-outline-variant px-8 py-5">
+                <div>
+                    <h2 class="font-serif text-3xl text-primary">Edit Customer</h2>
+                    <p class="text-sm text-on-surface-variant">Update customer profile information.</p>
+                </div>
+                <button type="button"
+                    class="close-edit-customer flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <form id="edit-customer-form" class="space-y-5 px-8 py-7">
+                <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                    <label class="space-y-2 md:col-span-2">
+                        <span class="text-sm font-bold text-on-surface">Full Name</span>
+                        <input id="edit-customer-name" type="text" required
+                            class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
+                    </label>
+                    <label class="space-y-2">
+                        <span class="text-sm font-bold text-on-surface">Phone</span>
+                        <input id="edit-customer-phone" type="tel"
+                            class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
+                    </label>
+                    <label class="space-y-2">
+                        <span class="text-sm font-bold text-on-surface">Loyalty Points</span>
+                        <input id="edit-customer-points" type="number" min="0" step="1" required
+                            class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
+                    </label>
+                    <label class="space-y-2 md:col-span-2">
+                        <span class="text-sm font-bold text-on-surface">Address</span>
+                        <input id="edit-customer-address" type="text"
+                            class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
+                    </label>
+                    <label class="space-y-2 md:col-span-2">
+                        <span class="text-sm font-bold text-on-surface">Note</span>
+                        <textarea id="edit-customer-note" rows="3"
+                            class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary"></textarea>
+                    </label>
+                </div>
+                <p id="edit-customer-status" class="hidden text-sm font-bold"></p>
+                <div class="flex flex-wrap items-center justify-between gap-3 border-t border-outline-variant pt-5">
+                    <button id="delete-customer" type="button"
+                        class="rounded-full bg-error/10 px-6 py-2.5 text-sm font-bold text-error hover:bg-error/15">
+                        Delete Customer
+                    </button>
+                    <div class="flex gap-3">
+                        <button type="button"
+                            class="close-edit-customer rounded-full bg-surface-container-high px-6 py-2.5 text-sm font-bold text-on-surface hover:bg-surface-container-highest">
+                            Cancel
+                        </button>
+                        <button id="save-edit-customer" type="submit"
+                            class="rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-white hover:bg-primary/90">
+                            Save Changes
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
   <script src="../assets/js/layout.js?v=fm-20260530"></script>
   <script src="../assets/js/main.js?v=fm-20260530"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const API_BASE_URL = window.MATCHA_API_BASE_URL || 'http://localhost:8000/api/v1';
+        const params = new URLSearchParams(window.location.search);
+        const customerId = params.get('id');
+        const modal = document.getElementById('edit-customer-modal');
+        const form = document.getElementById('edit-customer-form');
+        const statusMessage = document.getElementById('edit-customer-status');
+        const saveButton = document.getElementById('save-edit-customer');
+        const deleteButton = document.getElementById('delete-customer');
+        const ordersBody = document.getElementById('customer-orders-body');
+        const activityList = document.getElementById('customer-activity');
+        let currentCustomer = null;
+        let currentOrders = [];
+
+        const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+        }[character]));
+        const formatNumber = (value) => new Intl.NumberFormat('vi-VN').format(Number(value) || 0);
+        const formatCurrency = (value) => new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND',
+            maximumFractionDigits: 0,
+        }).format(Number(value) || 0);
+        const formatDate = (value) => {
+            if (!value) return '--';
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return '--';
+            return new Intl.DateTimeFormat('vi-VN').format(date);
+        };
+        const getInitials = (name) => {
+            const words = String(name || '').trim().split(/\s+/).filter(Boolean);
+            if (!words.length) return 'CU';
+            if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+            return `${words[0][0]}${words[words.length - 1][0]}`.toUpperCase();
+        };
+        const getTier = (points) => {
+            const loyaltyPoints = Number(points) || 0;
+            if (loyaltyPoints >= 1000) {
+                return {
+                    label: 'Gold',
+                    nextLabel: 'Gold Tier',
+                    progress: 100,
+                    copy: `${formatNumber(loyaltyPoints)} loyalty points`,
+                    badgeClass: 'bg-amber-500 text-white',
+                };
+            }
+            if (loyaltyPoints >= 300) {
+                const progress = Math.min(99, Math.round((loyaltyPoints / 1000) * 100));
+                return {
+                    label: 'Silver',
+                    nextLabel: 'Gold Tier',
+                    progress,
+                    copy: `${formatNumber(1000 - loyaltyPoints)} points until Gold`,
+                    badgeClass: 'bg-stone-400 text-white',
+                };
+            }
+            const progress = Math.min(99, Math.round((loyaltyPoints / 300) * 100));
+            return {
+                label: 'Bronze',
+                nextLabel: 'Silver Tier',
+                progress,
+                copy: `${formatNumber(300 - loyaltyPoints)} points until Silver`,
+                badgeClass: 'bg-orange-500 text-white',
+            };
+        };
+        const getStatusClass = (status) => {
+            const normalized = String(status || '').toLowerCase();
+            if (['completed', 'paid', 'done'].includes(normalized)) return 'bg-secondary/10 text-secondary';
+            if (['cancelled', 'canceled', 'failed'].includes(normalized)) return 'bg-error/10 text-error';
+            return 'bg-stone-100 text-stone-600';
+        };
+        const getTokenHeaders = () => {
+            const token = localStorage.getItem('matcha_access_token');
+            return token ? { Authorization: `Bearer ${token}` } : {};
+        };
+        const getListData = (data) => {
+            if (Array.isArray(data)) return data;
+            if (Array.isArray(data?.items)) return data.items;
+            return [];
+        };
+        const fetchApiData = async (path, options = {}) => {
+            const response = await fetch(`${API_BASE_URL}${path}`, {
+                ...options,
+                headers: {
+                    ...getTokenHeaders(),
+                    ...(options.headers || {}),
+                },
+            });
+            const payload = await response.json().catch(() => null);
+            if (!response.ok || payload?.success === false) {
+                throw new Error(payload?.message || 'Request failed');
+            }
+            return payload?.data ?? payload;
+        };
+        const setText = (id, value) => {
+            const element = document.getElementById(id);
+            if (element) element.textContent = value;
+        };
+        const setStatus = (message, type = 'info') => {
+            statusMessage.textContent = message;
+            statusMessage.className = `text-sm font-bold ${type === 'error' ? 'text-error' : 'text-secondary'}`;
+            statusMessage.classList.toggle('hidden', !message);
+        };
+        const openModal = () => {
+            if (!currentCustomer) return;
+            setStatus('');
+            document.getElementById('edit-customer-name').value = currentCustomer.name || '';
+            document.getElementById('edit-customer-phone').value = currentCustomer.phone || '';
+            document.getElementById('edit-customer-points').value = Number(currentCustomer.loyalty_points) || 0;
+            document.getElementById('edit-customer-address').value = currentCustomer.address || '';
+            document.getElementById('edit-customer-note').value = currentCustomer.note || '';
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.classList.add('overflow-hidden');
+        };
+        const closeModal = () => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.classList.remove('overflow-hidden');
+        };
+        const renderOrders = (orders) => {
+            ordersBody.innerHTML = '';
+            if (!orders.length) {
+                ordersBody.innerHTML = `
+                    <tr>
+                        <td class="px-6 py-8 text-center text-sm font-bold text-stone-500" colspan="5">No orders found.</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            orders.forEach((order) => {
+                const item = Array.isArray(order.items) && order.items.length ? order.items[0] : null;
+                const productName = item?.product_name || item?.name || order.order_type || '--';
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-surface-container-low/30';
+                row.innerHTML = `
+                    <td class="px-6 py-4 font-mono text-xs text-stone-500">${escapeHtml(order.order_code || order.id)}</td>
+                    <td class="px-6 py-4 text-stone-500">${escapeHtml(formatDate(order.created_at))}</td>
+                    <td class="px-6 py-4 font-bold text-primary">${escapeHtml(productName)}</td>
+                    <td class="px-6 py-4 font-bold text-primary">${escapeHtml(formatCurrency(order.total_amount))}</td>
+                    <td class="px-6 py-4">
+                        <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${getStatusClass(order.status)}">
+                            ${escapeHtml(order.status || 'unknown')}
+                        </span>
+                    </td>
+                `;
+                ordersBody.appendChild(row);
+            });
+        };
+        const renderActivity = (customer, orders) => {
+            const activities = [];
+            orders.slice(0, 3).forEach((order) => {
+                activities.push({
+                    date: order.created_at,
+                    title: `Order ${order.order_code || order.id}`,
+                    copy: `${order.status || 'Order'} - ${formatCurrency(order.total_amount)}`,
+                    icon: 'receipt_long',
+                });
+            });
+            if (customer.updated_at) {
+                activities.push({
+                    date: customer.updated_at,
+                    title: 'Profile Updated',
+                    copy: 'Customer information was updated.',
+                    icon: 'edit',
+                });
+            }
+            if (customer.created_at) {
+                activities.push({
+                    date: customer.created_at,
+                    title: 'Profile Created',
+                    copy: 'Customer profile was created.',
+                    icon: 'person_add',
+                });
+            }
+
+            activityList.innerHTML = '';
+            if (!activities.length) {
+                activityList.innerHTML = '<div class="relative"><p class="text-sm font-bold text-stone-500">No activity found.</p></div>';
+                return;
+            }
+
+            activities
+                .sort((first, second) => new Date(second.date || 0) - new Date(first.date || 0))
+                .slice(0, 5)
+                .forEach((activity) => {
+                    const item = document.createElement('div');
+                    item.className = 'relative';
+                    item.innerHTML = `
+                        <span class="absolute -left-[33px] top-0 flex h-6 w-6 items-center justify-center rounded-full bg-secondary text-white">
+                            <span class="material-symbols-outlined text-[14px]">${escapeHtml(activity.icon)}</span>
+                        </span>
+                        <p class="text-[10px] uppercase font-bold text-stone-400">${escapeHtml(formatDate(activity.date))}</p>
+                        <p class="text-sm font-bold text-primary">${escapeHtml(activity.title)}</p>
+                        <p class="text-xs text-stone-500">${escapeHtml(activity.copy)}</p>
+                    `;
+                    activityList.appendChild(item);
+                });
+        };
+        const renderCustomer = (customer, orders) => {
+            const tier = getTier(customer.loyalty_points);
+            const totalSpent = orders.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0);
+            const averageOrder = orders.length ? totalSpent / orders.length : 0;
+            const latestOrderDate = orders
+                .map((order) => order.created_at)
+                .filter(Boolean)
+                .sort((first, second) => new Date(second) - new Date(first))[0];
+            const lastActive = latestOrderDate || customer.updated_at || customer.created_at;
+            const note = customer.note || 'No note available.';
+
+            document.getElementById('customer-avatar').textContent = getInitials(customer.name);
+            const tierBadge = document.getElementById('customer-tier-badge');
+            tierBadge.textContent = tier.label;
+            tierBadge.className = `absolute -bottom-2 -right-2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter ${tier.badgeClass}`;
+            setText('customer-name-heading', customer.name || 'Unnamed customer');
+            setText('customer-id-label', customer.id || '--');
+            setText('customer-loyalty-points', `${formatNumber(customer.loyalty_points)} pts`);
+            setText('customer-total-spent', formatCurrency(totalSpent));
+            setText('customer-total-orders', formatNumber(orders.length));
+            setText('customer-average-order', formatCurrency(averageOrder));
+            setText('customer-next-tier', tier.nextLabel);
+            setText('customer-tier-copy', tier.copy);
+            setText('customer-last-active', formatDate(lastActive));
+            setText('customer-phone', customer.phone || '--');
+            setText('customer-note-summary', note);
+            setText('customer-address', customer.address || '--');
+            setText('customer-tier-label', tier.label);
+            setText('customer-registered', formatDate(customer.created_at));
+            setText('customer-note', note);
+            document.getElementById('customer-tier-progress').style.width = `${tier.progress}%`;
+        };
+        const showLoadError = (message) => {
+            setText('customer-name-heading', 'Cannot load customer');
+            setText('customer-id-label', customerId || '--');
+            ordersBody.innerHTML = `
+                <tr>
+                    <td class="px-6 py-8 text-center text-sm font-bold text-error" colspan="5">${escapeHtml(message)}</td>
+                </tr>
+            `;
+            activityList.innerHTML = `<div class="relative"><p class="text-sm font-bold text-error">${escapeHtml(message)}</p></div>`;
+        };
+        const loadCustomer = async () => {
+            if (!customerId) {
+                showLoadError('Missing customer id in URL.');
+                return;
+            }
+
+            try {
+                const [customer, ordersData] = await Promise.all([
+                    fetchApiData(`/customers/${encodeURIComponent(customerId)}`),
+                    fetchApiData(`/customers/${encodeURIComponent(customerId)}/orders`).catch((error) => {
+                        console.warn('Cannot load customer orders:', error);
+                        return [];
+                    }),
+                ]);
+                currentCustomer = customer;
+                currentOrders = getListData(ordersData);
+                renderCustomer(currentCustomer, currentOrders);
+                renderOrders(currentOrders);
+                renderActivity(currentCustomer, currentOrders);
+            } catch (error) {
+                console.error('Failed to load customer:', error);
+                showLoadError('Cannot load customer. Please sign in with an admin or cashier account and check the backend server.');
+            }
+        };
+
+        document.getElementById('open-edit-customer').addEventListener('click', openModal);
+        document.querySelectorAll('.close-edit-customer').forEach((button) => {
+            button.addEventListener('click', closeModal);
+        });
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) closeModal();
+        });
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            if (!form.reportValidity() || !customerId) return;
+
+            const payload = {
+                name: document.getElementById('edit-customer-name').value.trim(),
+                phone: document.getElementById('edit-customer-phone').value.trim() || null,
+                address: document.getElementById('edit-customer-address').value.trim() || null,
+                note: document.getElementById('edit-customer-note').value.trim() || null,
+                loyalty_points: Number(document.getElementById('edit-customer-points').value) || 0,
+            };
+
+            saveButton.disabled = true;
+            saveButton.textContent = 'Saving...';
+            setStatus('Saving customer...');
+            try {
+                await fetchApiData(`/customers/${encodeURIComponent(customerId)}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+                closeModal();
+                await loadCustomer();
+            } catch (error) {
+                console.error('Failed to update customer:', error);
+                setStatus(error.message || 'Cannot update customer. Please check the backend server.', 'error');
+            } finally {
+                saveButton.disabled = false;
+                saveButton.textContent = 'Save Changes';
+            }
+        });
+        deleteButton.addEventListener('click', async () => {
+            if (!customerId || !window.confirm('Delete this customer?')) return;
+
+            deleteButton.disabled = true;
+            setStatus('Deleting customer...');
+            try {
+                await fetchApiData(`/customers/${encodeURIComponent(customerId)}`, { method: 'DELETE' });
+                window.location.href = 'customer_list.html';
+            } catch (error) {
+                console.error('Failed to delete customer:', error);
+                setStatus(error.message || 'Cannot delete customer. Please check the backend server.', 'error');
+                deleteButton.disabled = false;
+            }
+        });
+
+        loadCustomer();
+    });
+  </script>
 </body>
 
 </html>

@@ -1,8 +1,14 @@
 /* MatchaShop — shared styles (extracted from HTML <style> blocks) */
 
 /* Base typography */
+:root {
+  --app-font: 'Manrope', sans-serif;
+  --number-font: 'Manrope', sans-serif;
+  --page-header-font: 'Newsreader', serif;
+}
+
 body {
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--app-font);
   background-color: #f9f9f8;
 }
 
@@ -17,8 +23,33 @@ h3,
   font-family: 'Newsreader', serif;
 }
 
+/* Shared number typography */
+html body .number-font,
+html body .font-mono,
+html body input[type="number"],
+html body [id*="amount" i],
+html body [id*="average" i],
+html body [id*="count" i],
+html body [id*="orders" i],
+html body [id*="points" i],
+html body [id*="price" i],
+html body [id*="quantity" i],
+html body [id*="salary" i],
+html body [id*="spent" i],
+html body [id*="stock" i],
+html body [id*="subtotal" i],
+html body [id*="threshold" i],
+html body [id*="total" i],
+html body [id*="value" i] {
+  font-family: var(--number-font) !important;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  font-variant-numeric: tabular-nums lining-nums !important;
+  letter-spacing: 0 !important;
+}
+
 /* Material Symbols */
 .material-symbols-outlined {
+  font-family: 'Material Symbols Outlined' !important;
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
   display: inline-block;
   line-height: 1;
@@ -27,7 +58,9 @@ h3,
 
 /* Login / auth variants */
 body.page-login .material-symbols-outlined,
-body.page-forgot-password-1 .material-symbols-outlined {
+body.page-forgot-password-1 .material-symbols-outlined,
+body.page-forgot-password-2 .material-symbols-outlined,
+body.page-register .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
 }
 
@@ -114,8 +147,9 @@ body.page-shipper .custom-scrollbar::-webkit-scrollbar-thumb {
   border: none !important;
 }
 
-/* Shared management tables: Inventory, Customers, Employees */
+/* Shared management tables: Inventory, Accounts, Customers, Employees */
 body.page-inventory-list,
+body.page-account-list,
 body.page-customer-list,
 body.page-employee-list,
 body.page-financial-management,
@@ -124,6 +158,7 @@ body.page-settings {
 }
 
 body.page-inventory-list table,
+body.page-account-list table,
 body.page-customer-list table,
 body.page-employee-list table,
 body.page-financial-management table {
@@ -136,6 +171,7 @@ body.page-financial-management table {
 }
 
 body.page-inventory-list .management-table-card,
+body.page-account-list .management-table-card,
 body.page-customer-list .management-table-card,
 body.page-employee-list .management-table-card,
 body.page-financial-management .management-table-card,
@@ -150,6 +186,7 @@ body.page-employee-list .grid > .col-span-12.lg\:col-span-12 {
 }
 
 body.page-inventory-list .management-table-card,
+body.page-account-list .management-table-card,
 body.page-customer-list .management-table-card,
 body.page-employee-list .management-table-card,
 body.page-financial-management .management-table-card {
@@ -161,6 +198,7 @@ body.page-employee-list .grid > .col-span-12.lg\:col-span-12 {
 }
 
 body.page-inventory-list thead tr,
+body.page-account-list thead tr,
 body.page-customer-list thead tr,
 body.page-employee-list thead tr,
 body.page-financial-management thead tr {
@@ -169,6 +207,7 @@ body.page-financial-management thead tr {
 }
 
 body.page-inventory-list th,
+body.page-account-list th,
 body.page-customer-list th,
 body.page-employee-list th,
 body.page-financial-management th {
@@ -185,6 +224,7 @@ body.page-financial-management th {
 }
 
 body.page-inventory-list td,
+body.page-account-list td,
 body.page-customer-list td,
 body.page-employee-list td,
 body.page-financial-management td {
@@ -199,6 +239,7 @@ body.page-financial-management td {
 }
 
 body.page-inventory-list td *,
+body.page-account-list td *,
 body.page-customer-list td *,
 body.page-employee-list td *,
 body.page-financial-management td * {
@@ -206,6 +247,7 @@ body.page-financial-management td * {
 }
 
 body.page-inventory-list tbody tr,
+body.page-account-list tbody tr,
 body.page-customer-list tbody tr,
 body.page-employee-list tbody tr,
 body.page-financial-management tbody tr {
@@ -214,6 +256,7 @@ body.page-financial-management tbody tr {
 }
 
 body.page-inventory-list tbody tr:hover,
+body.page-account-list tbody tr:hover,
 body.page-customer-list tbody tr:hover,
 body.page-employee-list tbody tr:hover,
 body.page-financial-management tbody tr:hover {
@@ -221,6 +264,7 @@ body.page-financial-management tbody tr:hover {
 }
 
 body.page-inventory-list tbody tr:hover td,
+body.page-account-list tbody tr:hover td,
 body.page-customer-list tbody tr:hover td,
 body.page-employee-list tbody tr:hover td,
 body.page-financial-management tbody tr:hover td {
@@ -228,6 +272,7 @@ body.page-financial-management tbody tr:hover td {
 }
 
 body.page-inventory-list tbody tr:last-child td,
+body.page-account-list tbody tr:last-child td,
 body.page-customer-list tbody tr:last-child td,
 body.page-employee-list tbody tr:last-child td,
 body.page-financial-management tbody tr:last-child td {
@@ -557,4 +602,66 @@ body.page-financial-management .management-table-footer button:hover {
   border-radius: 12px;
   background: #eef3ec;
   color: #002c04;
+}
+
+/* Global font unification: keep Newsreader only for the main page header. */
+html body :where(*):not(.material-symbols-outlined) {
+  font-family: var(--app-font) !important;
+}
+
+html body :where(
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  .serif,
+  .font-serif,
+  .serif-text,
+  .serif-headline,
+  .font-headline,
+  .font-body,
+  .font-label
+):not(.material-symbols-outlined) {
+  font-family: var(--app-font) !important;
+}
+
+html body .material-symbols-outlined {
+  font-family: 'Material Symbols Outlined' !important;
+}
+
+html body[data-page] main > :where(section, div, header):first-child :where(h1, h2):first-of-type,
+html body[data-page] main :where(#product-name, #ingredient-name, #customer-name-heading, #employee-title),
+html body[data-page] .ml-72 > :where(section, div, header):first-child :where(h1, h2):first-of-type,
+html body.page-login h1:first-of-type,
+html body.page-register h1:first-of-type,
+html body.page-forgot-password-1 h1:first-of-type,
+html body.page-forgot-password-2 h1:first-of-type {
+  font-family: var(--page-header-font) !important;
+}
+
+html body.page-delivery-manage #delivery-management-title {
+  font-family: var(--page-header-font) !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+}
+
+html body .page-header-subtitle {
+  color: #41493e !important;
+  font-family: var(--app-font) !important;
+  font-size: 0.95rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.6 !important;
+  margin-top: 0.5rem !important;
+  max-width: 42rem;
+}
+
+html body.page-customer-detail :where(*):not(.material-symbols-outlined) {
+  font-family: var(--app-font) !important;
+}
+
+html body.page-customer-detail #customer-name-heading {
+  font-family: var(--app-font) !important;
 }

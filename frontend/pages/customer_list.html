@@ -14,7 +14,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
         rel="stylesheet" />
-      <link rel="stylesheet" href="../assets/css/style.css" />
+        <link rel="stylesheet" href="../assets/css/style.css?v=header-subtitle-20260605" />
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
       <script src="../assets/js/tailwind-config.js"></script>
 </head>
@@ -30,9 +30,10 @@
         <div class="flex items-end justify-between mb-10">
             <div>
                     <h2 class="font-serif text-4xl text-primary">Customer List</h2>
-                    <p class="text-stone-500 mt-2 font-body">Manage and track your loyal customers in the system.</p>
+                    <p class="page-header-subtitle">Manage and track your loyal customers in the system.</p>
             </div>
             <button
+                id="open-customer-modal"
                 class="management-primary-action bg-secondary text-on-secondary px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-secondary/20 hover:scale-[1.02] transition-transform active:scale-95">
                 <span class="material-symbols-outlined" data-icon="person_add">person_add</span>
                 Add New Customer
@@ -42,34 +43,34 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
             <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
                 <p class="text-xs font-label uppercase tracking-widest text-stone-400 mb-1">Total Customers</p>
-                <p class="text-3xl font-serif font-bold text-primary">1,284</p>
+                <p id="total-customers-stat" class="text-3xl font-serif font-bold text-primary">0</p>
                 <div class="mt-4 flex items-center text-xs text-secondary font-bold">
                     <span class="material-symbols-outlined text-sm mr-1" data-icon="trending_up">trending_up</span>
-                    +12% this month
+                    Loaded from API
                 </div>
             </div>
             <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
                 <p class="text-xs font-label uppercase tracking-widest text-stone-400 mb-1">Gold Members</p>
-                <p class="text-3xl font-serif font-bold text-primary">156</p>
+                <p id="gold-customers-stat" class="text-3xl font-serif font-bold text-primary">0</p>
                 <div class="mt-4 flex items-center text-xs text-tertiary-container font-bold">
                     <span class="material-symbols-outlined text-sm mr-1" data-icon="military_tech">military_tech</span>
-                    Top tier
+                    1000+ points
                 </div>
             </div>
             <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
                 <p class="text-xs font-label uppercase tracking-widest text-stone-400 mb-1">Retention Rate</p>
-                <p class="text-3xl font-serif font-bold text-primary">84%</p>
+                <p id="active-customers-stat" class="text-3xl font-serif font-bold text-primary">0</p>
                 <div class="mt-4 flex items-center text-xs text-secondary font-bold">
                     <span class="material-symbols-outlined text-sm mr-1" data-icon="favorite">favorite</span>
-                    Above target by 5%
+                    Customers with points
                 </div>
             </div>
             <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
-                <p class="text-xs font-label uppercase tracking-widest text-stone-400 mb-1">Average Spend</p>
-                <p class="text-3xl font-serif font-bold text-primary">450k</p>
+                <p class="text-xs font-label uppercase tracking-widest text-stone-400 mb-1">Loyalty Points</p>
+                <p id="loyalty-points-stat" class="text-3xl font-serif font-bold text-primary">0</p>
                 <div class="mt-4 flex items-center text-xs text-stone-400">
                     <span class="material-symbols-outlined text-sm mr-1" data-icon="payments">payments</span>
-                    per transaction
+                    Total points
                 </div>
             </div>
         </div>
@@ -77,20 +78,12 @@
         <div class="management-table-card bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/10 overflow-hidden">
             <!-- Filter Bar -->
             <div class="management-filter-bar p-6 border-b border-surface-container flex flex-wrap items-center justify-between gap-4">
-                <div class="flex items-center gap-3">
-                    <div
-                        class="flex items-center bg-surface-container px-3 py-2 rounded-lg gap-2 text-sm font-label text-stone-600 cursor-pointer hover:bg-surface-container-high transition-colors">
-                        <span class="material-symbols-outlined text-lg" data-icon="filter_list">filter_list</span>
-                        Membership Tier: All
-                    </div>
-                    <div
-                        class="flex items-center bg-surface-container px-3 py-2 rounded-lg gap-2 text-sm font-label text-stone-600 cursor-pointer hover:bg-surface-container-high transition-colors">
-                        <span class="material-symbols-outlined text-lg" data-icon="calendar_today">calendar_today</span>
-                        Registered: This Year
-                    </div>
-                </div>
-                    <div class="text-xs text-stone-400 font-label">
-                    Showing 1-10 of 1,284 customers
+                <label class="flex min-w-[280px] flex-1 items-center bg-surface-container px-3 py-2 rounded-lg gap-2 text-sm font-label text-stone-600">
+                    <span class="material-symbols-outlined text-lg" data-icon="search">search</span>
+                    <input id="customer-search" class="w-full border-none bg-transparent p-0 text-sm focus:ring-0" type="search" placeholder="Search customers..." />
+                </label>
+                <div id="customer-table-count" class="text-xs text-stone-400 font-label">
+                    Loading customers...
                 </div>
             </div>
             <!-- Table -->
@@ -109,211 +102,279 @@
                                 Membership Tier</th>
                             <th
                                 class="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-stone-400 font-label text-right">
-                                Total Spent</th>
+                                Loyalty Points</th>
                             <th
                                 class="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-stone-400 font-label">
                                 Registered</th>
-                            <th
-                                class="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-stone-400 font-label text-center">
-                                Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-surface-container">
-                        <!-- Row 1 -->
-                        <tr class="hover:bg-surface-container-low/30 transition-colors group cursor-pointer"
-                            onclick="window.location='customer_detail.html'">
-                            <td class="px-6 py-5 font-mono text-xs text-stone-500">#MA-10293</td>
-                            <td class="px-6 py-5">
-                                <a class="flex items-center gap-3" href="customer_detail.html">
-                                    <div
-                                        class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed font-bold text-xs">
-                                        NL</div>
-                                    <div>
-                                        <p class="font-bold text-primary text-sm">Nguyễn Lan Anh</p>
-                                        <p class="text-xs text-stone-400">lananh.nguyen@email.com</p>
-                                    </div>
-                                </a>
-                            </td>
-                            <td class="px-6 py-5">
-                                <span
-                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
-                                    <span class="material-symbols-outlined text-sm mr-1" data-icon="stars"
-                                        data-weight="fill" style="font-variation-settings: 'FILL' 1;">stars</span>
-                                    Gold
-                                </span>
-                            </td>
-                            <td class="px-6 py-5 text-right font-bold text-primary text-sm">12,450,000 VND</td>
-                            <td class="px-6 py-5 text-stone-500 text-xs font-label">12/05/2023</td>
-                            <td class="px-6 py-5">
-                                <div
-                                    class="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button
-                                        class="p-1.5 hover:bg-surface-container rounded-lg text-stone-400 hover:text-primary transition-colors">
-                                        <span class="material-symbols-outlined text-lg"
-                                            data-icon="visibility">visibility</span>
-                                    </button>
-                                    <button
-                                        class="p-1.5 hover:bg-surface-container rounded-lg text-stone-400 hover:text-secondary transition-colors">
-                                        <span class="material-symbols-outlined text-lg" data-icon="edit">edit</span>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        <!-- Row 2 -->
-                        <tr class="hover:bg-surface-container-low/30 transition-colors group cursor-pointer"
-                            onclick="window.location='customer_detail.html'">
-                            <td class="px-6 py-5 font-mono text-xs text-stone-500">#MA-10442</td>
-                            <td class="px-6 py-5">
-                                <a class="flex items-center gap-3" href="customer_detail.html">
-                                    <div
-                                        class="w-8 h-8 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed font-bold text-xs">
-                                        TH</div>
-                                    <div>
-                                        <p class="font-bold text-primary text-sm">Trần Hoàng Nam</p>
-                                        <p class="text-xs text-stone-400">nam.hoang@email.com</p>
-                                    </div>
-                                </a>
-                            </td>
-                            <td class="px-6 py-5">
-                                <span
-                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-stone-200 text-stone-700">
-                                    <span class="material-symbols-outlined text-sm mr-1" data-icon="stars"
-                                        data-weight="fill" style="font-variation-settings: 'FILL' 1;">stars</span>
-                                    Silver
-                                </span>
-                            </td>
-                            <td class="px-6 py-5 text-right font-bold text-primary text-sm">5,200,000 VND</td>
-                            <td class="px-6 py-5 text-stone-500 text-xs font-label">03/08/2023</td>
-                            <td class="px-6 py-5">
-                                <div
-                                    class="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button
-                                        class="p-1.5 hover:bg-surface-container rounded-lg text-stone-400 hover:text-primary transition-colors">
-                                        <span class="material-symbols-outlined text-lg"
-                                            data-icon="visibility">visibility</span>
-                                    </button>
-                                    <button
-                                        class="p-1.5 hover:bg-surface-container rounded-lg text-stone-400 hover:text-secondary transition-colors">
-                                        <span class="material-symbols-outlined text-lg" data-icon="edit">edit</span>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        <!-- Row 3 -->
-                        <tr class="hover:bg-surface-container-low/30 transition-colors group cursor-pointer"
-                            onclick="window.location='customer_detail.html'">
-                            <td class="px-6 py-5 font-mono text-xs text-stone-500">#MA-10512</td>
-                            <td class="px-6 py-5">
-                                <a class="flex items-center gap-3" href="customer_detail.html">
-                                    <div
-                                        class="w-8 h-8 rounded-full bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed font-bold text-xs">
-                                        PV</div>
-                                    <div>
-                                        <p class="font-bold text-primary text-sm">Phạm Văn Minh</p>
-                                        <p class="text-xs text-stone-400">minh.pham@email.com</p>
-                                    </div>
-                                </a>
-                            </td>
-                            <td class="px-6 py-5">
-                                <span
-                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-800">
-                                    <span class="material-symbols-outlined text-sm mr-1" data-icon="stars"
-                                        data-weight="fill" style="font-variation-settings: 'FILL' 1;">stars</span>
-                                    Bronze
-                                </span>
-                            </td>
-                            <td class="px-6 py-5 text-right font-bold text-primary text-sm">850,000 VND</td>
-                            <td class="px-6 py-5 text-stone-500 text-xs font-label">20/10/2023</td>
-                            <td class="px-6 py-5">
-                                <div
-                                    class="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button
-                                        class="p-1.5 hover:bg-surface-container rounded-lg text-stone-400 hover:text-primary transition-colors">
-                                        <span class="material-symbols-outlined text-lg"
-                                            data-icon="visibility">visibility</span>
-                                    </button>
-                                    <button
-                                        class="p-1.5 hover:bg-surface-container rounded-lg text-stone-400 hover:text-secondary transition-colors">
-                                        <span class="material-symbols-outlined text-lg" data-icon="edit">edit</span>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        <!-- Row 4 -->
-                        <tr class="hover:bg-surface-container-low/30 transition-colors group cursor-pointer"
-                            onclick="window.location='customer_detail.html'">
-                            <td class="px-6 py-5 font-mono text-xs text-stone-500">#MA-10668</td>
-                            <td class="px-6 py-5">
-                                <a class="flex items-center gap-3" href="customer_detail.html">
-                                    <div
-                                        class="w-8 h-8 rounded-full bg-primary-fixed-dim flex items-center justify-center text-on-primary-fixed-variant font-bold text-xs">
-                                        LT</div>
-                                    <div>
-                                        <p class="font-bold text-primary text-sm">Lê Thu Thảo</p>
-                                        <p class="text-xs text-stone-400">thao.le@email.com</p>
-                                    </div>
-                                </a>
-                            </td>
-                            <td class="px-6 py-5">
-                                <span
-                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
-                                    <span class="material-symbols-outlined text-sm mr-1" data-icon="stars"
-                                        data-weight="fill" style="font-variation-settings: 'FILL' 1;">stars</span>
-                                    Gold
-                                </span>
-                            </td>
-                            <td class="px-6 py-5 text-right font-bold text-primary text-sm">21,900,000 VND</td>
-                            <td class="px-6 py-5 text-stone-500 text-xs font-label">15/01/2024</td>
-                            <td class="px-6 py-5">
-                                <div
-                                    class="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button
-                                        class="p-1.5 hover:bg-surface-container rounded-lg text-stone-400 hover:text-primary transition-colors">
-                                        <span class="material-symbols-outlined text-lg"
-                                            data-icon="visibility">visibility</span>
-                                    </button>
-                                    <button
-                                        class="p-1.5 hover:bg-surface-container rounded-lg text-stone-400 hover:text-secondary transition-colors">
-                                        <span class="material-symbols-outlined text-lg" data-icon="edit">edit</span>
-                                    </button>
-                                </div>
-                            </td>
+                    <tbody id="customer-table-body" class="divide-y divide-surface-container">
+                        <tr>
+                            <td class="px-6 py-8 text-center text-sm font-bold text-stone-500" colspan="5">Loading customers...</td>
                         </tr>
                     </tbody>
                 </table>
-            </div>
-            <!-- Pagination -->
-            <div
-                class="management-table-footer p-6 bg-surface-container-low/30 border-t border-surface-container flex items-center justify-between">
-                <button
-                    class="text-stone-400 hover:text-primary flex items-center gap-1 text-sm font-bold transition-colors">
-                    <span class="material-symbols-outlined" data-icon="chevron_left">chevron_left</span>
-                    Previous
-                </button>
-                <div class="flex items-center gap-2">
-                    <button class="w-8 h-8 rounded-lg bg-primary text-white text-xs font-bold">1</button>
-                    <button
-                        class="w-8 h-8 rounded-lg hover:bg-surface-container text-stone-600 text-xs font-bold transition-colors">2</button>
-                    <button
-                        class="w-8 h-8 rounded-lg hover:bg-surface-container text-stone-600 text-xs font-bold transition-colors">3</button>
-                    <span class="text-stone-400 text-xs">...</span>
-                    <button
-                        class="w-8 h-8 rounded-lg hover:bg-surface-container text-stone-600 text-xs font-bold transition-colors">128</button>
-                </div>
-                <button
-                    class="text-stone-400 hover:text-primary flex items-center gap-1 text-sm font-bold transition-colors">
-                    Next
-                    <span class="material-symbols-outlined" data-icon="chevron_right">chevron_right</span>
-                </button>
             </div>
         </div>
         <!-- Footer Meta Info -->
         <div class="mt-12 text-center">
             <p class="text-[10px] text-stone-400 font-label uppercase tracking-widest">Matcha Atelier Internal Portal © 2024</p>
         </div>
-        </main>
+        </div>
+    <div id="customer-modal"
+        class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4 py-8 backdrop-blur-sm">
+        <div class="w-full max-w-2xl rounded-2xl bg-surface-container-lowest shadow-2xl">
+            <div class="flex items-center justify-between border-b border-outline-variant px-8 py-5">
+                <div>
+                    <h2 class="font-serif text-3xl text-primary">New Customer</h2>
+                    <p class="text-sm text-on-surface-variant">Create a customer profile.</p>
+                </div>
+                <button id="close-customer-modal" type="button"
+                    class="flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface">
+                    <span class="material-symbols-outlined" data-icon="close">close</span>
+                </button>
+            </div>
+            <form id="customer-form" class="space-y-5 px-8 py-7">
+                <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                    <label class="space-y-2 md:col-span-2">
+                        <span class="text-sm font-bold text-on-surface">Full Name</span>
+                        <input id="customer-name" type="text" required
+                            class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
+                    </label>
+                    <label class="space-y-2">
+                        <span class="text-sm font-bold text-on-surface">Phone</span>
+                        <input id="customer-phone" type="tel"
+                            class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
+                    </label>
+                    <label class="space-y-2">
+                        <span class="text-sm font-bold text-on-surface">Loyalty Points</span>
+                        <input id="customer-points" type="number" min="0" step="1" value="0" required
+                            class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
+                    </label>
+                    <label class="space-y-2 md:col-span-2">
+                        <span class="text-sm font-bold text-on-surface">Address</span>
+                        <input id="customer-address" type="text"
+                            class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
+                    </label>
+                    <label class="space-y-2 md:col-span-2">
+                        <span class="text-sm font-bold text-on-surface">Note</span>
+                        <textarea id="customer-note" rows="3"
+                            class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary"></textarea>
+                    </label>
+                </div>
+                <p id="customer-form-status" class="hidden text-sm font-bold"></p>
+                <div class="flex justify-end gap-3 border-t border-outline-variant pt-5">
+                    <button id="cancel-customer-modal" type="button"
+                        class="rounded-full bg-surface-container-high px-6 py-2.5 text-sm font-bold text-on-surface hover:bg-surface-container-highest">
+                        Cancel
+                    </button>
+                    <button id="save-customer" type="submit"
+                        class="rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-white hover:bg-primary/90">
+                        Save Customer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
   <script src="../assets/js/layout.js?v=fm-20260530"></script>
   <script src="../assets/js/main.js?v=fm-20260530"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const API_BASE_URL = window.MATCHA_API_BASE_URL || 'http://localhost:8000/api/v1';
+        const tableBody = document.getElementById('customer-table-body');
+        const tableCount = document.getElementById('customer-table-count');
+        const searchInput = document.getElementById('customer-search');
+        const modal = document.getElementById('customer-modal');
+        const form = document.getElementById('customer-form');
+        const formStatus = document.getElementById('customer-form-status');
+        const saveButton = document.getElementById('save-customer');
+        const totalCustomersStat = document.getElementById('total-customers-stat');
+        const goldCustomersStat = document.getElementById('gold-customers-stat');
+        const activeCustomersStat = document.getElementById('active-customers-stat');
+        const loyaltyPointsStat = document.getElementById('loyalty-points-stat');
+        let customersCache = [];
+        let searchTimer = null;
+
+        const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+        }[character]));
+        const formatNumber = (value) => new Intl.NumberFormat('vi-VN').format(Number(value) || 0);
+        const formatDate = (value) => value
+            ? new Intl.DateTimeFormat('vi-VN').format(new Date(value))
+            : '--';
+        const getInitials = (name) => {
+            const words = String(name || '').trim().split(/\s+/).filter(Boolean);
+            if (!words.length) return 'CU';
+            if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+            return `${words[0][0]}${words[words.length - 1][0]}`.toUpperCase();
+        };
+        const getTier = (points) => {
+            const loyaltyPoints = Number(points) || 0;
+            if (loyaltyPoints >= 1000) return { label: 'Gold', className: 'bg-amber-100 text-amber-800' };
+            if (loyaltyPoints >= 300) return { label: 'Silver', className: 'bg-stone-200 text-stone-700' };
+            return { label: 'Bronze', className: 'bg-orange-100 text-orange-800' };
+        };
+        const getTokenHeaders = () => {
+            const token = localStorage.getItem('matcha_access_token');
+            return token ? { Authorization: `Bearer ${token}` } : {};
+        };
+        const getListData = (data) => {
+            if (Array.isArray(data)) return data;
+            if (Array.isArray(data?.items)) return data.items;
+            return [];
+        };
+        const fetchApiData = async (path, options = {}) => {
+            const response = await fetch(`${API_BASE_URL}${path}`, {
+                ...options,
+                headers: {
+                    ...getTokenHeaders(),
+                    ...(options.headers || {}),
+                },
+            });
+            const payload = await response.json().catch(() => null);
+            if (!response.ok || payload?.success === false) {
+                throw new Error(payload?.message || 'Request failed');
+            }
+            return payload?.data ?? payload;
+        };
+        const setFormStatus = (message, type = 'info') => {
+            formStatus.textContent = message;
+            formStatus.className = `text-sm font-bold ${type === 'error' ? 'text-error' : 'text-secondary'}`;
+            formStatus.classList.toggle('hidden', !message);
+        };
+        const openModal = () => {
+            setFormStatus('');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.classList.add('overflow-hidden');
+        };
+        const closeModal = () => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.classList.remove('overflow-hidden');
+        };
+        const renderStats = (customers) => {
+            const totalPoints = customers.reduce((sum, customer) => sum + (Number(customer.loyalty_points) || 0), 0);
+            totalCustomersStat.textContent = formatNumber(customers.length);
+            goldCustomersStat.textContent = formatNumber(customers.filter((customer) => Number(customer.loyalty_points) >= 1000).length);
+            activeCustomersStat.textContent = formatNumber(customers.filter((customer) => Number(customer.loyalty_points) > 0).length);
+            loyaltyPointsStat.textContent = formatNumber(totalPoints);
+        };
+        const renderCustomers = (customers) => {
+            tableBody.innerHTML = '';
+            tableCount.textContent = `Showing ${customers.length} customer${customers.length === 1 ? '' : 's'}`;
+            renderStats(customers);
+
+            if (!customers.length) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td class="px-6 py-8 text-center text-sm font-bold text-stone-500" colspan="5">No customers found.</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            customers.forEach((customer) => {
+                const tier = getTier(customer.loyalty_points);
+                const href = `customer_detail.html?id=${encodeURIComponent(customer.id)}`;
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-surface-container-low/30 transition-colors group cursor-pointer';
+                row.addEventListener('click', () => {
+                    window.location.href = href;
+                });
+                row.innerHTML = `
+                    <td class="px-6 py-5 font-mono text-xs text-stone-500">${escapeHtml(customer.id)}</td>
+                    <td class="px-6 py-5">
+                        <a class="flex items-center gap-3" href="${href}">
+                            <div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed font-bold text-xs">
+                                ${escapeHtml(getInitials(customer.name))}
+                            </div>
+                            <div>
+                                <p class="font-bold text-primary text-sm">${escapeHtml(customer.name)}</p>
+                                <p class="text-xs text-stone-400">${escapeHtml(customer.phone || 'No phone')}</p>
+                            </div>
+                        </a>
+                    </td>
+                    <td class="px-6 py-5">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${tier.className}">
+                            <span class="material-symbols-outlined text-sm mr-1" data-icon="stars" style="font-variation-settings: 'FILL' 1;">stars</span>
+                            ${tier.label}
+                        </span>
+                    </td>
+                    <td class="px-6 py-5 text-right font-bold text-primary text-sm">${escapeHtml(formatNumber(customer.loyalty_points))} pts</td>
+                    <td class="px-6 py-5 text-stone-500 text-xs font-label">${escapeHtml(formatDate(customer.created_at))}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        };
+        const loadCustomers = async (search = '') => {
+            try {
+                const query = search ? `?q=${encodeURIComponent(search)}` : '';
+                const customers = getListData(await fetchApiData(`/customers${query}`));
+                customersCache = customers;
+                renderCustomers(customersCache);
+            } catch (error) {
+                console.error('Failed to load customers:', error);
+                tableCount.textContent = 'Cannot load customers';
+                renderStats([]);
+                tableBody.innerHTML = `
+                    <tr>
+                        <td class="px-6 py-8 text-center text-sm font-bold text-error" colspan="5">Cannot load customers. Please sign in with an admin or cashier account and check the backend server.</td>
+                    </tr>
+                `;
+            }
+        };
+
+        document.getElementById('open-customer-modal').addEventListener('click', openModal);
+        document.getElementById('close-customer-modal').addEventListener('click', closeModal);
+        document.getElementById('cancel-customer-modal').addEventListener('click', closeModal);
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) closeModal();
+        });
+        searchInput.addEventListener('input', () => {
+            window.clearTimeout(searchTimer);
+            searchTimer = window.setTimeout(() => loadCustomers(searchInput.value.trim()), 300);
+        });
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            if (!form.reportValidity()) return;
+
+            const payload = {
+                name: document.getElementById('customer-name').value.trim(),
+                phone: document.getElementById('customer-phone').value.trim() || null,
+                address: document.getElementById('customer-address').value.trim() || null,
+                note: document.getElementById('customer-note').value.trim() || null,
+                loyalty_points: Number(document.getElementById('customer-points').value) || 0,
+            };
+
+            saveButton.disabled = true;
+            saveButton.textContent = 'Saving...';
+            setFormStatus('Saving customer...');
+            try {
+                await fetchApiData('/customers', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+                form.reset();
+                closeModal();
+                await loadCustomers(searchInput.value.trim());
+            } catch (error) {
+                console.error('Failed to create customer:', error);
+                setFormStatus(error.message || 'Cannot create customer. Please check the backend server.', 'error');
+            } finally {
+                saveButton.disabled = false;
+                saveButton.textContent = 'Save Customer';
+            }
+        });
+
+        loadCustomers();
+    });
+  </script>
 </body>
 
 </html>
