@@ -15,7 +15,9 @@ from app.models.finance import FinancialRecordType
 from app.models.order import OrderPaymentStatus, OrderStatus, OrderType
 from app.models.payment import PaymentEventStatus, PaymentMethod
 from app.schemas.delivery import (
+    DeliveryBatchSuggestRequest,
     DeliveryCodReconcile,
+    DeliveryLocationUpdate,
     DeliveryOrderDelivered,
     DeliveryOrderFailed,
     DeliveryTripCreate,
@@ -211,6 +213,110 @@ async def test_create_trip_rejects_order_not_ready(monkeypatch):
     assert error.value.status_code == 409
     assert db.commits == 0
     assert db.rollbacks == 1
+
+
+@pytest.mark.asyncio
+async def test_suggest_batches_auto_groups_queue_and_routes_each_batch(monkeypatch):
+    db = FakeDb()
+    first_order = make_order(
+        order_code="ORD-FIRST",
+        total_amount=Decimal("65000.00"),
+        lat=Decimal("10.7780000"),
+        lon=Decimal("106.7020000"),
+    )
+    second_order = make_order(
+        order_code="ORD-SECOND",
+        total_amount=Decimal("75000.00"),
+        lat=Decimal("10.7820000"),
+        lon=Decimal("106.7060000"),
+    )
+    far_order = make_order(
+        order_code="ORD-FAR",
+        total_amount=Decimal("85000.00"),
+        lat=Decimal("10.9000000"),
+        lon=Decimal("106.9000000"),
+    )
+
+    async def list_delivery_queue_orders(db):
+        return [first_order, second_order, far_order]
+
+    monkeypatch.setattr(
+        delivery_service.delivery_repo,
+        "list_delivery_queue_orders",
+        list_delivery_queue_orders,
+    )
+
+    batches = await delivery_service.suggest_batches(
+        db,
+        DeliveryBatchSuggestRequest(max_orders_per_trip=2),
+    )
+
+    assert [len(batch.orders) for batch in batches] == [2, 1]
+    assert [stop.order_code for stop in batches[0].orders] == [
+        "ORD-FIRST",
+        "ORD-SECOND",
+    ]
+    assert [stop.stop_order for stop in batches[0].orders] == [1, 2]
+    assert batches[0].expected_cod_amount == Decimal("140000.00")
+    assert batches[1].orders[0].order_code == "ORD-FAR"
+    assert batches[1].expected_cod_amount == Decimal("85000.00")
+
+
+@pytest.mark.asyncio
+async def test_update_location_records_assigned_shipper_position(monkeypatch):
+    db = FakeDb()
+    shipper_user = make_user(UserRole.SHIPPER)
+    shipper = make_staff(shipper_user.id)
+    trip = SimpleNamespace(
+        id=uuid4(),
+        shipper_id=shipper.id,
+        status=DeliveryTripStatus.IN_TRANSIT,
+    )
+    captured = {}
+
+    async def get_trip_for_update(db, trip_id):
+        return trip
+
+    async def get_staff_profile_by_user_id(db, user_id):
+        return shipper
+
+    async def create_location_log(db, **kwargs):
+        captured["location"] = kwargs
+        return SimpleNamespace(id=uuid4(), **kwargs)
+
+    monkeypatch.setattr(
+        delivery_service.delivery_repo,
+        "get_trip_for_update",
+        get_trip_for_update,
+    )
+    monkeypatch.setattr(
+        delivery_service.staff_repo,
+        "get_staff_profile_by_user_id",
+        get_staff_profile_by_user_id,
+    )
+    monkeypatch.setattr(
+        delivery_service.delivery_repo,
+        "create_location_log",
+        create_location_log,
+    )
+
+    result = await delivery_service.update_location(
+        db,
+        trip.id,
+        DeliveryLocationUpdate(
+            latitude=Decimal("10.7801234"),
+            longitude=Decimal("106.7045678"),
+        ),
+        current_user=shipper_user,
+    )
+
+    assert result.trip_id == trip.id
+    assert result.shipper_id == shipper.id
+    assert captured["location"]["latitude"] == Decimal("10.7801234")
+    assert captured["location"]["longitude"] == Decimal("106.7045678")
+    assert captured["location"]["recorded_at"].tzinfo is not None
+    assert db.commits == 1
+    assert db.rollbacks == 0
 
 
 @pytest.mark.asyncio

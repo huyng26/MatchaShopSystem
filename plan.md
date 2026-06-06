@@ -372,9 +372,14 @@ inactive
 locked
 ```
 
+Account records are login credentials for RBAC and audit trails. Staff-specific
+accounts should normally be created from the staff profile flow so the account
+can be linked immediately.
+
 ### 4.3 Staff Profiles
 
-Purpose: employee information. A user account may have one staff profile.
+Purpose: employee information. A user account may have one staff profile, but a
+staff profile does not always need a login account.
 
 ```text
 staff_profiles
@@ -392,7 +397,12 @@ staff_profiles
 - deleted_at timestamptz nullable
 ```
 
+
 Do not create a separate employee account table. `users` handles login, `staff_profiles` handles staff details.
+When a staff member needs system access, create or link one matching `users`
+account through `staff_profiles.user_id`. The user role and staff role must
+match. Shipper staff must always be linked to a shipper account because delivery
+trips, location updates, and COD actions are assigned to individual shippers.
 
 ### 4.4 Staff Tasks
 
@@ -1152,17 +1162,19 @@ DELETE /api/v1/staff/tasks/{task_id}
 ### Tasks
 
 1. Account CRUD.
-2. Staff profile CRUD.
+2. Staff profile CRUD, including optional linked account creation.
 3. Staff search by name or role.
 4. Task assignment.
 5. Task status update.
-6. Prevent deleting staff with active tasks or active delivery/order links.
-7. Suggest setting staff inactive instead of deleting.
+6. Require shipper staff to have a linked shipper account.
+7. Prevent deleting staff with active tasks or active delivery/order links.
+8. Suggest setting staff inactive instead of deleting.
 
 ### Done when
 
 - Admin can create accounts.
-- Admin can create and update staff.
+- Admin can create and update staff, with or without a linked login account.
+- Admin can create shipper staff only when a shipper account is linked or created.
 - Admin can assign and update tasks.
 
 ---
