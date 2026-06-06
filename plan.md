@@ -2066,6 +2066,78 @@ GET /api/v1/dashboard/best-selling-products?month=2026-05
 GET /api/v1/dashboard/delivery-performance?month=2026-05
 ```
 
+### Dashboard Implementation Status
+
+```text
+Implemented.
+```
+
+The dashboard APIs no longer return mock data. They are backed by the
+existing finance, order, inventory, product, and delivery tables.
+
+Access:
+
+```text
+Required roles:
+- admin
+- delivery_manager
+```
+
+Business date behavior:
+
+```text
+Dashboard day/month windows use the configured shop timezone.
+Default shop_timezone = Asia/Ho_Chi_Minh
+The backend converts local business windows to UTC for timestamp queries.
+```
+
+Current dashboard data rules:
+
+```text
+GET /api/v1/dashboard/today
+- date: local shop date
+- revenue: sum financial_records.amount where record_type = revenue,
+  source_type = order, and financial_records.created_at is inside today
+- order_count: non-deleted orders created today
+- completed_order_count: non-deleted completed orders completed today
+- delivery_queue_count: delivery orders ready_for_delivery with no active trip assignment
+- low_stock_count: ingredients where current_stock <= minimum_threshold
+
+GET /api/v1/dashboard/low-stock
+- Returns low-stock ingredients using the same shape as ingredient low-stock reads.
+- Excludes soft-deleted ingredients.
+
+GET /api/v1/dashboard/best-selling-products?month=YYYY-MM
+- Counts completed, non-deleted orders by completed_at month.
+- Groups by product.
+- quantity_sold = sum(order_items.quantity)
+- revenue = sum(order_items.line_total)
+- Sorts by quantity_sold desc, then revenue desc.
+- Product-level revenue does not allocate order discounts.
+
+GET /api/v1/dashboard/delivery-performance?month=YYYY-MM
+- total_trips: non-deleted trips created in the month
+- completed_trips: completed or reconciled trips completed in the month
+- average_delivery_minutes: average completed_at - started_at in minutes,
+  using trips that have both timestamps
+- cod_pending: sum expected_cod_amount for completed but unreconciled trips
+```
+
+Backend implementation files:
+
+```text
+backend/app/api/v1/dashboard.py
+backend/app/services/dashboard_service.py
+backend/app/repositories/dashboard_repo.py
+backend/app/schemas/dashboard.py
+```
+
+Dashboard API testing guide:
+
+```text
+backend/docs/api-testing-dashboard-swagger.md
+```
+
 ### Finance Summary Formula
 
 ```text
@@ -2092,7 +2164,12 @@ Net Profit = Revenue - Material Cost - Operating Expense
 
 - Finance summary works by month.
 - Expense recording updates finance ledger.
-- Dashboard can show today revenue, order count, and low-stock count.
+- Dashboard can show today revenue, order count, completed order count,
+  delivery queue count, and low-stock count.
+- Dashboard can list low-stock ingredients.
+- Dashboard can list best-selling products by completed-order month.
+- Dashboard can show delivery performance by month.
+- Dashboard endpoints are protected for admin and delivery_manager users.
 
 ---
 
@@ -2447,11 +2524,11 @@ Phase 10:
 - Implement COD reconciliation
 
 Phase 11:
-- Implement expense API
-- Implement finance summary API
-- Implement dashboard today API
-- Implement best-selling product API
-- Implement delivery performance API
+- Implement expense API [done]
+- Implement finance summary API [done]
+- Implement dashboard today API [done]
+- Implement best-selling product API [done]
+- Implement delivery performance API [done]
 
 Phase 12:
 - Add reporting views only if needed
@@ -2464,6 +2541,35 @@ Delivery manager can batch and assign orders
 Shipper can complete delivery flow
 COD reconciliation works
 Finance and dashboard APIs work
+```
+
+Dashboard handoff notes:
+
+```text
+Dashboard endpoints are implemented and protected by role.
+Allowed roles: admin, delivery_manager.
+
+Frontend should call:
+- GET /api/v1/dashboard/today
+- GET /api/v1/dashboard/low-stock
+- GET /api/v1/dashboard/best-selling-products?month=YYYY-MM
+- GET /api/v1/dashboard/delivery-performance?month=YYYY-MM
+
+All responses use the standard wrapper:
+{
+  "success": true,
+  "message": "Fetched successfully",
+  "data": ...
+}
+
+Dashboard date/month calculations use shop local time.
+Default shop_timezone = Asia/Ho_Chi_Minh.
+
+Best-selling products are based on completed orders only.
+Delivery pending COD is based on completed but unreconciled trips.
+
+Swagger testing doc:
+backend/docs/api-testing-dashboard-swagger.md
 ```
 
 Important warning:

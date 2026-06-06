@@ -1,5 +1,7 @@
 from functools import lru_cache
+from typing import Any
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -15,12 +17,21 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
+    shop_timezone: str = "Asia/Ho_Chi_Minh"
     shop_latitude: float = 10.776889
     shop_longitude: float = 106.700806
     supabase_url: str | None = None
     supabase_service_role_key: str | None = None
     supabase_product_images_bucket: str = "product-images"
     product_image_max_size_bytes: int = 2 * 1024 * 1024
+
+    @field_validator("debug", mode="before")
+    @classmethod
+    def normalize_debug(cls, value: Any) -> Any:
+        release_values = {"release", "prod", "production"}
+        if isinstance(value, str) and value.lower() in release_values:
+            return False
+        return value
 
     model_config = SettingsConfigDict(
         env_file=".env",
