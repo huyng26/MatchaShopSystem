@@ -90,16 +90,15 @@
     </section>
 
     <section class="grid grid-cols-1 gap-8 xl:grid-cols-3">
-      <div class="management-table-card xl:col-span-2 bg-white">
+      <div class="management-table-card xl:col-span-2 min-w-0 self-start overflow-hidden bg-white">
         <div class="management-filter-bar flex flex-wrap items-center justify-between gap-4 border-b border-outline-variant/10 p-5">
           <div>
-            <h3 class="font-serif text-2xl text-primary">Financial Records</h3>
+            <h3 class="font-serif text-3xl text-primary" style="font-size: 20px !important; font-weight: 600;">Financial Records</h3>
             <p class="mt-1 text-sm text-on-surface-variant">Immutable monthly records created from orders, expenses, COD reconciliation, and refunds.</p>
           </div>
-          <div class="text-xs font-bold text-on-surface-variant" id="finance-record-count">0 records</div>
         </div>
         <div class="overflow-x-auto">
-          <table>
+          <table class="min-w-[860px]">
             <thead>
               <tr>
                 <th>Record ID</th>
@@ -117,6 +116,18 @@
             </tbody>
           </table>
         </div>
+        <div class="management-table-footer flex items-center justify-between gap-4">
+          <p id="finance-record-count">Loading records...</p>
+          <div id="finance-record-pagination" class="hidden items-center gap-2">
+            <button id="finance-record-prev" type="button" aria-label="Previous finance records page">
+              <span class="material-symbols-outlined">chevron_left</span>
+            </button>
+            <span id="finance-record-page-label">Page 1 of 1</span>
+            <button id="finance-record-next" type="button" aria-label="Next finance records page">
+              <span class="material-symbols-outlined">chevron_right</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       <div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/10">
@@ -132,17 +143,16 @@
       </div>
     </section>
 
-    <section class="grid grid-cols-1 gap-8 xl:grid-cols-3">
-      <div class="management-table-card xl:col-span-2 bg-white">
+    <section class="grid grid-cols-1 items-start gap-8 xl:grid-cols-3">
+      <div class="management-table-card xl:col-span-2 min-w-0 self-start overflow-hidden bg-white">
         <div class="management-filter-bar flex flex-wrap items-center justify-between gap-4 border-b border-outline-variant/10 p-5">
           <div>
-            <h3 class="font-serif text-2xl text-primary">Operating Expenses</h3>
-            <p class="mt-1 text-sm text-on-surface-variant">Expenses created with `/api/v1/finance/expenses` and generated staff wages.</p>
+            <h3 class="font-serif text-3xl text-primary" style="font-size: 20px !important; font-weight: 600;">Operating Expenses</h3>
+            <p class="mt-2 text-sm text-on-surface-variant">Monthly operating costs recorded for store operations and payroll.</p>
           </div>
-          <div class="text-xs font-bold text-on-surface-variant" id="finance-expense-count">0 expenses</div>
         </div>
-        <div class="overflow-x-auto">
-          <table>
+        <div class="w-full overflow-x-auto">
+          <table class="min-w-[860px]">
             <thead>
               <tr>
                 <th>Expense ID</th>
@@ -160,9 +170,26 @@
             </tbody>
           </table>
         </div>
-        <div class="management-table-footer flex items-center justify-between">
-          <p>Finance API currently supports create and list for expenses.</p>
-          <button id="finance-staff-wage-btn" class="bg-primary text-white" type="button">Generate Staff Wages</button>
+        <div class="management-table-footer flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p id="finance-expense-count">Loading expenses...</p>
+            <p id="finance-staff-wage-status" class="mt-1 text-xs">Generate monthly wage expense from active staff salaries.</p>
+          </div>
+          <div class="flex flex-wrap items-center justify-end gap-3">
+            <div id="finance-expense-pagination" class="hidden items-center gap-2">
+              <button id="finance-expense-prev" type="button" aria-label="Previous expenses page">
+                <span class="material-symbols-outlined">chevron_left</span>
+              </button>
+              <span id="finance-expense-page-label">Page 1 of 1</span>
+              <button id="finance-expense-next" type="button" aria-label="Next expenses page">
+                <span class="material-symbols-outlined">chevron_right</span>
+              </button>
+            </div>
+            <button id="finance-staff-wage-btn" class="bg-primary text-white" type="button">
+              <span class="material-symbols-outlined">payments</span>
+              Generate Staff Wages
+            </button>
+          </div>
         </div>
       </div>
 
@@ -205,7 +232,7 @@
   </main>
 
   <script src="../assets/js/layout.js?v=fm-20260530"></script>
-  <script src="../assets/js/main.js?v=finance-api-20260605"></script>
+  <script src="../assets/js/main.js?v=finance-friendly-wage-errors-20260607"></script>
 </body>
 
 </html>

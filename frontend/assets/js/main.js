@@ -489,10 +489,10 @@ const POS_ORDER_CODE_STORAGE_KEY = 'matcha_pos_order_code';
 const POS_CUSTOMER_STORAGE_KEY = 'matcha_pos_customer';
 const POS_ORDER_TYPE_STORAGE_KEY = 'matcha_pos_order_type';
 const POS_DELIVERY_DETAILS_STORAGE_KEY = 'matcha_pos_delivery_details';
+const POS_INSTORE_CUSTOMER_DETAILS_STORAGE_KEY = 'matcha_pos_instore_customer_details';
 
 let POS_TOPPINGS = [];
 let POS_MENU_ITEMS = [];
-let POS_CUSTOMERS = [];
 
 const POS_FALLBACK_IMAGE =
   'https://images.unsplash.com/photo-1515823662972-da6a2e4d3002?auto=format&fit=crop&w=900&q=80';
@@ -619,30 +619,6 @@ function getPosOrderCode() {
   return getStoredPosOrderCode() || 'Generated on submit';
 }
 
-function getSelectedPosCustomer() {
-  try {
-    return JSON.parse(localStorage.getItem(POS_CUSTOMER_STORAGE_KEY)) || null;
-  } catch {
-    return null;
-  }
-}
-
-function setSelectedPosCustomer(customer) {
-  if (!customer?.id) {
-    localStorage.removeItem(POS_CUSTOMER_STORAGE_KEY);
-    return;
-  }
-
-  localStorage.setItem(
-    POS_CUSTOMER_STORAGE_KEY,
-    JSON.stringify({
-      id: String(customer.id),
-      name: customer.name || 'Unnamed Customer',
-      phone: customer.phone || '',
-    })
-  );
-}
-
 function getPosDeliveryDetails() {
   try {
     return JSON.parse(localStorage.getItem(POS_DELIVERY_DETAILS_STORAGE_KEY)) || {};
@@ -655,16 +631,16 @@ function setPosDeliveryDetails(details) {
   localStorage.setItem(POS_DELIVERY_DETAILS_STORAGE_KEY, JSON.stringify(details || {}));
 }
 
-function setPosCustomerStatus(message = '', type = 'info') {
-  const status = document.getElementById('posCustomerStatus');
-  if (!status) return;
+function getPosInstoreCustomerDetails() {
+  try {
+    return JSON.parse(localStorage.getItem(POS_INSTORE_CUSTOMER_DETAILS_STORAGE_KEY)) || {};
+  } catch {
+    return {};
+  }
+}
 
-  status.textContent = message;
-  status.classList.toggle('hidden', !message);
-  status.classList.remove('text-error', 'text-secondary', 'text-on-surface-variant');
-  status.classList.add(
-    type === 'error' ? 'text-error' : type === 'success' ? 'text-secondary' : 'text-on-surface-variant'
-  );
+function setPosInstoreCustomerDetails(details) {
+  localStorage.setItem(POS_INSTORE_CUSTOMER_DETAILS_STORAGE_KEY, JSON.stringify(details || {}));
 }
 
 function updatePosOrderModeUi() {
@@ -672,7 +648,6 @@ function updatePosOrderModeUi() {
   const isDelivery = orderType === 'delivery';
   const title = document.getElementById('posOrderModeTitle');
   const subtitle = document.getElementById('posOrderModeSubtitle');
-  const customerLabel = document.getElementById('posCustomerSelectLabel');
   const cartTitle = document.getElementById('posCartTitle');
 
   if (title) {
@@ -682,9 +657,6 @@ function updatePosOrderModeUi() {
     subtitle.textContent = isDelivery
       ? 'Create a phone order for a remote customer, then collect delivery details at checkout.'
       : 'Select an available item, customize it, then add it to the order.';
-  }
-  if (customerLabel) {
-    customerLabel.textContent = isDelivery ? 'Existing Customer' : 'Customer';
   }
   if (cartTitle) {
     cartTitle.textContent = isDelivery ? 'Delivery Order' : 'Current Order';
@@ -792,10 +764,22 @@ function validateDeliveryDetails(details) {
   }
 }
 
-async function submitPosOrder(selectedPayment, deliveryDetails = null) {
+function validateInstoreCustomerDetails(details) {
+  if (!details?.create_customer_profile) return;
+  const missing = [];
+  if (!details.customer_phone) missing.push('customer phone');
+  if (!details.customer_name) missing.push('customer name');
+  if (missing.length) {
+    throw new Error(`Creating a loyalty profile requires ${missing.join(', ')}.`);
+  }
+}
+
+async function submitPosOrder(selectedPayment, checkoutDetails = {}, onStep = () => {}) {
   const cart = getPosCart();
   const items = buildPosOrderItems(cart);
   const orderType = getPosOrderType();
+  const deliveryDetails = checkoutDetails?.deliveryDetails || null;
+  const instoreCustomerDetails = checkoutDetails?.instoreCustomerDetails || {};
 
   if (!items.length) {
     throw new Error('No order items selected.');
@@ -805,7 +789,11 @@ async function submitPosOrder(selectedPayment, deliveryDetails = null) {
     throw new Error('Please log in before completing an order.');
   }
 
-  const selectedCustomer = getSelectedPosCustomer();
+  const paymentMethod = getPosPaymentMethod(selectedPayment);
+  if (orderType === 'delivery' && paymentMethod === 'cash') {
+    throw new Error('Cash register payment is not allowed for delivery orders. Use COD or prepaid QR/card.');
+  }
+
   const payload = {
     order_type: orderType,
     discount_amount: 0,
@@ -814,7 +802,6 @@ async function submitPosOrder(selectedPayment, deliveryDetails = null) {
 
   if (orderType === 'delivery') {
     validateDeliveryDetails(deliveryDetails || {});
-    payload.customer_id = selectedCustomer?.id || null;
     payload.customer_name = deliveryDetails.customer_name;
     payload.customer_phone = deliveryDetails.customer_phone;
     payload.delivery_address = deliveryDetails.delivery_address;
@@ -822,17 +809,20 @@ async function submitPosOrder(selectedPayment, deliveryDetails = null) {
     payload.delivery_longitude = Number(deliveryDetails.delivery_longitude);
     payload.note = buildDeliveryOrderNote(cart, deliveryDetails);
   } else {
+    validateInstoreCustomerDetails(instoreCustomerDetails);
     Object.assign(payload, (() => {
-      if (!selectedCustomer?.id) return {};
+      const checkoutPhone = instoreCustomerDetails.customer_phone || '';
+      if (!checkoutPhone) return {};
       return {
-        customer_id: selectedCustomer.id,
-        customer_name: selectedCustomer.name,
-        customer_phone: selectedCustomer.phone || null,
+        customer_name: instoreCustomerDetails.customer_name || null,
+        customer_phone: checkoutPhone,
+        create_customer_profile: Boolean(instoreCustomerDetails.create_customer_profile),
       };
     })());
     payload.note = buildPosOrderNote(cart);
   }
 
+  onStep('Creating pending order...');
   const order = await fetchMatchaApi('/orders', {
     method: 'POST',
     headers: {
@@ -840,11 +830,14 @@ async function submitPosOrder(selectedPayment, deliveryDetails = null) {
     },
     body: JSON.stringify(payload),
   });
+  onStep('Starting order preparation...');
+  const processingOrder = await fetchMatchaApi(`/orders/${order.id}/start-processing`, {
+    method: 'POST',
+  });
 
-  const paymentMethod = getPosPaymentMethod(selectedPayment);
-  const amount = Number(order.total_amount || getCartTotal(cart));
+  const amount = Number(processingOrder.total_amount || order.total_amount || getCartTotal(cart));
   const paymentPayload = {
-    order_id: order.id,
+    order_id: processingOrder.id || order.id,
     method: paymentMethod,
     amount,
   };
@@ -853,10 +846,7 @@ async function submitPosOrder(selectedPayment, deliveryDetails = null) {
     paymentPayload.amount_received = amount;
   }
 
-  if (orderType === 'delivery' && paymentMethod === 'cash') {
-    throw new Error('Cash register payment is not allowed for delivery orders. Use COD or prepaid QR/card.');
-  }
-
+  onStep(paymentMethod === 'cod' ? 'Creating pending COD payment...' : `Recording ${getPosPaymentLabel(selectedPayment)} payment...`);
   await fetchMatchaApi('/payments', {
     method: 'POST',
     headers: {
@@ -867,7 +857,8 @@ async function submitPosOrder(selectedPayment, deliveryDetails = null) {
 
   if (orderType === 'delivery') {
     if (deliveryDetails.ready_for_queue) {
-      return fetchMatchaApi(`/orders/${order.id}/ready-for-delivery`, {
+      onStep('Marking prepared delivery order ready for queue...');
+      return fetchMatchaApi(`/orders/${processingOrder.id || order.id}/ready-for-delivery`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -878,14 +869,19 @@ async function submitPosOrder(selectedPayment, deliveryDetails = null) {
       });
     }
 
-    return order;
+    return processingOrder || order;
   }
 
-  const completedOrder = await fetchMatchaApi(`/orders/${order.id}/complete`, {
+  onStep('Completing in-shop order and deducting inventory...');
+  const completedOrder = await fetchMatchaApi(`/orders/${processingOrder.id || order.id}/complete`, {
     method: 'POST',
   });
 
-  return completedOrder || order;
+  return {
+    ...(processingOrder || order),
+    ...(completedOrder || {}),
+    order_code: processingOrder.order_code || order.order_code,
+  };
 }
 
 function renderPosMenuItems() {
@@ -903,29 +899,29 @@ function renderPosMenuItems() {
       const items = POS_MENU_ITEMS.filter((item) => item.category === category);
       return `
         <section>
-          <div class="flex items-center gap-4 mb-6">
-            <h3 class="font-headline text-2xl text-secondary">${escapeHtml(category)}</h3>
+          <div class="flex items-center gap-3 mb-4">
+            <h3 class="font-headline text-xl text-secondary">${escapeHtml(category)}</h3>
             <div class="h-px flex-1 bg-surface-container-highest"></div>
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div class="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
             ${items
               .map(
                 (item) => `
-                  <button class="group bg-surface-container-lowest rounded-xl p-4 text-left transition-all hover:translate-y-[-4px] hover:shadow-[0_20px_40px_-15px_rgba(0,44,4,0.08)] flex flex-col h-full border border-transparent hover:border-secondary-container/30" data-pos-item-id="${item.id}" type="button">
-                    <div class="relative w-full aspect-[4/3] rounded-lg overflow-hidden mb-4 bg-surface-container-low">
+                  <button class="group bg-surface-container-lowest rounded-xl p-3 pb-4 text-left transition-all hover:translate-y-[-2px] hover:shadow-[0_16px_32px_-18px_rgba(0,44,4,0.12)] flex flex-col h-full border border-transparent hover:border-secondary-container/30" data-pos-item-id="${item.id}" type="button">
+                    <div class="relative w-full aspect-[16/10] rounded-lg overflow-hidden mb-3 bg-surface-container-low">
                       <img alt="${escapeHtml(item.name)}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src="${item.image}" />
                       ${
                         item.badge
-                          ? `<div class="absolute top-2 right-2 bg-secondary text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-widest shadow-lg">${escapeHtml(item.badge)}</div>`
+                          ? `<div class="absolute top-2 right-2 bg-secondary text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest shadow-lg">${escapeHtml(item.badge)}</div>`
                           : ''
                       }
                     </div>
-                    <h4 class="font-headline text-xl text-primary mb-1">${escapeHtml(item.name)}</h4>
-                    <p class="text-sm text-on-surface-variant line-clamp-2 mb-4">${escapeHtml(item.description)}</p>
+                    <h4 class="font-headline text-base text-primary leading-tight line-clamp-1">${escapeHtml(item.name)}</h4>
+                    <p class="mt-1 text-xs text-on-surface-variant mb-3">${escapeHtml(item.description)}</p>
                     <div class="mt-auto flex justify-between items-center">
-                      <span class="text-secondary font-bold text-lg">${formatVnd(item.price)}</span>
-                      <div class="w-8 h-8 rounded-full bg-secondary text-white flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <span class="material-symbols-outlined text-sm">add</span>
+                      <span class="text-secondary font-bold text-sm">${formatVnd(item.price)}</span>
+                      <div class="w-7 h-7 rounded-full bg-secondary text-white flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <span class="material-symbols-outlined text-[16px]">add</span>
                       </div>
                     </div>
                   </button>
@@ -972,57 +968,6 @@ async function loadPosMenuProducts() {
   POS_MENU_ITEMS = products.filter((product) => !isToppingProduct(product)).map(mapProductToPosItem);
   renderPosMenuItems();
   renderPosToppingOptions();
-}
-
-function renderPosCustomerOptions() {
-  const select = document.getElementById('posCustomerSelect');
-  if (!select) return;
-
-  const selectedCustomer = getSelectedPosCustomer();
-  const placeholder = isPosDeliveryOrder() ? 'New phone customer' : 'Walk-in customer';
-  select.innerHTML = `
-    <option value="">${placeholder}</option>
-    ${POS_CUSTOMERS.map(
-      (customer) => `
-        <option value="${customer.id}">${escapeHtml(customer.name)}${customer.phone ? ` - ${escapeHtml(customer.phone)}` : ''}</option>
-      `
-    ).join('')}
-  `;
-
-  if (selectedCustomer?.id && POS_CUSTOMERS.some((customer) => customer.id === selectedCustomer.id)) {
-    select.value = selectedCustomer.id;
-    setPosCustomerStatus(`Selected customer: ${selectedCustomer.name}`, 'success');
-  } else {
-    localStorage.removeItem(POS_CUSTOMER_STORAGE_KEY);
-    select.value = '';
-    setPosCustomerStatus('');
-  }
-}
-
-async function loadPosCustomers() {
-  const select = document.getElementById('posCustomerSelect');
-  if (!select) return;
-
-  select.disabled = true;
-  setPosCustomerStatus('Loading customers...');
-
-  try {
-    const customers = getApiListData(await fetchMatchaApi('/customers'));
-    POS_CUSTOMERS = customers.map((customer) => ({
-      id: String(customer.id),
-      name: customer.name || 'Unnamed Customer',
-      phone: customer.phone || '',
-    }));
-    renderPosCustomerOptions();
-  } catch (error) {
-    console.error('Failed to load POS customers:', error);
-    POS_CUSTOMERS = [];
-    localStorage.removeItem(POS_CUSTOMER_STORAGE_KEY);
-    renderPosCustomerOptions();
-    setPosCustomerStatus('Cannot load customers. You can still continue as a walk-in customer.', 'error');
-  } finally {
-    select.disabled = false;
-  }
 }
 
 function openPosCustomizeModal(itemId) {
@@ -1114,7 +1059,7 @@ async function initPosMenu() {
     renderPosMenuState('Cannot load products for Point of Sale. Please check the backend server.', 'error');
   }
 
-  await loadPosCustomers();
+  localStorage.removeItem(POS_CUSTOMER_STORAGE_KEY);
   updatePosOrderModeUi();
   renderPosCart();
 
@@ -1125,14 +1070,14 @@ async function initPosMenu() {
   const cartItems = document.getElementById('posCartItems');
   const completeBtn = document.getElementById('posCompleteOrderBtn');
   const searchInput = document.getElementById('topbar-search');
-  const customerSelect = document.getElementById('posCustomerSelect');
   const orderTypeButtons = document.querySelectorAll('.pos-order-type-button');
 
   orderTypeButtons.forEach((button) => {
     button.addEventListener('click', () => {
       setPosOrderType(button.dataset.posOrderType);
+      localStorage.removeItem(POS_INSTORE_CUSTOMER_DETAILS_STORAGE_KEY);
+      localStorage.removeItem(POS_DELIVERY_DETAILS_STORAGE_KEY);
       updatePosOrderModeUi();
-      renderPosCustomerOptions();
       renderPosCart();
     });
   });
@@ -1195,12 +1140,6 @@ async function initPosMenu() {
     window.location.href = 'POS_payment.html';
   });
 
-  customerSelect?.addEventListener('change', () => {
-    const customer = POS_CUSTOMERS.find((item) => item.id === customerSelect.value);
-    setSelectedPosCustomer(customer);
-    setPosCustomerStatus(customer ? `Selected customer: ${customer.name}` : '');
-  });
-
   if (searchInput?.parentElement) {
     searchInput.addEventListener('focus', () => {
       searchInput.parentElement.classList.add('scale-[1.02]');
@@ -1216,6 +1155,7 @@ function renderPosPaymentMode() {
   const title = document.getElementById('paymentModeTitle');
   const subtitle = document.getElementById('paymentModeSubtitle');
   const orderType = document.getElementById('paymentOrderType');
+  const instoreCustomerPanel = document.getElementById('instoreCustomerPanel');
   const deliveryPanel = document.getElementById('deliveryDetailsPanel');
   const paymentOptions = document.querySelectorAll('#paymentMethodGroup label');
   const codInput = document.querySelector('input[name="payment"][value="cod"]');
@@ -1227,10 +1167,13 @@ function renderPosPaymentMode() {
   if (subtitle) {
     subtitle.textContent = isDelivery
       ? 'Review the phone order, confirm delivery details, and choose COD or prepaid payment.'
-      : 'Review selected items and choose a payment method.';
+      : 'Review selected items, resolve customer loyalty, and choose a payment method.';
   }
   if (orderType) {
     orderType.textContent = isDelivery ? 'Delivery' : 'In-shop';
+  }
+  if (instoreCustomerPanel) {
+    instoreCustomerPanel.classList.toggle('hidden', isDelivery);
   }
   if (deliveryPanel) {
     deliveryPanel.classList.toggle('hidden', !isDelivery);
@@ -1251,19 +1194,55 @@ function renderPosPaymentMode() {
   }
 }
 
+function populateInstoreCustomerForm() {
+  if (isPosDeliveryOrder()) return;
+
+  const storedDetails = getPosInstoreCustomerDetails();
+  const details = {
+    create_customer_profile: false,
+    ...storedDetails,
+    customer_name: storedDetails.customer_name || '',
+    customer_phone: storedDetails.customer_phone || '',
+  };
+
+  const phoneInput = document.getElementById('instoreCustomerPhone');
+  const nameInput = document.getElementById('instoreCustomerName');
+  const createProfileInput = document.getElementById('instoreCreateCustomerProfile');
+
+  if (phoneInput && phoneInput.value === '') {
+    phoneInput.value = details.customer_phone || '';
+  }
+  if (nameInput && nameInput.value === '') {
+    nameInput.value = details.customer_name || '';
+  }
+  if (createProfileInput) {
+    createProfileInput.checked = Boolean(details.create_customer_profile);
+  }
+}
+
+function collectInstoreCustomerForm() {
+  const details = {
+    customer_phone: document.getElementById('instoreCustomerPhone')?.value.trim() || '',
+    customer_name: document.getElementById('instoreCustomerName')?.value.trim() || '',
+    create_customer_profile: Boolean(document.getElementById('instoreCreateCustomerProfile')?.checked),
+  };
+  setPosInstoreCustomerDetails(details);
+  return details;
+}
+
 function populateDeliveryDetailsForm() {
   if (!isPosDeliveryOrder()) return;
 
-  const selectedCustomer = getSelectedPosCustomer();
+  const storedDetails = getPosDeliveryDetails();
   const details = {
-    customer_name: selectedCustomer?.name || '',
-    customer_phone: selectedCustomer?.phone || '',
     delivery_address: '',
     delivery_latitude: '',
     delivery_longitude: '',
     note: '',
-    ready_for_queue: true,
-    ...getPosDeliveryDetails(),
+    ready_for_queue: false,
+    ...storedDetails,
+    customer_name: storedDetails.customer_name || '',
+    customer_phone: storedDetails.customer_phone || '',
   };
 
   const fieldMap = {
@@ -1314,17 +1293,18 @@ function renderPosPaymentOrder() {
   if (!itemList || !emptyState || !subtotal || !total || !orderCode || !payBtn) return;
 
   renderPosPaymentMode();
+  populateInstoreCustomerForm();
   populateDeliveryDetailsForm();
 
   const totalAmount = getCartTotal(cart);
   orderCode.textContent = getPosOrderCode();
-  const selectedCustomer = getSelectedPosCustomer();
   if (customerName) {
     const deliveryDetails = getPosDeliveryDetails();
+    const instoreDetails = getPosInstoreCustomerDetails();
     customerName.textContent = isPosDeliveryOrder()
-      ? (deliveryDetails.customer_name || selectedCustomer?.name || 'Phone customer')
-      : selectedCustomer
-        ? `${selectedCustomer.name}${selectedCustomer.phone ? ` - ${selectedCustomer.phone}` : ''}`
+      ? (deliveryDetails.customer_name || 'Phone customer')
+      : instoreDetails.customer_phone
+        ? `${instoreDetails.customer_name || 'Phone lookup'} - ${instoreDetails.customer_phone}`
         : 'Walk-in customer';
   }
   subtotal.textContent = formatVnd(totalAmount);
@@ -1369,6 +1349,7 @@ function initPosPayment() {
   const payBtn = document.getElementById('payBtn');
   const overlay = document.getElementById('successOverlay');
   const card = document.getElementById('successCard');
+  const successTitle = document.getElementById('successTitle');
   const successText = document.getElementById('successPaymentText');
   const newOrderBtn = document.getElementById('newOrderBtn');
   const paymentOrderCode = document.getElementById('paymentOrderCode');
@@ -1379,6 +1360,7 @@ function initPosPayment() {
     if (!getPosCart().length || !overlay || !card) return;
     const isDelivery = isPosDeliveryOrder();
     const deliveryDetails = isDelivery ? collectDeliveryDetailsForm() : null;
+    const instoreCustomerDetails = isDelivery ? null : collectInstoreCustomerForm();
 
     payBtn.disabled = true;
     payBtn.innerHTML =
@@ -1386,21 +1368,32 @@ function initPosPayment() {
     setPosPaymentStatus(isDelivery ? 'Creating delivery order...' : 'Creating in-shop order...');
 
     try {
-      const completedOrder = await submitPosOrder(selectedPayment, deliveryDetails);
+      const completedOrder = await submitPosOrder(
+        selectedPayment,
+        { deliveryDetails, instoreCustomerDetails },
+        setPosPaymentStatus
+      );
       const orderCode = completedOrder.order_code || completedOrder.id || getPosOrderCode();
       localStorage.setItem(POS_ORDER_CODE_STORAGE_KEY, orderCode);
 
       if (paymentOrderCode) {
         paymentOrderCode.textContent = orderCode;
       }
+      if (successTitle) {
+        successTitle.textContent = isDelivery
+          ? deliveryDetails?.ready_for_queue
+            ? 'Ready For Delivery'
+            : 'Order In Preparation'
+          : 'Order Completed';
+      }
       if (successText) {
         successText.textContent = isDelivery
-          ? `${orderCode} delivery order created with ${getPosPaymentLabel(selectedPayment)}${deliveryDetails?.ready_for_queue ? ' and sent to delivery queue' : ''}.`
+          ? `${orderCode} delivery order created with ${getPosPaymentLabel(selectedPayment)}${deliveryDetails?.ready_for_queue ? ' and sent to delivery queue' : ' and kept in preparation'}.`
           : `${orderCode} completed successfully by ${getPosPaymentLabel(selectedPayment)}.`;
       }
       setPosPaymentStatus(
         isDelivery
-          ? `Delivery order created${deliveryDetails?.ready_for_queue ? ' and sent to delivery queue' : ''}.`
+          ? `Delivery order created${deliveryDetails?.ready_for_queue ? ' and sent to delivery queue' : ' and kept in preparation'}.`
           : 'Order completed successfully.',
         'success'
       );
@@ -1423,6 +1416,7 @@ function initPosPayment() {
     localStorage.removeItem(POS_ORDER_CODE_STORAGE_KEY);
     localStorage.removeItem(POS_CUSTOMER_STORAGE_KEY);
     localStorage.removeItem(POS_DELIVERY_DETAILS_STORAGE_KEY);
+    localStorage.removeItem(POS_INSTORE_CUSTOMER_DETAILS_STORAGE_KEY);
     localStorage.removeItem(POS_ORDER_TYPE_STORAGE_KEY);
     window.location.href = 'POS_menu.html';
   });
@@ -1928,9 +1922,11 @@ const FINANCE_STATE = {
   expenses: [],
   records: [],
   recordPage: 1,
+  expensePage: 1,
 };
 
 const FINANCE_RECORD_PAGE_SIZE = 5;
+const FINANCE_EXPENSE_PAGE_SIZE = 5;
 
 function getCurrentFinanceMonth() {
   const now = new Date();
@@ -1996,6 +1992,28 @@ function setFinanceFormStatus(message = '', type = 'info') {
   );
 }
 
+function setFinanceStaffWageStatus(message = '', type = 'info') {
+  const status = document.getElementById('finance-staff-wage-status');
+  if (!status) return;
+
+  status.textContent = message || 'Generate monthly wage expense from active staff salaries.';
+  status.classList.remove('text-error', 'text-secondary', 'text-primary', 'text-on-surface-variant');
+  status.classList.add(
+    type === 'error' ? 'text-error' : type === 'success' ? 'text-secondary' : type === 'active' ? 'text-primary' : 'text-on-surface-variant'
+  );
+}
+
+function getFinanceStaffWageMessage(message) {
+  const normalizedMessage = String(message || '');
+  if (normalizedMessage.includes('staff_wage_expense_already_exists')) {
+    return 'Staff wages have already been generated for this month.';
+  }
+  if (normalizedMessage.includes('staff_wage_total_is_zero')) {
+    return 'No active staff salary is available to generate wages.';
+  }
+  return normalizedMessage || 'Cannot generate staff wage expense.';
+}
+
 function renderFinanceSummary(summary) {
   setFinanceText('finance-revenue', formatVnd(summary?.revenue || 0));
   setFinanceText('finance-material-cost', formatVnd(summary?.material_cost || 0));
@@ -2003,13 +2021,34 @@ function renderFinanceSummary(summary) {
   setFinanceText('finance-net-profit', formatVnd(summary?.net_profit || 0));
 }
 
+function getFinanceExpenseTotalPages(expenseCount) {
+  return Math.max(1, Math.ceil(expenseCount / FINANCE_EXPENSE_PAGE_SIZE));
+}
+
+function updateFinanceExpensePagination(expenseCount) {
+  const pagination = document.getElementById('finance-expense-pagination');
+  const previousButton = document.getElementById('finance-expense-prev');
+  const nextButton = document.getElementById('finance-expense-next');
+  const pageLabel = document.getElementById('finance-expense-page-label');
+  if (!pagination || !previousButton || !nextButton || !pageLabel) return;
+
+  const totalPages = getFinanceExpenseTotalPages(expenseCount);
+  const hasMultiplePages = totalPages > 1;
+  pagination.classList.toggle('hidden', !hasMultiplePages);
+  pagination.classList.toggle('flex', hasMultiplePages);
+  previousButton.disabled = FINANCE_STATE.expensePage <= 1;
+  nextButton.disabled = FINANCE_STATE.expensePage >= totalPages;
+  pageLabel.textContent = `Page ${FINANCE_STATE.expensePage} of ${totalPages}`;
+}
+
 function renderFinanceExpenses(expenses) {
   const body = document.getElementById('finance-expenses-body');
   if (!body) return;
 
-  setFinanceText('finance-expense-count', `${expenses.length} expense${expenses.length === 1 ? '' : 's'}`);
-
   if (!expenses.length) {
+    FINANCE_STATE.expensePage = 1;
+    setFinanceText('finance-expense-count', 'Showing 0 of 0 expenses');
+    updateFinanceExpensePagination(0);
     body.innerHTML = `
       <tr>
         <td class="px-6 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="6">No expenses found for this month.</td>
@@ -2018,12 +2057,23 @@ function renderFinanceExpenses(expenses) {
     return;
   }
 
-  body.innerHTML = expenses
+  const totalPages = getFinanceExpenseTotalPages(expenses.length);
+  FINANCE_STATE.expensePage = Math.min(Math.max(FINANCE_STATE.expensePage, 1), totalPages);
+  const startIndex = (FINANCE_STATE.expensePage - 1) * FINANCE_EXPENSE_PAGE_SIZE;
+  const pageExpenses = expenses.slice(startIndex, startIndex + FINANCE_EXPENSE_PAGE_SIZE);
+  const endIndex = startIndex + pageExpenses.length;
+  setFinanceText(
+    'finance-expense-count',
+    `Showing ${startIndex + 1}-${endIndex} of ${expenses.length} expense${expenses.length === 1 ? '' : 's'}`
+  );
+  updateFinanceExpensePagination(expenses.length);
+
+  body.innerHTML = pageExpenses
     .map(
       (expense) => `
         <tr>
           <td class="font-mono text-xs font-bold text-secondary">${escapeHtml(String(expense.id).slice(0, 8))}</td>
-          <td><span class="rounded-full bg-primary/5 px-3 py-1 text-xs font-extrabold uppercase text-primary">${escapeHtml(formatFinanceLabel(expense.category))}</span></td>
+          <td><span class="text-xs font-extrabold uppercase text-primary">${escapeHtml(formatFinanceLabel(expense.category))}</span></td>
           <td><b class="text-primary">${escapeHtml(expense.description)}</b></td>
           <td class="text-right font-extrabold text-primary">${formatVnd(expense.amount)}</td>
           <td>${escapeHtml(formatFinanceMonth(expense.expense_month))}</td>
@@ -2150,7 +2200,11 @@ function renderFinancePage() {
 
 function renderFinanceLoading() {
   setFinanceStatus('Loading finance data...');
+  setFinanceStaffWageStatus();
   renderFinanceSummary({});
+  setFinanceText('finance-expense-count', 'Loading expenses...');
+  FINANCE_STATE.expensePage = 1;
+  updateFinanceExpensePagination(0);
   setFinanceText('finance-record-count', 'Loading records...');
   FINANCE_STATE.recordPage = 1;
   updateFinanceRecordPagination(0);
@@ -2186,6 +2240,7 @@ async function loadFinanceData(month = FINANCE_STATE.month) {
     FINANCE_STATE.summary = summary || {};
     FINANCE_STATE.expenses = getApiListData(expenses);
     FINANCE_STATE.records = getApiListData(records);
+    FINANCE_STATE.expensePage = 1;
     FINANCE_STATE.recordPage = 1;
     renderFinancePage();
     setFinanceStatus(`Loaded ${formatFinanceMonth(selectedMonth)} finance data.`, 'success');
@@ -2194,6 +2249,7 @@ async function loadFinanceData(month = FINANCE_STATE.month) {
     FINANCE_STATE.summary = {};
     FINANCE_STATE.expenses = [];
     FINANCE_STATE.records = [];
+    FINANCE_STATE.expensePage = 1;
     FINANCE_STATE.recordPage = 1;
     renderFinancePage();
     setFinanceStatus(error.message || 'Cannot load finance data. Please check the backend server.', 'error');
@@ -2242,6 +2298,8 @@ async function initFinancialManagement() {
   const exportBtn = document.getElementById('finance-export-btn');
   const recordPrevBtn = document.getElementById('finance-record-prev');
   const recordNextBtn = document.getElementById('finance-record-next');
+  const expensePrevBtn = document.getElementById('finance-expense-prev');
+  const expenseNextBtn = document.getElementById('finance-expense-next');
 
   const initialMonth = getCurrentFinanceMonth();
   if (periodInput) periodInput.value = initialMonth;
@@ -2294,23 +2352,43 @@ async function initFinancialManagement() {
 
   staffWageBtn?.addEventListener('click', async () => {
     const month = periodInput?.value || getCurrentFinanceMonth();
+    const originalStaffWageHtml = staffWageBtn.innerHTML;
     staffWageBtn.disabled = true;
+    staffWageBtn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span> Generating...';
     setFinanceStatus('Generating staff wage expense...');
+    setFinanceStaffWageStatus(`Generating staff wage expense for ${formatFinanceMonth(month)}...`, 'active');
     try {
-      await fetchMatchaApi(`/finance/expenses/staff-wages?month=${encodeURIComponent(month)}`, {
+      const result = await fetchMatchaApi(`/finance/expenses/staff-wages?month=${encodeURIComponent(month)}`, {
         method: 'POST',
       });
-      setFinanceStatus('Staff wage expense generated successfully.', 'success');
       await loadFinanceData(month);
+      setFinanceStatus('Staff wage expense generated successfully.', 'success');
+      setFinanceStaffWageStatus(
+        `Created ${formatVnd(result?.total_salary || 0)} staff wage expense for ${result?.staff_count || 0} active staff.`,
+        'success'
+      );
     } catch (error) {
       console.error('Failed to generate staff wage expense:', error);
-      setFinanceStatus(error.message || 'Cannot generate staff wage expense.', 'error');
+      const friendlyMessage = getFinanceStaffWageMessage(error.message);
+      setFinanceStatus(friendlyMessage, 'error');
+      setFinanceStaffWageStatus(friendlyMessage, 'error');
     } finally {
       staffWageBtn.disabled = false;
+      staffWageBtn.innerHTML = originalStaffWageHtml;
     }
   });
 
   exportBtn?.addEventListener('click', downloadFinanceCsv);
+  expensePrevBtn?.addEventListener('click', () => {
+    if (FINANCE_STATE.expensePage <= 1) return;
+    FINANCE_STATE.expensePage -= 1;
+    renderFinanceExpenses(FINANCE_STATE.expenses);
+  });
+  expenseNextBtn?.addEventListener('click', () => {
+    if (FINANCE_STATE.expensePage >= getFinanceExpenseTotalPages(FINANCE_STATE.expenses.length)) return;
+    FINANCE_STATE.expensePage += 1;
+    renderFinanceExpenses(FINANCE_STATE.expenses);
+  });
   recordPrevBtn?.addEventListener('click', () => {
     if (FINANCE_STATE.recordPage <= 1) return;
     FINANCE_STATE.recordPage -= 1;
