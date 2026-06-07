@@ -105,7 +105,7 @@ async def update_staff_profile(
                 current_user_id=staff_profile.user_id,
             )
         else:
-            await _validate_account_options(
+            _validate_account_options(
                 create_account=create_account,
                 account_password=account_password,
             )
@@ -139,7 +139,7 @@ async def update_staff_profile(
             current_user_id=staff_profile.user_id,
         )
     else:
-        await _validate_account_options(
+        _validate_account_options(
             create_account=create_account,
             account_password=account_password,
         )

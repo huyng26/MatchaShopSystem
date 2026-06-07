@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 from uuid import uuid4
 
 import pytest
@@ -8,7 +9,7 @@ from app.core.exceptions import BusinessRuleError
 from app.core.security import verify_password
 from app.models.staff import StaffProfile
 from app.models.user import User
-from app.schemas.staff import StaffProfileCreate
+from app.schemas.staff import StaffProfileCreate, StaffProfileUpdate
 from app.services import staff_service
 
 
@@ -102,3 +103,39 @@ async def test_create_shipper_requires_linked_or_created_account(monkeypatch) ->
             ),
             actor_user_id=uuid4(),
         )
+
+
+@pytest.mark.asyncio
+async def test_update_staff_profile_can_update_salary_only(monkeypatch) -> None:
+    patch_empty_staff_and_user_lookup(monkeypatch)
+    staff = StaffProfile(
+        id=uuid4(),
+        full_name="Tran Cashier",
+        phone="0900000777",
+        email="cashier@matcha.local",
+        role=UserRole.CASHIER,
+        salary=Decimal("6000000.00"),
+        date_joined=date(2026, 6, 1),
+        status=StaffStatus.ACTIVE,
+    )
+
+    async def get_staff_profile_by_id(*args, **kwargs):
+        return staff
+
+    monkeypatch.setattr(
+        staff_service.staff_repo,
+        "get_staff_profile_by_id",
+        get_staff_profile_by_id,
+    )
+    db = FakeDb()
+
+    result = await staff_service.update_staff_profile(
+        db,
+        staff.id,
+        StaffProfileUpdate(salary=Decimal("1000")),
+        actor_user_id=uuid4(),
+    )
+
+    assert result is staff
+    assert staff.salary == Decimal("1000")
+    assert db.commits == 1
