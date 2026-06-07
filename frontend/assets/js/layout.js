@@ -121,7 +121,7 @@ const PAGE_CONFIG = {
   'financial-management': { activeNav: 'financial-management', searchPlaceholder: 'Search finance records...', backUrl: null },
   'settings':        { activeNav: 'settings',    searchPlaceholder: 'Search settings...',                backUrl: null },
   'pos-menu':        { activeNav: 'pos-menu',    searchPlaceholder: 'Search menu items...',               backUrl: null },
-  'pos-payment':     { activeNav: 'pos-menu',    searchPlaceholder: 'Search payment items...',             backUrl: 'POS_menu.html' },
+  'pos-payment':     { activeNav: 'pos-menu',    searchPlaceholder: 'Search payment items...',             backUrl: 'POS_menu.html', hideSearch: true },
   'shipper':         { activeNav: 'shipper',     searchPlaceholder: 'Search assigned trips or stops...',    backUrl: null },
   'delivery-manage': { activeNav: 'delivery-manage', searchPlaceholder: 'Search orders, shippers or routes...', backUrl: null },
 };

@@ -67,6 +67,33 @@
                     <section class="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
                         <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
                             <div>
+                                <h2 class="font-headline text-2xl font-bold text-primary">Preparing Delivery Orders</h2>
+                                <p class="text-sm text-on-surface-variant">Mark prepared delivery orders ready before they enter the queue.</p>
+                            </div>
+                        </div>
+                        <div class="overflow-hidden rounded-xl border border-outline-variant/30">
+                            <table class="w-full text-left">
+                                <thead class="bg-surface-container-low">
+                                    <tr>
+                                        <th class="px-4 py-3 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Order</th>
+                                        <th class="px-4 py-3 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Customer</th>
+                                        <th class="px-4 py-3 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Payment</th>
+                                        <th class="px-4 py-3 text-right text-xs font-bold uppercase tracking-widest text-on-surface-variant">Total</th>
+                                        <th class="px-4 py-3 text-right text-xs font-bold uppercase tracking-widest text-on-surface-variant">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="delivery-preparing-body" class="divide-y divide-outline-variant/20">
+                                    <tr>
+                                        <td class="px-4 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="5">Loading preparing orders...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <section class="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
+                        <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
+                            <div>
                                 <h2 class="font-headline text-2xl font-bold text-primary">Ready For Delivery</h2>
                                 <p class="text-sm text-on-surface-variant">Select orders from the queue, request a route suggestion, then create a trip.</p>
                             </div>
@@ -183,6 +210,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const API_BASE_URL = window.MATCHA_API_BASE_URL || 'http://localhost:8000/api/v1';
+            const preparingBody = document.getElementById('delivery-preparing-body');
             const queueBody = document.getElementById('delivery-queue-body');
             const tripsBody = document.getElementById('delivery-trips-body');
             const pageStatus = document.getElementById('delivery-page-status');
@@ -195,6 +223,7 @@
             const shippersList = document.getElementById('active-shippers-list');
 
             let deliveryQueue = [];
+            let preparingOrders = [];
             let deliveryTrips = [];
             let shippers = [];
             let selectedTrip = null;
@@ -290,6 +319,39 @@
                     .filter((trip) => trip.status === 'completed')
                     .reduce((total, trip) => total + Number(trip.expected_cod_amount || 0), 0);
                 document.getElementById('stat-cod').textContent = formatMoney(codAwaiting);
+            };
+
+            const renderPreparingOrders = () => {
+                preparingBody.innerHTML = '';
+
+                if (!preparingOrders.length) {
+                    preparingBody.innerHTML = '<tr><td class="px-4 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="5">No delivery orders are in preparation.</td></tr>';
+                    return;
+                }
+
+                preparingOrders.forEach((order) => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-surface-container-low';
+                    row.innerHTML = `
+                        <td class="px-4 py-4">
+                            <p class="font-bold text-primary">${escapeHtml(order.order_code)}</p>
+                            <p class="text-xs text-on-surface-variant">${escapeHtml(formatDateTime(order.created_at))}</p>
+                        </td>
+                        <td class="px-4 py-4">
+                            <p class="font-bold">${escapeHtml(order.customer_name || 'Phone customer')}</p>
+                            <p class="text-xs text-on-surface-variant">${escapeHtml(order.customer_phone || '-')}</p>
+                        </td>
+                        <td class="px-4 py-4">${getBadge(order.payment_status)}</td>
+                        <td class="px-4 py-4 text-right font-bold">${escapeHtml(formatMoney(order.total_amount))}</td>
+                        <td class="px-4 py-4 text-right">
+                            <button class="mark-order-ready inline-flex items-center justify-center gap-1 rounded-full bg-secondary px-3 py-2 text-xs font-bold text-on-secondary hover:bg-secondary/90" type="button" data-order-id="${escapeHtml(order.id)}" data-payment-status="${escapeHtml(order.payment_status)}">
+                                <span class="material-symbols-outlined text-[16px]">done_all</span>
+                                Mark Ready
+                            </button>
+                        </td>
+                    `;
+                    preparingBody.appendChild(row);
+                });
             };
 
             const renderQueue = () => {
@@ -513,12 +575,14 @@
                 setPageStatus('Loading delivery data...');
                 try {
                     const status = tripStatusFilter.value;
-                    const [queueData, tripsData, shippersData] = await Promise.all([
+                    const [preparingData, queueData, tripsData, shippersData] = await Promise.all([
+                        fetchApiData('/orders?status=in_progress&order_type=delivery'),
                         fetchApiData('/deliveries/queue'),
                         fetchApiData(`/deliveries/trips${status ? `?status=${encodeURIComponent(status)}` : ''}`),
                         fetchApiData('/staff?role=shipper&status=active&page_size=100').catch(() => ({ items: [] })),
                     ]);
 
+                    preparingOrders = getListData(preparingData);
                     deliveryQueue = getListData(queueData);
                     deliveryTrips = getListData(tripsData);
                     shippers = getListData(shippersData);
@@ -529,6 +593,7 @@
                     }
 
                     renderStats();
+                    renderPreparingOrders();
                     renderQueue();
                     renderTrips();
                     renderShippers();
@@ -537,6 +602,26 @@
                 } catch (error) {
                     console.error('Failed to load delivery data:', error);
                     setPageStatus(error.message || 'Cannot load delivery data.', 'error');
+                }
+            };
+
+            const markOrderReady = async (orderId, paymentStatus) => {
+                if (!orderId) return;
+
+                setPageStatus('Marking order ready for delivery...');
+                try {
+                    await fetchApiData(`/orders/${encodeURIComponent(orderId)}/ready-for-delivery`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            payment_method: paymentStatus === 'paid' ? null : 'cod',
+                        }),
+                    });
+                    await refreshAll();
+                    setPageStatus('Order moved to delivery queue.');
+                } catch (error) {
+                    console.error('Failed to mark order ready:', error);
+                    setPageStatus(error.message || 'Cannot mark order ready for delivery.', 'error');
                 }
             };
 
@@ -664,6 +749,11 @@
             document.getElementById('suggest-all-orders').addEventListener('click', () => suggestBatches());
             document.getElementById('suggest-selected-orders').addEventListener('click', () => suggestBatches(getSelectedOrderIds()));
             document.getElementById('create-trip-selected').addEventListener('click', () => createTrip(getSelectedOrderIds()));
+            preparingBody.addEventListener('click', (event) => {
+                const button = event.target.closest('.mark-order-ready');
+                if (!button) return;
+                markOrderReady(button.dataset.orderId, button.dataset.paymentStatus);
+            });
             suggestedBatches.addEventListener('click', (event) => {
                 const button = event.target.closest('.create-trip-from-batch');
                 if (!button) return;

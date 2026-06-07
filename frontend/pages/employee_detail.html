@@ -586,22 +586,44 @@
         const accountMode = accountModeInput.value;
         const userId = staffUserIdInput.value.trim();
         const role = staffRoleInput.value;
-        const payload = {
+        const salaryValue = document.getElementById('staff-salary').value;
+        const nextPayload = {
           full_name: document.getElementById('staff-full-name').value.trim(),
           phone: document.getElementById('staff-phone').value.trim(),
           email: document.getElementById('staff-email').value.trim(),
           role,
-          salary: document.getElementById('staff-salary').value === '' ? null : Number(document.getElementById('staff-salary').value),
+          salary: salaryValue === '' ? null : Number(salaryValue),
           date_joined: document.getElementById('staff-date-joined').value,
           status: document.getElementById('staff-status').value,
         };
+        const currentPayload = {
+          full_name: currentStaff?.full_name || '',
+          phone: currentStaff?.phone || '',
+          email: currentStaff?.email || '',
+          role: currentStaff?.role || '',
+          salary: currentStaff?.salary === null || currentStaff?.salary === undefined ? null : Number(currentStaff.salary),
+          date_joined: currentStaff?.date_joined || '',
+          status: currentStaff?.status || '',
+        };
+        const payload = Object.entries(nextPayload).reduce((result, [field, value]) => {
+          const currentValue = currentPayload[field];
+          const changed = field === 'salary'
+            ? value !== currentValue
+            : String(value ?? '') !== String(currentValue ?? '');
+          if (changed) result[field] = value;
+          return result;
+        }, {});
 
         if (accountMode === 'create') {
           payload.create_account = true;
           payload.account_password = accountPasswordInput.value;
           payload.account_status = accountStatusInput.value;
         } else {
-          payload.user_id = accountMode === 'link' ? userId : null;
+          const nextUserId = accountMode === 'link' ? userId : null;
+          const currentUserId = currentStaff?.user_id || null;
+          if (nextUserId !== currentUserId) {
+            payload.user_id = nextUserId;
+          }
         }
 
         return payload;

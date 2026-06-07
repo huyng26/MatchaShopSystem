@@ -29,12 +29,12 @@
   <header id="app-topbar"
     class="fixed top-0 right-0 left-72 h-20 z-30 bg-[#f9f9f8]/80 dark:bg-[#191c1c]/80 backdrop-blur-2xl flex items-center justify-between px-10"></header>
 
-  <main class="ml-72 pt-24 p-10 space-y-8">
+  <main class="ml-72 pt-24 px-8 py-6 space-y-6 transition-[padding] duration-300" id="posMainContent">
     <section class="flex flex-wrap items-end justify-between gap-4">
-      <div class="max-w-6xl">
-        <header class="mb-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+      <div class="w-full max-w-none">
+        <header class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h2 class="font-headline text-4xl text-primary mb-2" id="posOrderModeTitle">In-shop Order</h2>
+            <h2 class="font-headline text-3xl text-primary mb-1" id="posOrderModeTitle">In-shop Order</h2>
             <p class="page-header-subtitle" id="posOrderModeSubtitle">Select an available item, customize it, then add it to the order.</p>
           </div>
           <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -46,24 +46,18 @@
                 Delivery
               </button>
             </div>
-            <label class="flex items-center gap-3 rounded-2xl bg-surface-container px-4 py-3" for="posCustomerSelect">
-              <span class="material-symbols-outlined text-secondary">person</span>
-              <div>
-                <p class="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant" id="posCustomerSelectLabel">Customer</p>
-                <select class="w-56 bg-transparent border-none p-0 text-sm font-bold text-primary focus:ring-0" id="posCustomerSelect">
-                  <option value="">Walk-in customer</option>
-                </select>
-              </div>
-            </label>
           </div>
         </header>
-        <p class="hidden mb-8 text-sm font-bold text-on-surface-variant" id="posCustomerStatus"></p>
 
-        <div class="space-y-12" id="posMenuSections"></div>
+        <div class="space-y-8" id="posMenuSections"></div>
       </div>
     </section>
 
-    <aside class="hidden w-96 bg-surface-container-low border-l border-surface-container-highest flex-col relative z-30" id="posCartPanel">
+    <div class="pb-6 text-center">
+      <p class="text-[10px] text-stone-400 font-label uppercase tracking-widest">Hoppers' Matcha Internal Portal © 2026</p>
+    </div>
+
+    <aside class="hidden fixed right-0 top-14 bottom-0 z-40 w-96 bg-surface-container-low border-l border-surface-container-highest shadow-2xl flex-col" id="posCartPanel">
       <div class="p-6 pb-0">
         <div class="flex items-center justify-between mb-8">
           <div class="flex items-center gap-2">
@@ -90,7 +84,7 @@
           </div>
         </div>
         <button class="w-full bg-secondary text-white py-5 rounded-2xl font-bold text-lg shadow-[0_16px_32px_-8px_rgba(0,110,8,0.3)] transition-all hover:bg-secondary/90 hover:translate-y-[-2px] active:scale-[0.98]" id="posCompleteOrderBtn" type="button">
-          Complete Order
+          Continue to Checkout
         </button>
       </div>
     </aside>
@@ -172,7 +166,7 @@
   </div>
 
   <script src="../assets/js/layout.js?v=fm-20260530"></script>
-  <script src="../assets/js/main.js?v=pos-orders-20260605"></script>
+  <script src="../assets/js/main.js?v=pos-order-flow-20260607"></script>
 </body>
 
 </html>

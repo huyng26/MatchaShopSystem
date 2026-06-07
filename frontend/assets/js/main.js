@@ -493,6 +493,7 @@ const POS_INSTORE_CUSTOMER_DETAILS_STORAGE_KEY = 'matcha_pos_instore_customer_de
 
 let POS_TOPPINGS = [];
 let POS_MENU_ITEMS = [];
+let POS_MENU_SEARCH_QUERY = '';
 
 const POS_FALLBACK_IMAGE =
   'https://images.unsplash.com/photo-1515823662972-da6a2e4d3002?auto=format&fit=crop&w=900&q=80';
@@ -888,22 +889,40 @@ function renderPosMenuItems() {
   const container = document.getElementById('posMenuSections');
   if (!container) return;
 
+  const searchQuery = POS_MENU_SEARCH_QUERY.trim().toLowerCase();
+  const visibleItems = searchQuery
+    ? POS_MENU_ITEMS.filter((item) => [
+      item.name,
+      item.description,
+      item.category,
+      formatVnd(item.price),
+    ].some((value) => String(value || '').toLowerCase().includes(searchQuery)))
+    : POS_MENU_ITEMS;
+
   if (!POS_MENU_ITEMS.length) {
     renderPosMenuState('No available products found. Add available products in Menu first.', 'empty');
     return;
   }
 
-  const categories = [...new Set(POS_MENU_ITEMS.map((item) => item.category))];
+  if (!visibleItems.length) {
+    renderPosMenuState(`No products found for "${POS_MENU_SEARCH_QUERY}".`, 'empty');
+    return;
+  }
+
+  const productGridClass = getPosCart().length
+    ? 'grid grid-cols-2 gap-3 md:grid-cols-3'
+    : 'grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5';
+  const categories = [...new Set(visibleItems.map((item) => item.category))];
   container.innerHTML = categories
     .map((category) => {
-      const items = POS_MENU_ITEMS.filter((item) => item.category === category);
+      const items = visibleItems.filter((item) => item.category === category);
       return `
         <section>
           <div class="flex items-center gap-3 mb-4">
             <h3 class="font-headline text-xl text-secondary">${escapeHtml(category)}</h3>
             <div class="h-px flex-1 bg-surface-container-highest"></div>
           </div>
-          <div class="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
+          <div class="${productGridClass}">
             ${items
               .map(
                 (item) => `
@@ -1002,6 +1021,7 @@ function closePosCustomizeModal() {
 
 function renderPosCart() {
   const cart = getPosCart();
+  const mainContent = document.getElementById('posMainContent');
   const panel = document.getElementById('posCartPanel');
   const itemList = document.getElementById('posCartItems');
   const count = document.getElementById('posCartCount');
@@ -1013,12 +1033,14 @@ function renderPosCart() {
   if (!cart.length) {
     panel.classList.add('hidden');
     panel.classList.remove('flex');
+    mainContent?.classList.remove('pr-[416px]');
     return;
   }
 
   const totalAmount = getCartTotal(cart);
   panel.classList.remove('hidden');
   panel.classList.add('flex');
+  mainContent?.classList.add('pr-[416px]');
   count.textContent = String(cart.length);
   subtotal.textContent = formatVnd(totalAmount);
   total.textContent = formatVnd(totalAmount);
@@ -1121,6 +1143,7 @@ async function initPosMenu() {
     cart.push(cartItem);
     setPosCart(cart);
     renderPosCart();
+    renderPosMenuItems();
     closePosCustomizeModal();
   });
 
@@ -1133,6 +1156,7 @@ async function initPosMenu() {
     cart.splice(Number(removeButton.dataset.posRemoveIndex), 1);
     setPosCart(cart);
     renderPosCart();
+    renderPosMenuItems();
   });
 
   completeBtn?.addEventListener('click', () => {
@@ -1141,6 +1165,11 @@ async function initPosMenu() {
   });
 
   if (searchInput?.parentElement) {
+    searchInput.value = POS_MENU_SEARCH_QUERY;
+    searchInput.addEventListener('input', () => {
+      POS_MENU_SEARCH_QUERY = searchInput.value || '';
+      renderPosMenuItems();
+    });
     searchInput.addEventListener('focus', () => {
       searchInput.parentElement.classList.add('scale-[1.02]');
     });
