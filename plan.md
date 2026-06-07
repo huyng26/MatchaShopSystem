@@ -610,10 +610,11 @@ Delivery coordinate rule:
 
 ```text
 Delivery orders require recipient name, phone, and delivery_address.
-delivery_latitude and delivery_longitude are optional request fields.
-If both coordinates are provided, backend treats them as a map-confirmed pin and uses them as the delivery location.
-If coordinates are not provided, backend geocodes delivery_address through the configured map provider.
-If only one coordinate is provided, reject the request.
+Staff enters delivery_address only.
+Backend geocodes delivery_address through the configured map provider.
+POST /api/v1/orders must not accept delivery_latitude or delivery_longitude.
+delivery_latitude and delivery_longitude are system-generated storage fields,
+not request fields.
 ```
 
 ### 4.11 Order Items
@@ -1372,10 +1373,10 @@ POST   /api/v1/orders/{order_id}/complete
      - If no, save the order as anonymous with customer_id = null and skip loyalty points.
    - Delivery order:
      - Require recipient name, phone, and delivery address before inserting the order.
-     - If delivery_latitude and delivery_longitude are both provided, treat them as a map-confirmed pin and use them as the delivery coordinates.
-     - If coordinates are not provided, geocode delivery_address through the configured map provider before inserting the order.
-     - If only one coordinate is provided, reject the order as incomplete delivery coordinates.
-     - If geocoding fails or returns an ambiguous address, reject the order and ask the client to correct the address or pick a pin on the map.
+     - Cashier sends delivery_address only.
+     - Backend geocodes delivery_address through the configured map provider before inserting the order.
+     - Reject delivery_latitude and delivery_longitude if they are sent in the create-order request.
+     - If geocoding fails or returns an ambiguous address, reject the order and ask staff to correct the address.
      - If customer_id is provided, load customer and use it as the linked profile.
      - If customer_id is not provided, find customer by phone.
      - If no customer exists by phone, create the customer in the same transaction.
@@ -1499,7 +1500,7 @@ Ready-for-delivery conditions:
 - order_type = delivery
 - order is not cancelled or completed
 - delivery customer/address are present
-- delivery coordinates are present, either from map pin or successful backend geocoding
+- delivery coordinates are present from successful backend geocoding
 - order is not already assigned to an active delivery trip
 - prepaid orders must have successful card or bank_transfer payment
 - unpaid orders must have COD pending, or request payment_method = cod to create it
@@ -1738,8 +1739,8 @@ Delivery flow:
 ```text
 1. Delivery order is created with recipient/contact/address information.
 2. Backend resolves delivery coordinates:
-   - use client-provided lat/lon when the user picked a map pin.
-   - otherwise geocode delivery_address through the configured map provider.
+   - geocode delivery_address through the configured map provider.
+   - do not accept client-provided lat/lon in the create-order request.
 3. Order is prepared and marked ready_for_delivery.
 4. Delivery manager views delivery queue.
 5. Delivery manager requests suggested batches.
@@ -1814,32 +1815,27 @@ waiting_time
 created_at
 ```
 
-### 10.4 Address, Geocoding, and Map Pin Flow
+### 10.4 Address and Geocoding Flow
 
-Delivery address input supports two modes:
+Delivery address input is primarily staff-entered address text:
 
 ```text
-Default mode:
+- cashier/staff enters recipient name, phone, and delivery_address.
 - client sends delivery_address only.
 - backend geocodes delivery_address through OpenRouteService.
 - backend stores delivery_latitude, delivery_longitude, formatted address,
   place_id, geocoded_at, geocoding_status, and map_provider.
-
-Pick-on-map mode:
-- client still sends delivery_address for display/instructions.
-- client also sends delivery_latitude and delivery_longitude from a map pin.
-- backend trusts the provided coordinates as the confirmed delivery location.
-- backend stores delivery_address as descriptive text.
 ```
 
 Important validation:
 
 ```text
-- If both delivery_latitude and delivery_longitude are provided, use them.
-- If neither coordinate is provided, geocode delivery_address.
-- If only one coordinate is provided, reject as delivery_coordinates_incomplete.
-- If geocoding fails or is ambiguous, reject the order and ask the client to
-  correct the address or pick a pin.
+- POST /api/v1/orders accepts delivery_address, not delivery_latitude or delivery_longitude.
+- If delivery_address is provided, geocode delivery_address.
+- If delivery_latitude or delivery_longitude is sent, reject the request as an
+  unknown/extra field.
+- If geocoding fails or is ambiguous, reject the order and ask staff to correct
+  the address.
 ```
 
 Map provider configuration:
@@ -2215,7 +2211,7 @@ Flow:
 
 - Delivery manager can view ready delivery orders.
 - Delivery orders can be geocoded from address.
-- Backend can accept map-picked coordinates when client sends lat/lon.
+- Create-order API rejects client-provided delivery latitude/longitude.
 - Delivery manager can request auto batch suggestions.
 - Backend can exact-optimize route stops with max 12 stops.
 - Backend stores route snapshot metrics on trips and stops.
@@ -2416,8 +2412,7 @@ Order:
 - Invalid empty order rejected
 - Invalid status transition rejected
 - Delivery order can geocode coordinates from address
-- Delivery order rejects incomplete coordinate pair
-- Delivery order uses map-picked lat/lon when both coordinates are provided
+- Delivery order create schema rejects delivery_latitude and delivery_longitude
 - Delivery order cannot be marked ready without delivery info
 - Unpaid delivery order requires COD pending or payment_method = cod
 - Prepaid delivery order can be marked ready after card/bank payment

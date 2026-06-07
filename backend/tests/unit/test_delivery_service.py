@@ -154,6 +154,29 @@ async def test_create_trip_auto_orders_stops_and_sums_expected_cod(monkeypatch):
     async def get_trip_detail(db, trip_id):
         return trip
 
+    async def optimize_route_exact_tsp(stops):
+        ordered_stops = [
+            delivery_service.RouteStop(
+                order_id=stop.order_id,
+                latitude=stop.latitude,
+                longitude=stop.longitude,
+                created_at=stop.created_at,
+                stop_order=index,
+                distance_from_previous_km=float(index),
+                duration_from_previous_minutes=index,
+            )
+            for index, stop in enumerate(
+                sorted(stops, key=lambda stop: stop.latitude),
+                start=1,
+            )
+        ]
+        return delivery_service.RoutePlan(
+            stops=ordered_stops,
+            total_distance_km=3.0,
+            total_duration_minutes=3,
+            provider="test_matrix",
+        )
+
     monkeypatch.setattr(
         delivery_service.delivery_repo,
         "get_orders_by_ids_for_update",
@@ -184,6 +207,11 @@ async def test_create_trip_auto_orders_stops_and_sums_expected_cod(monkeypatch):
         "get_trip_detail",
         get_trip_detail,
     )
+    monkeypatch.setattr(
+        delivery_service,
+        "optimize_route_exact_tsp",
+        optimize_route_exact_tsp,
+    )
 
     result = await delivery_service.create_trip(
         db,
@@ -200,7 +228,7 @@ async def test_create_trip_auto_orders_stops_and_sums_expected_cod(monkeypatch):
     assert captured["ordered_order_ids"] == [near_order.id, far_order.id]
     assert captured["total_distance_km"] is not None
     assert captured["total_duration_minutes"] is not None
-    assert captured["route_provider"] == "haversine_fallback"
+    assert captured["route_provider"] == "test_matrix"
 
 
 @pytest.mark.asyncio
@@ -255,10 +283,63 @@ async def test_suggest_batches_auto_groups_queue_and_routes_each_batch(monkeypat
     async def list_delivery_queue_orders(db):
         return [first_order, second_order, far_order]
 
+    async def suggest_batches_by_distance(stops, *, max_orders_per_trip):
+        assert max_orders_per_trip == 2
+        first_batch = [
+            delivery_service.RouteStop(
+                order_id=stops[0].order_id,
+                latitude=stops[0].latitude,
+                longitude=stops[0].longitude,
+                created_at=stops[0].created_at,
+                stop_order=1,
+                distance_from_previous_km=1.0,
+                duration_from_previous_minutes=1,
+            ),
+            delivery_service.RouteStop(
+                order_id=stops[1].order_id,
+                latitude=stops[1].latitude,
+                longitude=stops[1].longitude,
+                created_at=stops[1].created_at,
+                stop_order=2,
+                distance_from_previous_km=1.0,
+                duration_from_previous_minutes=1,
+            ),
+        ]
+        second_batch = [
+            delivery_service.RouteStop(
+                order_id=stops[2].order_id,
+                latitude=stops[2].latitude,
+                longitude=stops[2].longitude,
+                created_at=stops[2].created_at,
+                stop_order=1,
+                distance_from_previous_km=1.0,
+                duration_from_previous_minutes=1,
+            )
+        ]
+        return [
+            delivery_service.RoutePlan(
+                stops=first_batch,
+                total_distance_km=2.0,
+                total_duration_minutes=2,
+                provider="test_matrix",
+            ),
+            delivery_service.RoutePlan(
+                stops=second_batch,
+                total_distance_km=1.0,
+                total_duration_minutes=1,
+                provider="test_matrix",
+            ),
+        ]
+
     monkeypatch.setattr(
         delivery_service.delivery_repo,
         "list_delivery_queue_orders",
         list_delivery_queue_orders,
+    )
+    monkeypatch.setattr(
+        delivery_service,
+        "suggest_batches_by_distance",
+        suggest_batches_by_distance,
     )
 
     batches = await delivery_service.suggest_batches(
