@@ -42,6 +42,8 @@ class OrderItemRead(BaseModel):
 
 
 class OrderCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     customer_id: UUID | None = None
     order_type: OrderType
     create_customer_profile: bool = False
@@ -51,12 +53,6 @@ class OrderCreate(BaseModel):
     customer_name: str | None = Field(default=None, max_length=255)
     customer_phone: str | None = Field(default=None, max_length=50)
     delivery_address: str | None = None
-    delivery_latitude: Decimal | None = Field(
-        default=None, ge=-90, le=90, max_digits=10, decimal_places=7
-    )
-    delivery_longitude: Decimal | None = Field(
-        default=None, ge=-180, le=180, max_digits=10, decimal_places=7
-    )
     note: str | None = None
     items: list[OrderItemCreate] = Field(..., min_length=1)
 

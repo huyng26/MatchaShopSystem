@@ -518,22 +518,6 @@ def _validate_delivery_fields(payload: OrderCreate) -> None:
 async def _resolve_delivery_coordinates(
     payload: OrderCreate,
 ) -> map_service.GeocodeResult:
-    if payload.delivery_latitude is not None and payload.delivery_longitude is not None:
-        return map_service.GeocodeResult(
-            latitude=payload.delivery_latitude,
-            longitude=payload.delivery_longitude,
-            formatted_address=payload.delivery_address or "",
-            place_id=None,
-            provider="manual",
-            status="provided",
-            geocoded_at=utc_now(),
-        )
-    if payload.delivery_latitude is not None or payload.delivery_longitude is not None:
-        raise ServiceError(
-            "delivery_coordinates_incomplete",
-            status_code=422,
-            context={"fields": ["delivery_latitude", "delivery_longitude"]},
-        )
     if not payload.delivery_address:
         raise ServiceError(
             "delivery_fields_required",

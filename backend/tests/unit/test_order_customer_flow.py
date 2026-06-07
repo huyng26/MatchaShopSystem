@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from uuid import uuid4
 
 import pytest
+from pydantic import ValidationError
 
 from app.models.order import OrderPaymentStatus, OrderStatus, OrderType
 from app.schemas.order import OrderCreate
@@ -243,8 +244,6 @@ async def test_delivery_order_geocodes_coordinates_before_insert(monkeypatch):
             customer_name="Nguyen An",
             customer_phone="0912345678",
             delivery_address="Quan 3, TP.HCM",
-            delivery_latitude=None,
-            delivery_longitude=None,
             items=[{"product_id": product_id, "quantity": 1}],
         ),
         created_by=uuid4(),
@@ -258,6 +257,22 @@ async def test_delivery_order_geocodes_coordinates_before_insert(monkeypatch):
     assert captured["order"]["map_provider"] == "google"
     assert db.commits == 1
     assert db.rollbacks == 0
+
+
+def test_order_create_rejects_delivery_coordinate_fields():
+    with pytest.raises(ValidationError) as error:
+        make_payload(
+            order_type=OrderType.DELIVERY,
+            customer_name="Nguyen An",
+            customer_phone="0912345678",
+            delivery_address="Quan 3, TP.HCM",
+            delivery_latitude=Decimal("10.7829000"),
+            delivery_longitude=Decimal("106.6934000"),
+        )
+
+    error_fields = {tuple(item["loc"]) for item in error.value.errors()}
+    assert ("delivery_latitude",) in error_fields
+    assert ("delivery_longitude",) in error_fields
 
 
 @pytest.mark.asyncio
