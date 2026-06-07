@@ -88,6 +88,11 @@ class OrderRead(BaseModel):
     delivery_address: str | None = None
     delivery_latitude: Decimal | None = None
     delivery_longitude: Decimal | None = None
+    delivery_formatted_address: str | None = None
+    delivery_place_id: str | None = None
+    geocoded_at: datetime | None = None
+    geocoding_status: str | None = None
+    map_provider: str | None = None
     note: str | None = None
     created_at: datetime
     items: list[OrderItemRead]

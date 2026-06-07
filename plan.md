@@ -210,6 +210,7 @@ POST   /api/v1/auth/login
 GET    /api/v1/products
 POST   /api/v1/orders
 POST   /api/v1/orders/{order_id}/complete
+POST   /api/v1/maps/geocode
 GET    /api/v1/deliveries/queue
 POST   /api/v1/deliveries/trips/{trip_id}/assign
 ```
@@ -562,6 +563,11 @@ orders
 - delivery_address text nullable
 - delivery_latitude numeric(10,7) nullable
 - delivery_longitude numeric(10,7) nullable
+- delivery_formatted_address text nullable
+- delivery_place_id varchar nullable
+- geocoded_at timestamptz nullable
+- geocoding_status varchar nullable
+- map_provider varchar nullable
 - note text nullable
 - created_by UUID FK users.id not null
 - created_at timestamptz
@@ -599,6 +605,16 @@ refunded
 Why keep delivery fields in `orders` instead of creating `order_delivery_info`?
 
 Because delivery requirements are not complex enough to justify another table in version 1. The delivery-specific fields are only needed for delivery orders and can stay nullable.
+
+Delivery coordinate rule:
+
+```text
+Delivery orders require recipient name, phone, and delivery_address.
+delivery_latitude and delivery_longitude are optional request fields.
+If both coordinates are provided, backend treats them as a map-confirmed pin and uses them as the delivery location.
+If coordinates are not provided, backend geocodes delivery_address through the configured map provider.
+If only one coordinate is provided, reject the request.
+```
 
 ### 4.11 Order Items
 
@@ -802,6 +818,9 @@ delivery_trips
 - actual_cod_amount numeric(12,2) nullable
 - discrepancy_amount numeric(12,2) nullable
 - discrepancy_reason text nullable
+- total_distance_km numeric(10,3) nullable
+- total_duration_minutes integer nullable
+- route_provider varchar nullable
 - started_at timestamptz nullable
 - completed_at timestamptz nullable
 - reconciled_at timestamptz nullable
@@ -834,6 +853,8 @@ delivery_trip_orders
 - stop_order integer not null
 - status enum not null default 'assigned'
 - cod_collected numeric(12,2) not null default 0
+- distance_from_previous_km numeric(10,3) nullable
+- duration_from_previous_minutes integer nullable
 - delivered_at timestamptz nullable
 - failed_at timestamptz nullable
 - failed_reason text nullable
@@ -871,7 +892,17 @@ delivery_location_logs
 - recorded_at timestamptz not null
 ```
 
-Keep this table simple. It is an event log. Do not add too many route fields in version 1.
+Keep this table simple. It is an event log. Route snapshot fields belong on
+`delivery_trips` and `delivery_trip_orders`. Query the latest location by
+`trip_id` ordered by `recorded_at desc`.
+
+Location source rule:
+
+```text
+The backend does not determine the shipper's GPS position by itself.
+The shipper client gets latitude/longitude from the device location service
+and sends those coordinates to the backend while the trip is in transit.
+```
 
 ### 4.20 COD Reconciliations
 
@@ -1317,6 +1348,7 @@ Customer lookup/create/update should be available before order creation. In-stor
 GET    /api/v1/orders
 GET    /api/v1/orders/{order_id}
 POST   /api/v1/orders
+POST   /api/v1/maps/geocode
 POST   /api/v1/orders/{order_id}/start-processing
 POST   /api/v1/orders/{order_id}/ready-for-delivery
 POST   /api/v1/orders/{order_id}/cancel
@@ -1339,7 +1371,11 @@ POST   /api/v1/orders/{order_id}/complete
      - If yes, collect minimum customer information, create the customer, then link the order.
      - If no, save the order as anonymous with customer_id = null and skip loyalty points.
    - Delivery order:
-     - Require recipient name, phone, delivery address, latitude, and longitude before inserting the order.
+     - Require recipient name, phone, and delivery address before inserting the order.
+     - If delivery_latitude and delivery_longitude are both provided, treat them as a map-confirmed pin and use them as the delivery coordinates.
+     - If coordinates are not provided, geocode delivery_address through the configured map provider before inserting the order.
+     - If only one coordinate is provided, reject the order as incomplete delivery coordinates.
+     - If geocoding fails or returns an ambiguous address, reject the order and ask the client to correct the address or pick a pin on the map.
      - If customer_id is provided, load customer and use it as the linked profile.
      - If customer_id is not provided, find customer by phone.
      - If no customer exists by phone, create the customer in the same transaction.
@@ -1462,7 +1498,8 @@ Ready-for-delivery conditions:
 ```text
 - order_type = delivery
 - order is not cancelled or completed
-- delivery customer/address/coordinates are present
+- delivery customer/address are present
+- delivery coordinates are present, either from map pin or successful backend geocoding
 - order is not already assigned to an active delivery trip
 - prepaid orders must have successful card or bank_transfer payment
 - unpaid orders must have COD pending, or request payment_method = cod to create it
@@ -1699,18 +1736,27 @@ This is the most challenging part after order completion.
 Delivery flow:
 
 ```text
-1. Delivery order is created.
-2. Order is prepared and marked ready_for_delivery.
-3. Delivery manager views delivery queue.
-4. Delivery manager batches several orders into a trip.
-5. System suggests route order.
-6. Delivery manager can accept or override.
-7. Delivery manager assigns shipper.
-8. Shipper starts trip.
-9. Shipper marks each order delivered or failed.
-10. COD is collected if needed.
-11. Trip is completed.
-12. Delivery manager reconciles COD.
+1. Delivery order is created with recipient/contact/address information.
+2. Backend resolves delivery coordinates:
+   - use client-provided lat/lon when the user picked a map pin.
+   - otherwise geocode delivery_address through the configured map provider.
+3. Order is prepared and marked ready_for_delivery.
+4. Delivery manager views delivery queue.
+5. Delivery manager requests suggested batches.
+6. Backend groups orders by nearby location plus waiting time.
+7. Backend optimizes each batch with exact TSP, max 12 stops per trip.
+8. Delivery manager creates a trip from a suggested batch or selected order IDs.
+9. Backend stores route snapshot on the trip and trip stops.
+10. Delivery manager assigns shipper.
+11. Shipper starts trip.
+12. Shipper client asks the device for GPS permission and reads current location.
+13. Shipper client sends location updates to backend while the trip is in_transit.
+14. Backend writes location updates to delivery_location_logs.
+15. Delivery manager polls trip detail to see latest shipper location.
+16. Shipper marks each order delivered or failed.
+17. COD is collected if needed.
+18. Trip is completed when all stops are final.
+19. Delivery manager reconciles COD.
 ```
 
 ### 10.2 Delivery Endpoints
@@ -1718,6 +1764,7 @@ Delivery flow:
 Manager/admin side:
 
 ```http
+POST /api/v1/maps/geocode
 GET  /api/v1/deliveries/queue
 POST /api/v1/deliveries/batch/suggest
 POST /api/v1/deliveries/trips
@@ -1758,6 +1805,7 @@ customer_phone
 delivery_address
 delivery_latitude
 delivery_longitude
+geocoding_status
 total_amount
 payment_status
 payment_method
@@ -1766,107 +1814,125 @@ waiting_time
 created_at
 ```
 
-### 10.4 Auto Batching and Routing — Implementation Strategy
+### 10.4 Address, Geocoding, and Map Pin Flow
 
-Do not try to build a perfect route optimization engine immediately. Build it in levels.
-
-#### Level 1 — Manual Batching + Auto Stop Ordering
-
-This is the recommended first implementation.
-
-Delivery manager selects orders manually. Backend only sorts selected orders into a suggested delivery order.
-
-Algorithm:
+Delivery address input supports two modes:
 
 ```text
-Input:
-- shop latitude, shop longitude
-- selected delivery orders with latitude/longitude
+Default mode:
+- client sends delivery_address only.
+- backend geocodes delivery_address through OpenRouteService.
+- backend stores delivery_latitude, delivery_longitude, formatted address,
+  place_id, geocoded_at, geocoding_status, and map_provider.
 
-Output:
-- ordered list of delivery stops
+Pick-on-map mode:
+- client still sends delivery_address for display/instructions.
+- client also sends delivery_latitude and delivery_longitude from a map pin.
+- backend trusts the provided coordinates as the confirmed delivery location.
+- backend stores delivery_address as descriptive text.
 ```
 
-Use nearest-neighbor algorithm:
+Important validation:
 
 ```text
-1. Start from shop location.
-2. Find the nearest unvisited order.
-3. Add it as next stop.
-4. Move current location to that order.
-5. Repeat until all orders are visited.
+- If both delivery_latitude and delivery_longitude are provided, use them.
+- If neither coordinate is provided, geocode delivery_address.
+- If only one coordinate is provided, reject as delivery_coordinates_incomplete.
+- If geocoding fails or is ambiguous, reject the order and ask the client to
+  correct the address or pick a pin.
 ```
 
-This is simple and understandable.
-
-Pros:
+Map provider configuration:
 
 ```text
-Easy to implement
-Easy to explain
-Good enough for small delivery batches
-Manager still controls grouping
+MAPS_PROVIDER=openrouteservice
+OPENROUTESERVICE_API_KEY=<api key>
+MAPS_REQUEST_TIMEOUT_SECONDS=8
 ```
 
-Cons:
+OpenRouteService usage:
 
 ```text
-Not always globally optimal
+- Geocoding endpoint: /geocode/search
+- Matrix endpoint: /v2/matrix/driving-car
+- Geocoding returns coordinates as [longitude, latitude].
+- Backend stores them as delivery_latitude and delivery_longitude.
 ```
 
-But it is acceptable for version 1.
+### 10.5 Auto Batching and Exact Route Optimization
 
-#### Level 2 — Auto Batch Suggestion by Distance
+Auto batching is a recommendation flow, not full autopilot. The backend suggests
+batches, then delivery manager creates the trip.
 
-After Level 1 works, add automatic grouping.
-
-Simple algorithm:
+Batch suggestion input:
 
 ```text
-1. Get all ready_for_delivery orders with coordinates.
-2. Set max orders per trip, for example 4.
+- all ready_for_delivery orders, or a manager-selected order_ids subset.
+- max_orders_per_trip, hard capped at 12.
+```
+
+Batching rule:
+
+```text
+1. Exclude orders already assigned to an active trip.
+2. Require delivery coordinates.
 3. Pick the oldest waiting order as the seed.
-4. Find nearest orders to that seed.
-5. Group until max orders per trip is reached.
-6. Create a suggested batch.
-7. Repeat with remaining orders.
-8. For each batch, run nearest-neighbor route ordering.
+4. Add nearby orders to that seed.
+5. Apply a waiting-time bonus so older orders are not left behind.
+6. Stop when max_orders_per_trip is reached.
+7. Repeat until queue is grouped.
 ```
 
-This creates reasonable batches without complex algorithms.
-
-#### Level 3 — Better Clustering Later
-
-Only if needed, use:
+Routing rule inside each batch:
 
 ```text
-K-means clustering
-DBSCAN clustering
-Google Maps Directions API
-OpenRouteService
-OR-Tools vehicle routing
+1. Build coordinates list: shop first, then delivery stops.
+2. Use OpenRouteService Matrix to get driving distance and duration between all points.
+3. Run exact TSP with Held-Karp dynamic programming.
+4. Optimize primarily by total duration.
+5. Use total distance as tie-breaker.
+6. Do not add a return-to-shop leg after the last stop.
 ```
 
-Do not start with Level 3.
-
-### 10.5 Distance Calculation
-
-Use Haversine distance to estimate distance between two coordinates.
-
-Formula utility should live in:
+Route output:
 
 ```text
-app/utils/distance.py
+- ordered stops
+- distance_from_previous_km for each stop
+- duration_from_previous_minutes for each stop
+- total_distance_km
+- total_duration_minutes
+- route_provider
 ```
 
-Function:
+Exact TSP limit:
 
-```python
-def haversine_distance_km(lat1, lon1, lat2, lon2) -> float:
-    ...
+```text
+max_orders_per_trip = 12
 ```
 
-This is enough for sorting and grouping.
+The cap is a maximum, not a target. A trip can contain 1 to 12 orders. If the
+manager selects 3 orders, exact TSP runs on those 3 orders only.
+
+Fallback for local testing:
+
+```text
+If the map provider API key is missing for route matrix calls, backend may use
+Haversine fallback for local/test routing. Production routing should use the
+configured map provider.
+```
+
+Provider behavior:
+
+```text
+If OPENROUTESERVICE_API_KEY is configured:
+- route_provider should be openrouteservice.
+- total_distance_km and total_duration_minutes come from ORS driving matrix.
+
+If OPENROUTESERVICE_API_KEY is missing in local/test:
+- route_provider may be haversine_fallback.
+- route ordering still works, but distance/duration are estimates.
+```
 
 ### 10.6 Create Trip Flow
 
@@ -1895,14 +1961,27 @@ Flow:
 5. Validate orders are not already assigned to active trip.
 6. Validate orders have coordinates.
 7. If use_auto_route = true:
-   - calculate stop_order using nearest-neighbor.
+   - reject more than 12 stops.
+   - build route matrix with map provider.
+   - calculate stop_order with exact TSP.
+   - calculate total_distance_km and total_duration_minutes.
 8. Else:
-   - use frontend-provided order sequence.
+   - use request order sequence.
+   - route metrics may be stored as manual/zero until recalculated.
 9. Calculate expected_cod_amount:
    - sum total_amount for COD/unpaid orders.
-10. Insert delivery_trips row.
-11. Insert delivery_trip_orders rows.
+10. Insert delivery_trips row:
+   - include total_distance_km, total_duration_minutes, route_provider.
+11. Insert delivery_trip_orders rows:
+   - include stop_order, distance_from_previous_km, duration_from_previous_minutes.
 12. Commit.
+```
+
+Route snapshot rule:
+
+```text
+Trip route metrics are stored when the trip is created. Later edits to the
+order address must not silently change an already-created trip route.
 ```
 
 ### 10.7 Assign Shipper Flow
@@ -1930,6 +2009,32 @@ Flow:
 
 ### 10.9 Location Update Flow
 
+Purpose:
+
+```text
+Allow delivery manager to track where the assigned shipper currently is while
+the trip is in_transit.
+```
+
+Responsibility split:
+
+```text
+Shipper client:
+- asks for device location permission.
+- reads GPS/current position from browser or mobile OS.
+- sends latitude/longitude to backend every configured interval.
+
+Backend:
+- validates shipper and trip state.
+- stores every location update as an event log.
+- returns the newest location log in manager trip detail.
+
+Manager client:
+- polls trip detail periodically.
+- reads latest_location.
+- renders or moves the shipper marker on the map.
+```
+
 Endpoint:
 
 ```http
@@ -1941,21 +2046,87 @@ Request:
 ```json
 {
   "latitude": 21.027763,
-  "longitude": 105.834160
+  "longitude": 105.834160,
+  "recorded_at": "2026-06-07T14:10:00+07:00"
 }
 ```
 
-Flow:
+Shipper client location source:
+
+```text
+Web client:
+- use navigator.geolocation.getCurrentPosition for one-time location updates.
+- or use navigator.geolocation.watchPosition for continuous updates.
+
+Mobile app:
+- use the platform location service.
+- send the same latitude/longitude payload to the backend.
+```
+
+Shipper update loop:
+
+```text
+1. Shipper opens assigned trip.
+2. Shipper starts trip.
+3. Trip status becomes in_transit.
+4. Shipper client requests location permission.
+5. If permission is granted:
+   - read current latitude/longitude from device GPS/location service.
+   - POST location to backend.
+   - repeat every SHIPPER_LOCATION_UPDATE_INTERVAL_SECONDS while trip is in_transit.
+6. If permission is denied:
+   - show client-side error.
+   - keep manual location update or retry permission as fallback.
+```
+
+Backend validation flow:
 
 ```text
 1. Validate current user is assigned shipper.
 2. Validate trip status = in_transit.
 3. Validate latitude and longitude are valid.
-4. Insert delivery_location_logs row.
-5. Optionally broadcast location through WebSocket/SSE.
+4. Use request recorded_at when provided, otherwise use server time.
+5. Insert delivery_location_logs row with trip_id, shipper_id, latitude,
+   longitude, and recorded_at.
+6. Commit.
 ```
 
-For version 1, REST location updates are enough. Real-time push can be added later.
+Manager tracking flow:
+
+```http
+GET /api/v1/deliveries/trips/{trip_id}
+```
+
+```text
+1. Manager opens trip detail.
+2. Manager client polls trip detail every 10-30 seconds.
+3. Backend returns latest_location from delivery_location_logs ordered by
+   recorded_at desc.
+4. If latest_location is null, no location update has been received yet.
+5. If latest_location exists, manager client displays the shipper marker at
+   latest_location.latitude/latest_location.longitude and shows recorded_at.
+```
+
+Response field:
+
+```json
+{
+  "latest_location": {
+    "latitude": "10.7768890",
+    "longitude": "106.7008060",
+    "recorded_at": "2026-06-07T14:10:00+07:00"
+  }
+}
+```
+
+Version 1 tracking mode:
+
+```text
+Use REST polling.
+Do not require WebSocket/SSE for v1.
+WebSocket/SSE can be added later to push location changes to manager clients,
+but the shipper client still must send GPS updates to the backend.
+```
 
 ### 10.10 Mark Delivered Flow
 
@@ -2043,11 +2214,16 @@ Flow:
 ### 10.13 Delivery Done When
 
 - Delivery manager can view ready delivery orders.
-- Delivery manager can create trip manually.
-- Backend can auto-sort route stops.
+- Delivery orders can be geocoded from address.
+- Backend can accept map-picked coordinates when client sends lat/lon.
+- Delivery manager can request auto batch suggestions.
+- Backend can exact-optimize route stops with max 12 stops.
+- Backend stores route snapshot metrics on trips and stops.
+- Delivery manager can create trip from selected orders.
 - Delivery manager can assign shipper.
 - Shipper can start trip.
 - Shipper can update location.
+- Manager can view latest shipper location for a trip.
 - Shipper can mark delivered or failed.
 - COD collection updates payment.
 - COD reconciliation works.
@@ -2239,6 +2415,9 @@ Order:
 - Order total calculation
 - Invalid empty order rejected
 - Invalid status transition rejected
+- Delivery order can geocode coordinates from address
+- Delivery order rejects incomplete coordinate pair
+- Delivery order uses map-picked lat/lon when both coordinates are provided
 - Delivery order cannot be marked ready without delivery info
 - Unpaid delivery order requires COD pending or payment_method = cod
 - Prepaid delivery order can be marked ready after card/bank payment
@@ -2267,8 +2446,18 @@ Order completion:
 - Financial records created
 
 Delivery:
-- Haversine distance calculation
-- Nearest-neighbor route ordering
+- Haversine fallback distance calculation for local/test route matrix
+- OpenRouteService geocode parses [longitude, latitude] correctly
+- OpenRouteService matrix converts meters/seconds to km/minutes
+- Exact TSP route ordering
+- Batch suggestion enforces max 12 stops
+- Auto batch suggestion groups nearby orders while considering waiting time
+- Trip creation stores route snapshot metrics
+- Shipper location update requires assigned shipper and in_transit trip
+- Shipper location update stores latitude, longitude, and recorded_at
+- Latest trip location returns newest location log
+- Manager trip detail includes latest_location when logs exist
+- Manager trip detail returns latest_location = null before first update
 - Trip creation validates order status
 - Failed delivery returns order to queue
 - Delivered COD order marks COD payment success
@@ -2525,12 +2714,18 @@ Phase 1:
 
 Phase 10:
 - Implement delivery queue
+- Implement map/geocoding service for delivery addresses
+- Implement OpenRouteService geocoding and route matrix integration
 - Implement manual trip creation
-- Implement nearest-neighbor route ordering
-- Implement batch suggestion by distance
+- Implement exact TSP route ordering with max 12 stops
+- Implement batch suggestion by nearby location and waiting time
+- Store route snapshot metrics on trips and trip stops
 - Implement assign shipper
 - Implement start trip
-- Implement location update
+- Implement shipper client location update endpoint
+- Implement latest trip location query
+- Document shipper client periodic GPS update responsibility
+- Document manager client trip-detail polling responsibility
 - Implement mark delivered
 - Implement mark failed
 - Implement COD reconciliation
@@ -2584,14 +2779,19 @@ Swagger testing doc:
 backend/docs/api-testing-dashboard-swagger.md
 ```
 
-Important warning:
-
-Routing should be built gradually:
+Delivery routing and tracking notes:
 
 ```text
-First: manual grouping + auto stop ordering
-Second: auto batch suggestion
-Third: advanced routing only if time remains
+Routing:
+- Use OpenRouteService Matrix for driving distance and duration.
+- Use backend exact TSP for stop ordering.
+- Keep 12 stops as the hard cap for exact TSP.
+
+Tracking:
+- Shipper client gets GPS from device/browser location service.
+- Shipper client sends location updates periodically while trip is in_transit.
+- Backend stores location logs and exposes latest_location.
+- Manager client polls trip detail to display the current shipper marker.
 ```
 
 ---
