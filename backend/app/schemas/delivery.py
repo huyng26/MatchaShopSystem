@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import datetime
 from decimal import Decimal
 from typing import Any
@@ -22,6 +24,7 @@ class DeliveryQueueItem(BaseModel):
     delivery_address: str | None = None
     delivery_latitude: Decimal | None = None
     delivery_longitude: Decimal | None = None
+    geocoding_status: str | None = None
     total_amount: Decimal
     payment_status: OrderPaymentStatus
     payment_method: PaymentMethod | None = None
@@ -32,7 +35,7 @@ class DeliveryQueueItem(BaseModel):
 
 class DeliveryBatchSuggestRequest(BaseModel):
     order_ids: list[UUID] | None = Field(default=None, min_length=1)
-    max_orders_per_trip: int = Field(default=4, ge=1, le=20)
+    max_orders_per_trip: int = Field(default=4, ge=1, le=12)
 
 
 class DeliverySuggestedStop(BaseModel):
@@ -40,11 +43,14 @@ class DeliverySuggestedStop(BaseModel):
     order_code: str
     stop_order: int
     distance_from_previous_km: float
+    duration_from_previous_minutes: int
 
 
 class DeliverySuggestedBatch(BaseModel):
     orders: list[DeliverySuggestedStop]
     total_distance_km: float
+    total_duration_minutes: int
+    route_provider: str | None = None
     expected_cod_amount: Decimal
 
 
@@ -91,6 +97,8 @@ class DeliveryTripOrderRead(BaseModel):
     stop_order: int
     status: DeliveryTripOrderStatus
     cod_collected: Decimal
+    distance_from_previous_km: Decimal | None = None
+    duration_from_previous_minutes: int | None = None
     delivered_at: datetime | None = None
     failed_at: datetime | None = None
     failed_reason: str | None = None
@@ -119,6 +127,16 @@ class DeliveryTripOrderRead(BaseModel):
             "stop_order": getattr(data, "stop_order", None),
             "status": getattr(data, "status", None),
             "cod_collected": getattr(data, "cod_collected", None),
+            "distance_from_previous_km": getattr(
+                data,
+                "distance_from_previous_km",
+                None,
+            ),
+            "duration_from_previous_minutes": getattr(
+                data,
+                "duration_from_previous_minutes",
+                None,
+            ),
             "delivered_at": getattr(data, "delivered_at", None),
             "failed_at": getattr(data, "failed_at", None),
             "failed_reason": getattr(data, "failed_reason", None),
@@ -146,6 +164,9 @@ class DeliveryTripRead(BaseModel):
     actual_cod_amount: Decimal | None = None
     discrepancy_amount: Decimal | None = None
     discrepancy_reason: str | None = None
+    total_distance_km: Decimal | None = None
+    total_duration_minutes: int | None = None
+    route_provider: str | None = None
     started_at: datetime | None = None
     completed_at: datetime | None = None
     reconciled_at: datetime | None = None
@@ -154,6 +175,7 @@ class DeliveryTripRead(BaseModel):
 
 class DeliveryTripDetailRead(DeliveryTripRead):
     orders: list[DeliveryTripOrderRead]
+    latest_location: DeliveryLocationLogRead | None = None
 
     @model_validator(mode="before")
     @classmethod
@@ -170,11 +192,15 @@ class DeliveryTripDetailRead(DeliveryTripRead):
             "actual_cod_amount": getattr(data, "actual_cod_amount", None),
             "discrepancy_amount": getattr(data, "discrepancy_amount", None),
             "discrepancy_reason": getattr(data, "discrepancy_reason", None),
+            "total_distance_km": getattr(data, "total_distance_km", None),
+            "total_duration_minutes": getattr(data, "total_duration_minutes", None),
+            "route_provider": getattr(data, "route_provider", None),
             "started_at": getattr(data, "started_at", None),
             "completed_at": getattr(data, "completed_at", None),
             "reconciled_at": getattr(data, "reconciled_at", None),
             "created_at": getattr(data, "created_at", None),
             "orders": getattr(data, "trip_orders", []),
+            "latest_location": getattr(data, "latest_location", None),
         }
 
 

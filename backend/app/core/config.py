@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     shop_timezone: str = "Asia/Ho_Chi_Minh"
     shop_latitude: float = 10.776889
     shop_longitude: float = 106.700806
+    google_maps_api_key: str | None = None
+    openrouteservice_api_key: str | None = None
+    maps_provider: str = "openrouteservice"
+    maps_request_timeout_seconds: float = 8.0
+    shipper_location_update_interval_seconds: int = 30
     supabase_url: str | None = None
     supabase_service_role_key: str | None = None
     supabase_product_images_bucket: str = "product-images"

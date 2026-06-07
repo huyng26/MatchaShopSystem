@@ -124,18 +124,30 @@ async def test_create_trip_auto_orders_stops_and_sums_expected_cod(monkeypatch):
     async def reserve_unique_trip_code(db):
         return "TRIP-TEST"
 
-    async def create_trip(db, *, trip_code, expected_cod_amount, created_by):
+    async def create_trip(
+        db,
+        *,
+        trip_code,
+        expected_cod_amount,
+        total_distance_km=None,
+        total_duration_minutes=None,
+        route_provider=None,
+        created_by,
+    ):
         captured["trip_code"] = trip_code
         captured["expected_cod_amount"] = expected_cod_amount
+        captured["total_distance_km"] = total_distance_km
+        captured["total_duration_minutes"] = total_duration_minutes
+        captured["route_provider"] = route_provider
         captured["created_by"] = created_by
         trip.expected_cod_amount = expected_cod_amount
         return trip
 
-    async def create_trip_orders(db, *, trip_id, ordered_order_ids):
-        captured["ordered_order_ids"] = ordered_order_ids
+    async def create_trip_orders(db, *, trip_id, ordered_order_ids=None, route_stops=None):
+        captured["ordered_order_ids"] = [stop.order_id for stop in route_stops]
         trip.trip_orders = [
-            SimpleNamespace(order_id=order_id, stop_order=index + 1)
-            for index, order_id in enumerate(ordered_order_ids)
+            SimpleNamespace(order_id=stop.order_id, stop_order=stop.stop_order)
+            for stop in route_stops
         ]
         return trip.trip_orders
 
@@ -186,6 +198,9 @@ async def test_create_trip_auto_orders_stops_and_sums_expected_cod(monkeypatch):
     assert captured["created_by"] == current_user.id
     assert captured["expected_cod_amount"] == Decimal("150000.00")
     assert captured["ordered_order_ids"] == [near_order.id, far_order.id]
+    assert captured["total_distance_km"] is not None
+    assert captured["total_duration_minutes"] is not None
+    assert captured["route_provider"] == "haversine_fallback"
 
 
 @pytest.mark.asyncio

@@ -40,3 +40,5 @@ CREATE INDEX IF NOT EXISTS idx_delivery_location_logs_trip_id
     ON delivery_location_logs (trip_id);
 CREATE INDEX IF NOT EXISTS idx_delivery_location_logs_recorded_at
     ON delivery_location_logs (recorded_at);
+CREATE INDEX IF NOT EXISTS idx_delivery_location_logs_trip_recorded_at
+    ON delivery_location_logs (trip_id, recorded_at DESC);
