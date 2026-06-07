@@ -757,12 +757,6 @@ function validateDeliveryDetails(details) {
   if (missing.length) {
     throw new Error(`Delivery order requires ${missing.join(', ')}.`);
   }
-
-  const hasLatitude = details.delivery_latitude !== '' && details.delivery_latitude !== null && details.delivery_latitude !== undefined;
-  const hasLongitude = details.delivery_longitude !== '' && details.delivery_longitude !== null && details.delivery_longitude !== undefined;
-  if (hasLatitude !== hasLongitude) {
-    throw new Error('Delivery map pin is incomplete. Resolve the address again.');
-  }
 }
 
 function validateInstoreCustomerDetails(details) {
@@ -806,10 +800,6 @@ async function submitPosOrder(selectedPayment, checkoutDetails = {}, onStep = ()
     payload.customer_name = deliveryDetails.customer_name;
     payload.customer_phone = deliveryDetails.customer_phone;
     payload.delivery_address = deliveryDetails.delivery_address;
-    if (deliveryDetails.delivery_latitude !== '' && deliveryDetails.delivery_longitude !== '') {
-      payload.delivery_latitude = Number(deliveryDetails.delivery_latitude);
-      payload.delivery_longitude = Number(deliveryDetails.delivery_longitude);
-    }
     payload.note = buildDeliveryOrderNote(cart, deliveryDetails);
   } else {
     validateInstoreCustomerDetails(instoreCustomerDetails);
@@ -1261,29 +1251,6 @@ function collectInstoreCustomerForm() {
   return details;
 }
 
-function buildGoogleMapSearchUrl(latitude, longitude) {
-  if (latitude === '' || latitude === null || latitude === undefined || longitude === '' || longitude === null || longitude === undefined) {
-    return '';
-  }
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${latitude},${longitude}`)}`;
-}
-
-function setDeliveryMapStatus(message = '', type = 'info', mapUrl = '') {
-  const status = document.getElementById('deliveryMapStatus');
-  const preview = document.getElementById('deliveryMapPreview');
-  if (status) {
-    status.textContent = message || 'No pin selected. Backend will geocode this address when the order is created.';
-    status.classList.remove('text-error', 'text-secondary', 'text-on-surface-variant');
-    status.classList.add(
-      type === 'error' ? 'text-error' : type === 'success' ? 'text-secondary' : 'text-on-surface-variant'
-    );
-  }
-  if (preview) {
-    preview.classList.toggle('hidden', !mapUrl);
-    if (mapUrl) preview.href = mapUrl;
-  }
-}
-
 function getDeliveryMapErrorMessage(error) {
   const message = String(error?.message || '');
   const knownMessages = {
@@ -1307,8 +1274,6 @@ function populateDeliveryDetailsForm() {
   const storedDetails = getPosDeliveryDetails();
   const details = {
     delivery_address: '',
-    delivery_latitude: '',
-    delivery_longitude: '',
     note: '',
     ready_for_queue: false,
     ...storedDetails,
@@ -1320,8 +1285,6 @@ function populateDeliveryDetailsForm() {
     deliveryCustomerName: 'customer_name',
     deliveryCustomerPhone: 'customer_phone',
     deliveryAddress: 'delivery_address',
-    deliveryLatitude: 'delivery_latitude',
-    deliveryLongitude: 'delivery_longitude',
     deliveryOrderNote: 'note',
   };
 
@@ -1336,13 +1299,6 @@ function populateDeliveryDetailsForm() {
   if (readyForQueue) {
     readyForQueue.checked = details.ready_for_queue !== false;
   }
-
-  const mapUrl = buildGoogleMapSearchUrl(details.delivery_latitude, details.delivery_longitude);
-  if (mapUrl) {
-    setDeliveryMapStatus('Map destination resolved. This confirmed pin will be sent with the order.', 'success', mapUrl);
-  } else {
-    setDeliveryMapStatus();
-  }
 }
 
 function collectDeliveryDetailsForm() {
@@ -1350,56 +1306,11 @@ function collectDeliveryDetailsForm() {
     customer_name: document.getElementById('deliveryCustomerName')?.value.trim() || '',
     customer_phone: document.getElementById('deliveryCustomerPhone')?.value.trim() || '',
     delivery_address: document.getElementById('deliveryAddress')?.value.trim() || '',
-    delivery_latitude: document.getElementById('deliveryLatitude')?.value || '',
-    delivery_longitude: document.getElementById('deliveryLongitude')?.value || '',
     note: document.getElementById('deliveryOrderNote')?.value.trim() || '',
     ready_for_queue: Boolean(document.getElementById('deliveryReadyForQueue')?.checked),
   };
   setPosDeliveryDetails(details);
   return details;
-}
-
-async function resolveDeliveryAddressWithMap() {
-  if (!isPosDeliveryOrder()) return;
-  const addressInput = document.getElementById('deliveryAddress');
-  const latitudeInput = document.getElementById('deliveryLatitude');
-  const longitudeInput = document.getElementById('deliveryLongitude');
-  const resolveButton = document.getElementById('deliveryResolveMap');
-  const address = addressInput?.value.trim() || '';
-  if (!address) {
-    setDeliveryMapStatus('Enter a delivery address before resolving it.', 'error');
-    return;
-  }
-
-  const originalHtml = resolveButton?.innerHTML;
-  if (resolveButton) {
-    resolveButton.disabled = true;
-    resolveButton.innerHTML = '<span class="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>Resolving...';
-  }
-  setDeliveryMapStatus('Resolving address with the map provider...');
-  try {
-    const result = await fetchMatchaApi('/maps/geocode', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ address }),
-    });
-    if (latitudeInput) latitudeInput.value = result.latitude;
-    if (longitudeInput) longitudeInput.value = result.longitude;
-    const details = collectDeliveryDetailsForm();
-    const mapUrl = buildGoogleMapSearchUrl(details.delivery_latitude, details.delivery_longitude);
-    setDeliveryMapStatus(result.formatted_address || 'Map destination resolved. This confirmed pin will be sent with the order.', 'success', mapUrl);
-  } catch (error) {
-    console.error('Failed to resolve delivery address:', error);
-    if (latitudeInput) latitudeInput.value = '';
-    if (longitudeInput) longitudeInput.value = '';
-    collectDeliveryDetailsForm();
-    setDeliveryMapStatus(getDeliveryMapErrorMessage(error), 'error');
-  } finally {
-    if (resolveButton) {
-      resolveButton.disabled = false;
-      resolveButton.innerHTML = originalHtml;
-    }
-  }
 }
 
 function renderPosPaymentOrder() {
@@ -1468,10 +1379,6 @@ function initPosPayment() {
   renderPosPaymentOrder();
 
   const payBtn = document.getElementById('payBtn');
-  const deliveryAddressInput = document.getElementById('deliveryAddress');
-  const deliveryResolveMapButton = document.getElementById('deliveryResolveMap');
-  const deliveryLatitudeInput = document.getElementById('deliveryLatitude');
-  const deliveryLongitudeInput = document.getElementById('deliveryLongitude');
   const overlay = document.getElementById('successOverlay');
   const card = document.getElementById('successCard');
   const successTitle = document.getElementById('successTitle');
@@ -1479,14 +1386,6 @@ function initPosPayment() {
   const newOrderBtn = document.getElementById('newOrderBtn');
   const paymentOrderCode = document.getElementById('paymentOrderCode');
   const originalPayBtnHtml = payBtn?.innerHTML;
-
-  deliveryResolveMapButton?.addEventListener('click', resolveDeliveryAddressWithMap);
-  deliveryAddressInput?.addEventListener('input', () => {
-    if (deliveryLatitudeInput) deliveryLatitudeInput.value = '';
-    if (deliveryLongitudeInput) deliveryLongitudeInput.value = '';
-    setDeliveryMapStatus();
-    collectDeliveryDetailsForm();
-  });
 
   payBtn?.addEventListener('click', async () => {
     const selectedPayment = document.querySelector('input[name="payment"]:checked')?.value;
