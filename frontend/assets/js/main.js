@@ -753,15 +753,15 @@ function validateDeliveryDetails(details) {
   if (!details.customer_name) missing.push('customer name');
   if (!details.customer_phone) missing.push('phone');
   if (!details.delivery_address) missing.push('delivery address');
-  if (details.delivery_latitude === '' || details.delivery_latitude === null || details.delivery_latitude === undefined) {
-    missing.push('latitude');
-  }
-  if (details.delivery_longitude === '' || details.delivery_longitude === null || details.delivery_longitude === undefined) {
-    missing.push('longitude');
-  }
 
   if (missing.length) {
     throw new Error(`Delivery order requires ${missing.join(', ')}.`);
+  }
+
+  const hasLatitude = details.delivery_latitude !== '' && details.delivery_latitude !== null && details.delivery_latitude !== undefined;
+  const hasLongitude = details.delivery_longitude !== '' && details.delivery_longitude !== null && details.delivery_longitude !== undefined;
+  if (hasLatitude !== hasLongitude) {
+    throw new Error('Delivery map pin is incomplete. Resolve the address again.');
   }
 }
 
@@ -806,8 +806,10 @@ async function submitPosOrder(selectedPayment, checkoutDetails = {}, onStep = ()
     payload.customer_name = deliveryDetails.customer_name;
     payload.customer_phone = deliveryDetails.customer_phone;
     payload.delivery_address = deliveryDetails.delivery_address;
-    payload.delivery_latitude = Number(deliveryDetails.delivery_latitude);
-    payload.delivery_longitude = Number(deliveryDetails.delivery_longitude);
+    if (deliveryDetails.delivery_latitude !== '' && deliveryDetails.delivery_longitude !== '') {
+      payload.delivery_latitude = Number(deliveryDetails.delivery_latitude);
+      payload.delivery_longitude = Number(deliveryDetails.delivery_longitude);
+    }
     payload.note = buildDeliveryOrderNote(cart, deliveryDetails);
   } else {
     validateInstoreCustomerDetails(instoreCustomerDetails);
@@ -1259,6 +1261,46 @@ function collectInstoreCustomerForm() {
   return details;
 }
 
+function buildGoogleMapSearchUrl(latitude, longitude) {
+  if (latitude === '' || latitude === null || latitude === undefined || longitude === '' || longitude === null || longitude === undefined) {
+    return '';
+  }
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${latitude},${longitude}`)}`;
+}
+
+function setDeliveryMapStatus(message = '', type = 'info', mapUrl = '') {
+  const status = document.getElementById('deliveryMapStatus');
+  const preview = document.getElementById('deliveryMapPreview');
+  if (status) {
+    status.textContent = message || 'No pin selected. Backend will geocode this address when the order is created.';
+    status.classList.remove('text-error', 'text-secondary', 'text-on-surface-variant');
+    status.classList.add(
+      type === 'error' ? 'text-error' : type === 'success' ? 'text-secondary' : 'text-on-surface-variant'
+    );
+  }
+  if (preview) {
+    preview.classList.toggle('hidden', !mapUrl);
+    if (mapUrl) preview.href = mapUrl;
+  }
+}
+
+function getDeliveryMapErrorMessage(error) {
+  const message = String(error?.message || '');
+  const knownMessages = {
+    maps_api_key_required: 'Map provider is not configured. Add a Maps API key before resolving delivery addresses.',
+    geocoding_timeout: 'Map lookup timed out. Please try resolving the address again.',
+    geocoding_provider_error: 'Map provider could not resolve this address right now.',
+    geocoding_no_results: 'No map result found for this address. Correct the address or choose a map pin.',
+    geocoding_missing_coordinates: 'The map result did not include coordinates. Try a more specific address.',
+    geocoding_low_confidence: 'The map result is uncertain. Correct the address or choose a map pin.',
+    geocoding_failed: 'Map lookup failed. Correct the address or try again.',
+    geocoding_ambiguous_address: 'This address is ambiguous. Add more detail or choose a map pin.',
+    unsupported_maps_provider: 'Configured map provider is not supported.',
+  };
+
+  return knownMessages[message] || message || 'Cannot resolve this address. Correct it or try again.';
+}
+
 function populateDeliveryDetailsForm() {
   if (!isPosDeliveryOrder()) return;
 
@@ -1294,6 +1336,13 @@ function populateDeliveryDetailsForm() {
   if (readyForQueue) {
     readyForQueue.checked = details.ready_for_queue !== false;
   }
+
+  const mapUrl = buildGoogleMapSearchUrl(details.delivery_latitude, details.delivery_longitude);
+  if (mapUrl) {
+    setDeliveryMapStatus('Map destination resolved. This confirmed pin will be sent with the order.', 'success', mapUrl);
+  } else {
+    setDeliveryMapStatus();
+  }
 }
 
 function collectDeliveryDetailsForm() {
@@ -1308,6 +1357,49 @@ function collectDeliveryDetailsForm() {
   };
   setPosDeliveryDetails(details);
   return details;
+}
+
+async function resolveDeliveryAddressWithMap() {
+  if (!isPosDeliveryOrder()) return;
+  const addressInput = document.getElementById('deliveryAddress');
+  const latitudeInput = document.getElementById('deliveryLatitude');
+  const longitudeInput = document.getElementById('deliveryLongitude');
+  const resolveButton = document.getElementById('deliveryResolveMap');
+  const address = addressInput?.value.trim() || '';
+  if (!address) {
+    setDeliveryMapStatus('Enter a delivery address before resolving it.', 'error');
+    return;
+  }
+
+  const originalHtml = resolveButton?.innerHTML;
+  if (resolveButton) {
+    resolveButton.disabled = true;
+    resolveButton.innerHTML = '<span class="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>Resolving...';
+  }
+  setDeliveryMapStatus('Resolving address with the map provider...');
+  try {
+    const result = await fetchMatchaApi('/maps/geocode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ address }),
+    });
+    if (latitudeInput) latitudeInput.value = result.latitude;
+    if (longitudeInput) longitudeInput.value = result.longitude;
+    const details = collectDeliveryDetailsForm();
+    const mapUrl = buildGoogleMapSearchUrl(details.delivery_latitude, details.delivery_longitude);
+    setDeliveryMapStatus(result.formatted_address || 'Map destination resolved. This confirmed pin will be sent with the order.', 'success', mapUrl);
+  } catch (error) {
+    console.error('Failed to resolve delivery address:', error);
+    if (latitudeInput) latitudeInput.value = '';
+    if (longitudeInput) longitudeInput.value = '';
+    collectDeliveryDetailsForm();
+    setDeliveryMapStatus(getDeliveryMapErrorMessage(error), 'error');
+  } finally {
+    if (resolveButton) {
+      resolveButton.disabled = false;
+      resolveButton.innerHTML = originalHtml;
+    }
+  }
 }
 
 function renderPosPaymentOrder() {
@@ -1376,6 +1468,10 @@ function initPosPayment() {
   renderPosPaymentOrder();
 
   const payBtn = document.getElementById('payBtn');
+  const deliveryAddressInput = document.getElementById('deliveryAddress');
+  const deliveryResolveMapButton = document.getElementById('deliveryResolveMap');
+  const deliveryLatitudeInput = document.getElementById('deliveryLatitude');
+  const deliveryLongitudeInput = document.getElementById('deliveryLongitude');
   const overlay = document.getElementById('successOverlay');
   const card = document.getElementById('successCard');
   const successTitle = document.getElementById('successTitle');
@@ -1383,6 +1479,14 @@ function initPosPayment() {
   const newOrderBtn = document.getElementById('newOrderBtn');
   const paymentOrderCode = document.getElementById('paymentOrderCode');
   const originalPayBtnHtml = payBtn?.innerHTML;
+
+  deliveryResolveMapButton?.addEventListener('click', resolveDeliveryAddressWithMap);
+  deliveryAddressInput?.addEventListener('input', () => {
+    if (deliveryLatitudeInput) deliveryLatitudeInput.value = '';
+    if (deliveryLongitudeInput) deliveryLongitudeInput.value = '';
+    setDeliveryMapStatus();
+    collectDeliveryDetailsForm();
+  });
 
   payBtn?.addEventListener('click', async () => {
     const selectedPayment = document.querySelector('input[name="payment"]:checked')?.value;
@@ -1432,7 +1536,9 @@ function initPosPayment() {
     } catch (error) {
       console.error('Failed to complete POS order:', error);
       setPosPaymentStatus(
-        error.message || 'Cannot complete order. Please check the backend server.',
+        isDelivery
+          ? getDeliveryMapErrorMessage(error)
+          : error.message || 'Cannot complete order. Please check the backend server.',
         'error'
       );
       payBtn.disabled = false;
@@ -1485,6 +1591,7 @@ function initShipper() {
   const useCurrentLocationButton = document.getElementById('shipper-use-current-location');
   const latitudeInput = document.getElementById('shipper-latitude');
   const longitudeInput = document.getElementById('shipper-longitude');
+  const locationLast = document.getElementById('shipper-location-last');
   const stopModal = document.getElementById('shipper-stop-modal');
   const stopForm = document.getElementById('shipper-stop-form');
   const stopFormStatus = document.getElementById('shipper-stop-form-status');
@@ -1567,6 +1674,52 @@ function initShipper() {
       day: '2-digit',
       month: '2-digit',
     });
+  };
+
+  const buildShipperMapUrl = (latitude, longitude) => {
+    if (latitude === null || latitude === undefined || longitude === null || longitude === undefined) return '';
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${latitude},${longitude}`)}`;
+  };
+
+  const hasCapturedLocation = () => latitudeInput?.value !== '' && longitudeInput?.value !== '';
+
+  const renderLocationStatus = () => {
+    if (!locationLast) return;
+    const latestLocation = state.selectedTrip?.latest_location;
+    const latestMapUrl = latestLocation
+      ? buildShipperMapUrl(latestLocation.latitude, latestLocation.longitude)
+      : '';
+    const capturedMapUrl = hasCapturedLocation()
+      ? buildShipperMapUrl(latitudeInput.value, longitudeInput.value)
+      : '';
+
+    if (latestLocation) {
+      locationLast.innerHTML = `
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <span>Last sent ${escapeHtml(formatShipperDateTime(latestLocation.recorded_at))}</span>
+          <a class="inline-flex items-center gap-1 rounded-full bg-surface-container-high px-3 py-2 text-xs font-bold text-primary hover:bg-surface-container-highest" href="${latestMapUrl}" target="_blank" rel="noreferrer">
+            <span class="material-symbols-outlined text-[16px]">map</span>
+            Open map
+          </a>
+        </div>
+      `;
+      return;
+    }
+
+    if (hasCapturedLocation()) {
+      locationLast.innerHTML = `
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <span>Device location captured. Send it while the trip is in transit.</span>
+          <a class="inline-flex items-center gap-1 rounded-full bg-surface-container-high px-3 py-2 text-xs font-bold text-primary hover:bg-surface-container-highest" href="${capturedMapUrl}" target="_blank" rel="noreferrer">
+            <span class="material-symbols-outlined text-[16px]">map</span>
+            Preview
+          </a>
+        </div>
+      `;
+      return;
+    }
+
+    locationLast.textContent = 'No location has been captured in this session.';
   };
 
   const getVisibleTrips = () => {
@@ -1657,10 +1810,11 @@ function initShipper() {
     if (statusContainer) statusContainer.innerHTML = trip ? getBadge(trip.status) : '-';
 
     if (startTripButton) startTripButton.disabled = !canStart;
-    if (sendLocationButton) sendLocationButton.disabled = !canSendLocation;
+    if (sendLocationButton) sendLocationButton.disabled = !canSendLocation || !hasCapturedLocation();
 
     renderStops();
     renderCurrentStop();
+    renderLocationStatus();
     renderStats();
   };
 
@@ -1776,7 +1930,8 @@ function initShipper() {
         method: 'POST',
       });
       await loadTrips({ keepSelectedTrip: true });
-      setStatus('Trip started. You can now update location and stops.', 'success');
+      setStatus('Trip started. Requesting device location...', 'success');
+      captureCurrentLocation({ sendAfterCapture: true });
     } catch (error) {
       console.error('Failed to start shipper trip:', error);
       renderTripDetail();
@@ -1789,7 +1944,7 @@ function initShipper() {
     const latitude = latitudeInput?.value;
     const longitude = longitudeInput?.value;
     if (latitude === '' || longitude === '') {
-      setStatus('Latitude and longitude are required.', 'error');
+      setStatus('Capture the device location before sending it.', 'error');
       return;
     }
 
@@ -1804,6 +1959,9 @@ function initShipper() {
           longitude: Number(longitude),
         }),
       });
+      if (state.selectedTrip) {
+        state.selectedTrip = await fetchMatchaApi(`/shipper/trips/${encodeURIComponent(state.selectedTrip.id)}`);
+      }
       setStatus('Location updated.', 'success');
     } catch (error) {
       console.error('Failed to update shipper location:', error);
@@ -1813,23 +1971,34 @@ function initShipper() {
     }
   };
 
-  const fillCurrentLocation = () => {
+  const captureCurrentLocation = ({ sendAfterCapture = false } = {}) => {
     if (!navigator.geolocation) {
       setStatus('Browser geolocation is not available.', 'error');
       return;
     }
-    setStatus('Getting current location...');
+    setStatus('Requesting device location...');
+    useCurrentLocationButton.disabled = true;
     navigator.geolocation.getCurrentPosition(
       (position) => {
         if (latitudeInput) latitudeInput.value = position.coords.latitude.toFixed(7);
         if (longitudeInput) longitudeInput.value = position.coords.longitude.toFixed(7);
-        setStatus('Current location filled. Press Update Location to send it.', 'success');
+        renderLocationStatus();
+        renderTripDetail();
+        if (sendAfterCapture) {
+          updateLocation();
+          return;
+        }
+        setStatus('Device location captured. Send it when the trip is in transit.', 'success');
       },
       (error) => {
         setStatus(error.message || 'Cannot get current location.', 'error');
+        renderTripDetail();
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
+    setTimeout(() => {
+      useCurrentLocationButton.disabled = false;
+    }, 1000);
   };
 
   const openStopModal = (orderId, action) => {
@@ -1934,7 +2103,7 @@ function initShipper() {
   });
   startTripButton?.addEventListener('click', startSelectedTrip);
   sendLocationButton?.addEventListener('click', updateLocation);
-  useCurrentLocationButton?.addEventListener('click', fillCurrentLocation);
+  useCurrentLocationButton?.addEventListener('click', () => captureCurrentLocation());
   stopForm?.addEventListener('submit', submitStopUpdate);
   document.getElementById('shipper-close-stop-modal')?.addEventListener('click', closeStopModal);
   document.getElementById('shipper-cancel-stop-modal')?.addEventListener('click', closeStopModal);

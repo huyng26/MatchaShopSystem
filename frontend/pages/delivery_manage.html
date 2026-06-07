@@ -22,7 +22,7 @@
             <section class="flex flex-wrap items-end justify-between gap-4">
                 <div>
                     <h1 id="delivery-management-title" class="font-serif text-4xl text-primary" style="font-family: 'Newsreader', serif !important; font-weight: 400 !important; letter-spacing: 0 !important;">Delivery Management</h1>
-                    <p class="page-header-subtitle">Queue orders, build delivery trips, assign shippers, and reconcile COD.</p>
+                    <p class="page-header-subtitle">Dispatch map-resolved queue orders, build optimized trips, assign shippers, track location, and reconcile COD.</p>
                 </div>
                 <div class="flex items-center gap-3">
                     <button id="refresh-delivery-data" type="button" class="inline-flex items-center gap-2 rounded-full bg-surface-container-high px-5 py-2.5 text-sm font-bold text-on-surface hover:bg-surface-container-highest">
@@ -67,35 +67,8 @@
                     <section class="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
                         <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
                             <div>
-                                <h2 class="font-headline text-2xl font-bold text-primary">Preparing Delivery Orders</h2>
-                                <p class="text-sm text-on-surface-variant">Mark prepared delivery orders ready before they enter the queue.</p>
-                            </div>
-                        </div>
-                        <div class="overflow-hidden rounded-xl border border-outline-variant/30">
-                            <table class="w-full text-left">
-                                <thead class="bg-surface-container-low">
-                                    <tr>
-                                        <th class="px-4 py-3 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Order</th>
-                                        <th class="px-4 py-3 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Customer</th>
-                                        <th class="px-4 py-3 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Payment</th>
-                                        <th class="px-4 py-3 text-right text-xs font-bold uppercase tracking-widest text-on-surface-variant">Total</th>
-                                        <th class="px-4 py-3 text-right text-xs font-bold uppercase tracking-widest text-on-surface-variant">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="delivery-preparing-body" class="divide-y divide-outline-variant/20">
-                                    <tr>
-                                        <td class="px-4 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="5">Loading preparing orders...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
-
-                    <section class="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
-                        <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
-                            <div>
-                                <h2 class="font-headline text-2xl font-bold text-primary">Ready For Delivery</h2>
-                                <p class="text-sm text-on-surface-variant">Select orders from the queue, request a route suggestion, then create a trip.</p>
+                                <h2 class="font-headline text-2xl font-bold text-primary">Ready Delivery Queue</h2>
+                                <p class="text-sm text-on-surface-variant">Select map-resolved orders, request route suggestions, then create a trip.</p>
                             </div>
                             <div class="flex flex-wrap items-center gap-3">
                                 <button id="suggest-selected-orders" type="button" class="inline-flex items-center gap-2 rounded-full bg-surface-container-high px-4 py-2 text-sm font-bold text-on-surface hover:bg-surface-container-highest">
@@ -117,7 +90,7 @@
                                         </th>
                                         <th class="px-4 py-3 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Order</th>
                                         <th class="px-4 py-3 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Customer</th>
-                                        <th class="px-4 py-3 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Address</th>
+                                        <th class="px-4 py-3 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Map Destination</th>
                                         <th class="px-4 py-3 text-right text-xs font-bold uppercase tracking-widest text-on-surface-variant">COD</th>
                                         <th class="px-4 py-3 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Waiting</th>
                                     </tr>
@@ -142,7 +115,7 @@
                             </div>
                             <label class="space-y-1">
                                 <span class="block text-[10px] font-bold uppercase tracking-widest text-on-primary/70">Max stops</span>
-                                <input id="max-orders-per-trip" type="number" min="1" max="20" step="1" value="4" class="w-20 rounded-lg border-on-primary/20 bg-on-primary px-3 py-2 text-sm font-bold text-primary focus:border-secondary focus:ring-secondary" />
+                                <input id="max-orders-per-trip" type="number" min="1" max="12" step="1" value="4" class="w-20 rounded-lg border-on-primary/20 bg-on-primary px-3 py-2 text-sm font-bold text-primary focus:border-secondary focus:ring-secondary" />
                             </label>
                         </div>
                         <button id="suggest-all-orders" type="button" class="mb-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-on-primary px-4 py-3 text-sm font-bold text-primary hover:bg-secondary hover:text-on-secondary">
@@ -210,7 +183,6 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const API_BASE_URL = window.MATCHA_API_BASE_URL || 'http://localhost:8000/api/v1';
-            const preparingBody = document.getElementById('delivery-preparing-body');
             const queueBody = document.getElementById('delivery-queue-body');
             const tripsBody = document.getElementById('delivery-trips-body');
             const pageStatus = document.getElementById('delivery-page-status');
@@ -223,7 +195,6 @@
             const shippersList = document.getElementById('active-shippers-list');
 
             let deliveryQueue = [];
-            let preparingOrders = [];
             let deliveryTrips = [];
             let shippers = [];
             let selectedTrip = null;
@@ -261,6 +232,19 @@
                     hour: '2-digit',
                     minute: '2-digit',
                 }).format(date);
+            };
+
+            const formatDuration = (minutes) => {
+                const totalMinutes = Number(minutes || 0);
+                if (!totalMinutes) return '0 min';
+                const hours = Math.floor(totalMinutes / 60);
+                const remainder = totalMinutes % 60;
+                return hours ? `${hours}h ${remainder}m` : `${remainder} min`;
+            };
+
+            const buildMapUrl = (latitude, longitude) => {
+                if (latitude === null || latitude === undefined || longitude === null || longitude === undefined) return '';
+                return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${latitude},${longitude}`)}`;
             };
 
             const getTokenHeaders = () => {
@@ -321,39 +305,6 @@
                 document.getElementById('stat-cod').textContent = formatMoney(codAwaiting);
             };
 
-            const renderPreparingOrders = () => {
-                preparingBody.innerHTML = '';
-
-                if (!preparingOrders.length) {
-                    preparingBody.innerHTML = '<tr><td class="px-4 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="5">No delivery orders are in preparation.</td></tr>';
-                    return;
-                }
-
-                preparingOrders.forEach((order) => {
-                    const row = document.createElement('tr');
-                    row.className = 'hover:bg-surface-container-low';
-                    row.innerHTML = `
-                        <td class="px-4 py-4">
-                            <p class="font-bold text-primary">${escapeHtml(order.order_code)}</p>
-                            <p class="text-xs text-on-surface-variant">${escapeHtml(formatDateTime(order.created_at))}</p>
-                        </td>
-                        <td class="px-4 py-4">
-                            <p class="font-bold">${escapeHtml(order.customer_name || 'Phone customer')}</p>
-                            <p class="text-xs text-on-surface-variant">${escapeHtml(order.customer_phone || '-')}</p>
-                        </td>
-                        <td class="px-4 py-4">${getBadge(order.payment_status)}</td>
-                        <td class="px-4 py-4 text-right font-bold">${escapeHtml(formatMoney(order.total_amount))}</td>
-                        <td class="px-4 py-4 text-right">
-                            <button class="mark-order-ready inline-flex items-center justify-center gap-1 rounded-full bg-secondary px-3 py-2 text-xs font-bold text-on-secondary hover:bg-secondary/90" type="button" data-order-id="${escapeHtml(order.id)}" data-payment-status="${escapeHtml(order.payment_status)}">
-                                <span class="material-symbols-outlined text-[16px]">done_all</span>
-                                Mark Ready
-                            </button>
-                        </td>
-                    `;
-                    preparingBody.appendChild(row);
-                });
-            };
-
             const renderQueue = () => {
                 selectAllQueue.checked = false;
                 queueBody.innerHTML = '';
@@ -365,6 +316,7 @@
 
                 deliveryQueue.forEach((order) => {
                     const hasCoordinates = order.delivery_latitude !== null && order.delivery_longitude !== null;
+                    const mapUrl = buildMapUrl(order.delivery_latitude, order.delivery_longitude);
                     const row = document.createElement('tr');
                     row.className = 'hover:bg-surface-container-low';
                     row.innerHTML = `
@@ -381,7 +333,10 @@
                         </td>
                         <td class="max-w-[280px] px-4 py-4">
                             <p class="line-clamp-2 text-sm">${escapeHtml(order.delivery_address || '-')}</p>
-                            ${hasCoordinates ? '' : '<p class="mt-1 text-xs font-bold text-error">Missing coordinates</p>'}
+                            <div class="mt-2 flex flex-wrap items-center gap-2">
+                                <span class="rounded-full px-2.5 py-1 text-[10px] font-bold ${hasCoordinates ? 'bg-secondary-container/30 text-secondary' : 'bg-error-container/30 text-error'}">${hasCoordinates ? 'Map resolved' : 'Map missing'}</span>
+                                ${mapUrl ? `<a class="inline-flex items-center gap-1 text-xs font-bold text-secondary hover:text-primary" href="${mapUrl}" target="_blank" rel="noreferrer"><span class="material-symbols-outlined text-[15px]">map</span>Map</a>` : ''}
+                            </div>
                         </td>
                         <td class="px-4 py-4 text-right font-bold">${escapeHtml(formatMoney(order.amount_to_collect))}</td>
                         <td class="px-4 py-4 text-sm text-on-surface-variant">${escapeHtml(order.waiting_time)}</td>
@@ -476,7 +431,7 @@
                             ${batch.orders.map((order) => `
                                 <li class="flex items-center justify-between rounded-lg bg-primary/30 px-3 py-2 text-xs">
                                     <span>${order.stop_order}. ${escapeHtml(order.order_code)}</span>
-                                    <span>${Number(order.distance_from_previous_km || 0).toFixed(2)} km</span>
+                                    <span>${Number(order.distance_from_previous_km || 0).toFixed(2)} km · ${escapeHtml(formatDuration(order.duration_from_previous_minutes))}</span>
                                 </li>
                             `).join('')}
                         </ol>
@@ -501,6 +456,8 @@
                 const canAssign = selectedTrip.status === 'pending_dispatch';
                 const canReconcile = selectedTrip.status === 'completed';
                 const deliveredCod = deliveredCodForTrip(selectedTrip);
+                const latestLocation = selectedTrip.latest_location;
+                const latestLocationUrl = latestLocation ? buildMapUrl(latestLocation.latitude, latestLocation.longitude) : '';
 
                 tripDetailPanel.innerHTML = `
                     <div class="grid grid-cols-1 gap-5 xl:grid-cols-2">
@@ -513,9 +470,27 @@
                                 <div class="flex gap-2">
                                     <select id="assign-shipper-select" class="min-w-0 flex-1 rounded-xl border-outline bg-surface px-3 py-2 text-sm focus:border-secondary focus:ring-secondary" ${canAssign ? '' : 'disabled'}>
                                         <option value="">Select active shipper</option>
-                                        ${shippers.map((shipper) => `<option value="${escapeHtml(shipper.id)}">${escapeHtml(shipper.full_name)}</option>`).join('')}
+                                        ${shippers.map((shipper) => {
+                                            const busyTrip = deliveryTrips.find((trip) => trip.shipper_id === shipper.id && ['assigned', 'in_transit'].includes(trip.status));
+                                            return `<option value="${escapeHtml(shipper.id)}" ${busyTrip ? 'disabled' : ''}>${escapeHtml(shipper.full_name)}${busyTrip ? ` - busy on ${escapeHtml(busyTrip.trip_code)}` : ''}</option>`;
+                                        }).join('')}
                                     </select>
                                     <button id="assign-shipper-button" type="button" class="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50" ${canAssign ? '' : 'disabled'}>Assign</button>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                <div class="rounded-xl bg-surface-container-low p-4">
+                                    <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Route</p>
+                                    <p class="mt-2 text-sm font-bold text-primary">${Number(selectedTrip.total_distance_km || 0).toFixed(2)} km</p>
+                                </div>
+                                <div class="rounded-xl bg-surface-container-low p-4">
+                                    <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Duration</p>
+                                    <p class="mt-2 text-sm font-bold text-primary">${escapeHtml(formatDuration(selectedTrip.total_duration_minutes))}</p>
+                                </div>
+                                <div class="rounded-xl bg-surface-container-low p-4">
+                                    <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Provider</p>
+                                    <p class="mt-2 truncate text-sm font-bold text-primary">${escapeHtml(selectedTrip.route_provider || 'manual')}</p>
                                 </div>
                             </div>
 
@@ -531,9 +506,14 @@
                                                 </div>
                                                 ${getBadge(order.status)}
                                             </div>
-                                            <div class="mt-2 flex justify-between text-xs text-on-surface-variant">
+                                            <div class="mt-2 flex flex-wrap justify-between gap-2 text-xs text-on-surface-variant">
                                                 <span>Collect: ${escapeHtml(formatMoney(order.amount_to_collect))}</span>
                                                 <span>Collected: ${escapeHtml(formatMoney(order.cod_collected))}</span>
+                                            </div>
+                                            <div class="mt-2 flex flex-wrap items-center gap-3 text-xs text-on-surface-variant">
+                                                <span>${Number(order.distance_from_previous_km || 0).toFixed(2)} km from previous</span>
+                                                <span>${escapeHtml(formatDuration(order.duration_from_previous_minutes))}</span>
+                                                ${buildMapUrl(order.delivery_latitude, order.delivery_longitude) ? `<a class="font-bold text-secondary hover:text-primary" href="${buildMapUrl(order.delivery_latitude, order.delivery_longitude)}" target="_blank" rel="noreferrer">Open map</a>` : ''}
                                             </div>
                                             ${order.failed_reason ? `<p class="mt-2 text-xs font-bold text-error">${escapeHtml(order.failed_reason)}</p>` : ''}
                                         </div>
@@ -542,7 +522,26 @@
                             </div>
                         </div>
 
-                        <div class="rounded-xl border border-outline-variant/30 p-4">
+                        <div class="space-y-5">
+                          <div class="rounded-xl border border-outline-variant/30 p-4">
+                            <p class="mb-3 font-bold text-primary">Live Tracking</p>
+                            <div class="rounded-xl bg-surface-container-low p-4">
+                                <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Latest shipper location</p>
+                                ${
+                                    latestLocation
+                                        ? `<div class="mt-2 flex flex-wrap items-center justify-between gap-3">
+                                            <p class="text-sm font-bold text-primary">${escapeHtml(formatDateTime(latestLocation.recorded_at))}</p>
+                                            <a class="inline-flex items-center gap-1 rounded-full bg-surface-container-high px-3 py-2 text-xs font-bold text-primary hover:bg-surface-container-highest" href="${latestLocationUrl}" target="_blank" rel="noreferrer">
+                                                <span class="material-symbols-outlined text-[16px]">my_location</span>
+                                                Open map
+                                            </a>
+                                          </div>`
+                                        : '<p class="mt-2 text-sm font-bold text-on-surface-variant">No shipper location received yet.</p>'
+                                }
+                            </div>
+                          </div>
+
+                          <div class="rounded-xl border border-outline-variant/30 p-4">
                             <p class="mb-3 font-bold text-primary">COD Reconciliation</p>
                             <div class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                                 <div class="rounded-xl bg-surface-container-low p-4">
@@ -563,6 +562,7 @@
                                 <textarea id="cod-discrepancy-reason" rows="6" class="w-full rounded-xl border-outline bg-surface px-3 py-2 text-sm focus:border-secondary focus:ring-secondary" placeholder="Required if actual amount differs" ${canReconcile ? '' : 'disabled'}></textarea>
                             </label>
                             <button id="reconcile-cod-button" type="button" class="mt-4 w-full rounded-xl bg-secondary px-4 py-3 text-sm font-bold text-on-secondary hover:bg-secondary/90 disabled:cursor-not-allowed disabled:opacity-50" ${canReconcile ? '' : 'disabled'}>Reconcile COD</button>
+                          </div>
                         </div>
                     </div>
                 `;
@@ -575,14 +575,12 @@
                 setPageStatus('Loading delivery data...');
                 try {
                     const status = tripStatusFilter.value;
-                    const [preparingData, queueData, tripsData, shippersData] = await Promise.all([
-                        fetchApiData('/orders?status=in_progress&order_type=delivery'),
+                    const [queueData, tripsData, shippersData] = await Promise.all([
                         fetchApiData('/deliveries/queue'),
                         fetchApiData(`/deliveries/trips${status ? `?status=${encodeURIComponent(status)}` : ''}`),
                         fetchApiData('/staff?role=shipper&status=active&page_size=100').catch(() => ({ items: [] })),
                     ]);
 
-                    preparingOrders = getListData(preparingData);
                     deliveryQueue = getListData(queueData);
                     deliveryTrips = getListData(tripsData);
                     shippers = getListData(shippersData);
@@ -593,7 +591,6 @@
                     }
 
                     renderStats();
-                    renderPreparingOrders();
                     renderQueue();
                     renderTrips();
                     renderShippers();
@@ -602,26 +599,6 @@
                 } catch (error) {
                     console.error('Failed to load delivery data:', error);
                     setPageStatus(error.message || 'Cannot load delivery data.', 'error');
-                }
-            };
-
-            const markOrderReady = async (orderId, paymentStatus) => {
-                if (!orderId) return;
-
-                setPageStatus('Marking order ready for delivery...');
-                try {
-                    await fetchApiData(`/orders/${encodeURIComponent(orderId)}/ready-for-delivery`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            payment_method: paymentStatus === 'paid' ? null : 'cod',
-                        }),
-                    });
-                    await refreshAll();
-                    setPageStatus('Order moved to delivery queue.');
-                } catch (error) {
-                    console.error('Failed to mark order ready:', error);
-                    setPageStatus(error.message || 'Cannot mark order ready for delivery.', 'error');
                 }
             };
 
@@ -747,13 +724,15 @@
                 });
             });
             document.getElementById('suggest-all-orders').addEventListener('click', () => suggestBatches());
-            document.getElementById('suggest-selected-orders').addEventListener('click', () => suggestBatches(getSelectedOrderIds()));
-            document.getElementById('create-trip-selected').addEventListener('click', () => createTrip(getSelectedOrderIds()));
-            preparingBody.addEventListener('click', (event) => {
-                const button = event.target.closest('.mark-order-ready');
-                if (!button) return;
-                markOrderReady(button.dataset.orderId, button.dataset.paymentStatus);
+            document.getElementById('suggest-selected-orders').addEventListener('click', () => {
+                const selectedIds = getSelectedOrderIds();
+                if (!selectedIds.length) {
+                    setPageStatus('Select at least one queued order for a selected suggestion.', 'error');
+                    return;
+                }
+                suggestBatches(selectedIds);
             });
+            document.getElementById('create-trip-selected').addEventListener('click', () => createTrip(getSelectedOrderIds()));
             suggestedBatches.addEventListener('click', (event) => {
                 const button = event.target.closest('.create-trip-from-batch');
                 if (!button) return;

@@ -21,7 +21,7 @@
       <section class="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 class="font-headline text-4xl text-primary">Ship</h1>
-          <p class="page-header-subtitle">Shipper workspace for assigned trips, route stops, delivery results, and live location updates.</p>
+          <p class="page-header-subtitle">Shipper workspace for assigned trips, map routes, delivery results, and device location updates.</p>
         </div>
         <div class="flex flex-wrap items-center gap-3">
           <select id="shipper-trip-filter" class="rounded-full border-outline bg-surface px-5 py-2.5 text-sm font-bold text-primary focus:border-secondary focus:ring-secondary">
@@ -117,26 +117,21 @@
             </div>
 
             <section class="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
-              <h2 class="font-headline text-2xl font-bold text-primary">Location</h2>
-              <p class="mt-1 text-sm text-on-surface-variant">Send the latest shipper position for the selected trip.</p>
+              <h2 class="font-headline text-2xl font-bold text-primary">Device Location</h2>
+              <p class="mt-1 text-sm text-on-surface-variant">Capture the current device position and send it while the trip is in transit.</p>
               <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-                <label class="space-y-2">
-                  <span class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Latitude</span>
-                  <input id="shipper-latitude" type="number" min="-90" max="90" step="0.0000001" class="w-full rounded-xl border-outline bg-surface px-3 py-2 text-sm focus:border-secondary focus:ring-secondary" placeholder="10.7768890" />
-                </label>
-                <label class="space-y-2">
-                  <span class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Longitude</span>
-                  <input id="shipper-longitude" type="number" min="-180" max="180" step="0.0000001" class="w-full rounded-xl border-outline bg-surface px-3 py-2 text-sm focus:border-secondary focus:ring-secondary" placeholder="106.7008060" />
-                </label>
+                <input id="shipper-latitude" type="hidden" />
+                <input id="shipper-longitude" type="hidden" />
                 <button id="shipper-use-current-location" type="button" class="inline-flex items-center justify-center gap-2 rounded-xl bg-surface-container-high px-4 py-3 text-sm font-bold text-primary hover:bg-surface-container-highest">
                   <span class="material-symbols-outlined text-[18px]">my_location</span>
-                  Use Current Location
+                  Capture Location
                 </button>
                 <button id="shipper-send-location" type="button" class="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50" disabled>
                   <span class="material-symbols-outlined text-[18px]">near_me</span>
-                  Update Location
+                  Send Location
                 </button>
               </div>
+              <p id="shipper-location-last" class="mt-4 rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">No location has been captured in this session.</p>
             </section>
 
             <section class="rounded-xl bg-primary p-6 text-on-primary shadow-sm">
