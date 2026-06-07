@@ -66,6 +66,9 @@ class DeliveryTrip(Base):
     actual_cod_amount = Column(Numeric(12, 2))
     discrepancy_amount = Column(Numeric(12, 2))
     discrepancy_reason = Column(Text)
+    total_distance_km = Column(Numeric(10, 3))
+    total_duration_minutes = Column(Integer)
+    route_provider = Column(String(50))
     started_at = Column(DateTime(timezone=True))
     completed_at = Column(DateTime(timezone=True))
     reconciled_at = Column(DateTime(timezone=True))
@@ -127,6 +130,8 @@ class DeliveryTripOrder(Base):
         server_default=text("'assigned'::delivery_trip_order_status"),
     )
     cod_collected = Column(Numeric(12, 2), nullable=False, server_default=text("0"))
+    distance_from_previous_km = Column(Numeric(10, 3))
+    duration_from_previous_minutes = Column(Integer)
     delivered_at = Column(DateTime(timezone=True))
     failed_at = Column(DateTime(timezone=True))
     failed_reason = Column(Text)

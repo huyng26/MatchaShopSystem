@@ -8,7 +8,6 @@ import pytest
 from app.models.order import OrderPaymentStatus, OrderStatus, OrderType
 from app.schemas.order import OrderCreate
 from app.services import order_service
-from app.services.errors import ServiceError
 
 
 class FakeDb:
@@ -211,26 +210,53 @@ async def test_instore_order_creates_customer_profile_when_requested(monkeypatch
 
 
 @pytest.mark.asyncio
-async def test_delivery_order_requires_coordinates_before_insert(monkeypatch):
+async def test_delivery_order_geocodes_coordinates_before_insert(monkeypatch):
     db = FakeDb()
+    product_id = uuid4()
 
-    with pytest.raises(ServiceError) as error:
-        await order_service.create_order(
-            db,
-            make_payload(
-                order_type=OrderType.DELIVERY,
-                customer_name="Nguyen An",
-                customer_phone="0912345678",
-                delivery_address="Quan 3, TP.HCM",
-                delivery_latitude=None,
-                delivery_longitude=None,
-            ),
-            created_by=uuid4(),
+    async def get_customer_by_phone(db, phone):
+        return None
+
+    async def geocode_address(address):
+        return SimpleNamespace(
+            latitude=Decimal("10.7829000"),
+            longitude=Decimal("106.6934000"),
+            formatted_address="Quan 3, TP.HCM, Viet Nam",
+            place_id="place-123",
+            provider="google",
+            status="OK",
+            geocoded_at=datetime.now(timezone.utc),
         )
 
-    assert error.value.code == "delivery_fields_required"
-    assert error.value.status_code == 422
-    assert db.commits == 0
+    monkeypatch.setattr(
+        order_service.customer_repo,
+        "get_customer_by_phone",
+        get_customer_by_phone,
+    )
+    monkeypatch.setattr(order_service.map_service, "geocode_address", geocode_address)
+    captured = await setup_create_order_repos(monkeypatch)
+
+    result = await order_service.create_order(
+        db,
+        make_payload(
+            order_type=OrderType.DELIVERY,
+            customer_name="Nguyen An",
+            customer_phone="0912345678",
+            delivery_address="Quan 3, TP.HCM",
+            delivery_latitude=None,
+            delivery_longitude=None,
+            items=[{"product_id": product_id, "quantity": 1}],
+        ),
+        created_by=uuid4(),
+    )
+
+    assert result.delivery_latitude == Decimal("10.7829000")
+    assert captured["order"]["delivery_longitude"] == Decimal("106.6934000")
+    assert captured["order"]["delivery_formatted_address"] == "Quan 3, TP.HCM, Viet Nam"
+    assert captured["order"]["delivery_place_id"] == "place-123"
+    assert captured["order"]["geocoding_status"] == "OK"
+    assert captured["order"]["map_provider"] == "google"
+    assert db.commits == 1
     assert db.rollbacks == 0
 
 

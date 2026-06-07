@@ -113,11 +113,17 @@ async def create_trip(
     *,
     trip_code: str,
     expected_cod_amount: Decimal,
+    total_distance_km: Decimal | None = None,
+    total_duration_minutes: int | None = None,
+    route_provider: str | None = None,
     created_by: UUID,
 ) -> DeliveryTrip:
     trip = DeliveryTrip(
         trip_code=trip_code,
         expected_cod_amount=expected_cod_amount,
+        total_distance_km=total_distance_km,
+        total_duration_minutes=total_duration_minutes,
+        route_provider=route_provider,
         created_by=created_by,
     )
     db.add(trip)
@@ -130,16 +136,31 @@ async def create_trip_orders(
     db: AsyncSession,
     *,
     trip_id: UUID,
-    ordered_order_ids: list[UUID],
+    ordered_order_ids: list[UUID] | None = None,
+    route_stops: Sequence[object] | None = None,
 ) -> Sequence[DeliveryTripOrder]:
-    rows = [
-        DeliveryTripOrder(
-            trip_id=trip_id,
-            order_id=order_id,
-            stop_order=index + 1,
-        )
-        for index, order_id in enumerate(ordered_order_ids)
-    ]
+    if route_stops is not None:
+        rows = [
+            DeliveryTripOrder(
+                trip_id=trip_id,
+                order_id=stop.order_id,
+                stop_order=stop.stop_order,
+                distance_from_previous_km=Decimal(
+                    str(stop.distance_from_previous_km)
+                ),
+                duration_from_previous_minutes=stop.duration_from_previous_minutes,
+            )
+            for stop in route_stops
+        ]
+    else:
+        rows = [
+            DeliveryTripOrder(
+                trip_id=trip_id,
+                order_id=order_id,
+                stop_order=index + 1,
+            )
+            for index, order_id in enumerate(ordered_order_ids or [])
+        ]
     db.add_all(rows)
     await db.flush()
     for row in rows:
@@ -182,7 +203,10 @@ async def get_trip_detail(db: AsyncSession, trip_id: UUID) -> DeliveryTrip | Non
         )
     )
     result = await db.execute(stmt)
-    return result.scalar_one_or_none()
+    trip = result.scalar_one_or_none()
+    if trip is not None:
+        trip.latest_location = await get_latest_location_log(db, trip.id)
+    return trip
 
 
 async def get_trip_for_update(
@@ -277,6 +301,20 @@ async def create_location_log(
     await db.flush()
     await db.refresh(log)
     return log
+
+
+async def get_latest_location_log(
+    db: AsyncSession,
+    trip_id: UUID,
+) -> DeliveryLocationLog | None:
+    stmt = (
+        select(DeliveryLocationLog)
+        .where(DeliveryLocationLog.trip_id == trip_id)
+        .order_by(DeliveryLocationLog.recorded_at.desc())
+        .limit(1)
+    )
+    result = await db.execute(stmt)
+    return result.scalar_one_or_none()
 
 
 async def get_reconciliation_by_trip(

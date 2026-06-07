@@ -96,6 +96,11 @@ class Order(Base):
     delivery_address = Column(Text)
     delivery_latitude = Column(Numeric(10, 7))
     delivery_longitude = Column(Numeric(10, 7))
+    delivery_formatted_address = Column(Text)
+    delivery_place_id = Column(String(255))
+    geocoded_at = Column(DateTime(timezone=True))
+    geocoding_status = Column(String(50))
+    map_provider = Column(String(50))
     note = Column(Text)
     created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     created_at = Column(

@@ -5,7 +5,6 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import get_settings
 from app.core.constants import StaffStatus, UserRole
 from app.models.delivery import (
     CodReconciliation,
@@ -44,13 +43,15 @@ from app.schemas.delivery import (
 from app.services import order_service
 from app.services.errors import ServiceError
 from app.services.routing_service import (
+    MAX_EXACT_TSP_STOPS,
+    RoutePlan,
     RouteStop,
-    order_stops_nearest_neighbor,
+    optimize_route_exact_tsp,
     suggest_batches_by_distance,
 )
-from app.utils.distance import haversine_distance_km
 
 MONEY_QUANT = Decimal("0.01")
+DISTANCE_QUANT = Decimal("0.001")
 
 
 def utc_now() -> datetime:
@@ -80,17 +81,20 @@ async def suggest_batches(
                 context={"order_ids": [str(order_id) for order_id in missing]},
             )
         selected = [queue_by_id[order_id] for order_id in payload.order_ids]
-        return [_suggest_batch(selected)]
+        return [await _suggest_batch(selected)]
 
     stops = [_route_stop_from_order(order) for order in queue_orders]
-    batches = suggest_batches_by_distance(
+    route_plans = await suggest_batches_by_distance(
         stops,
         max_orders_per_trip=payload.max_orders_per_trip,
     )
     orders_by_id = {order.id: order for order in queue_orders}
     return [
-        _suggest_batch([orders_by_id[stop.order_id] for stop in batch])
-        for batch in batches
+        _suggested_batch_from_route_plan(
+            route_plan,
+            orders_by_id=orders_by_id,
+        )
+        for route_plan in route_plans
     ]
 
 
@@ -103,10 +107,10 @@ async def create_trip(
     order_ids = _dedupe_order_ids(payload.order_ids)
     try:
         orders = await _validate_orders_for_trip_creation(db, order_ids)
-        ordered_ids = (
-            _auto_order_ids(orders)
+        route_plan = (
+            await _route_plan_for_orders(orders)
             if payload.use_auto_route
-            else [order.id for order in _order_like_request(orders, order_ids)]
+            else _manual_route_plan(_order_like_request(orders, order_ids))
         )
         expected_cod_amount = _sum_expected_cod(orders)
         trip_code = await delivery_repo.reserve_unique_trip_code(db)
@@ -114,12 +118,17 @@ async def create_trip(
             db,
             trip_code=trip_code,
             expected_cod_amount=expected_cod_amount,
+            total_distance_km=Decimal(str(route_plan.total_distance_km)).quantize(
+                DISTANCE_QUANT
+            ),
+            total_duration_minutes=route_plan.total_duration_minutes,
+            route_provider=route_plan.provider,
             created_by=current_user.id,
         )
         await delivery_repo.create_trip_orders(
             db,
             trip_id=trip.id,
-            ordered_order_ids=ordered_ids,
+            route_stops=route_plan.stops,
         )
         await db.commit()
         detail = await delivery_repo.get_trip_detail(db, trip.id)
@@ -451,6 +460,7 @@ def _queue_item_from_order(order: Order, now: datetime) -> DeliveryQueueItem:
         delivery_address=order.delivery_address,
         delivery_latitude=order.delivery_latitude,
         delivery_longitude=order.delivery_longitude,
+        geocoding_status=getattr(order, "geocoding_status", None),
         total_amount=order.total_amount,
         payment_status=order.payment_status,
         payment_method=payment_method_for_order(order),
@@ -460,51 +470,36 @@ def _queue_item_from_order(order: Order, now: datetime) -> DeliveryQueueItem:
     )
 
 
-def _suggest_batch(orders: list[Order]) -> DeliverySuggestedBatch:
-    settings = get_settings()
-    ordered_stops = order_stops_nearest_neighbor(
-        [_route_stop_from_order(order) for order in orders],
-        shop_latitude=settings.shop_latitude,
-        shop_longitude=settings.shop_longitude,
-    )
+async def _suggest_batch(orders: list[Order]) -> DeliverySuggestedBatch:
+    route_plan = await _route_plan_for_orders(orders)
     orders_by_id = {order.id: order for order in orders}
+    return _suggested_batch_from_route_plan(route_plan, orders_by_id=orders_by_id)
+
+
+def _suggested_batch_from_route_plan(
+    route_plan: RoutePlan,
+    *,
+    orders_by_id: dict[UUID, Order],
+) -> DeliverySuggestedBatch:
     suggested_stops = [
         DeliverySuggestedStop(
             order_id=stop.order_id,
             order_code=orders_by_id[stop.order_id].order_code,
             stop_order=stop.stop_order,
             distance_from_previous_km=stop.distance_from_previous_km,
+            duration_from_previous_minutes=stop.duration_from_previous_minutes,
         )
-        for stop in ordered_stops
+        for stop in route_plan.stops
     ]
     return DeliverySuggestedBatch(
         orders=suggested_stops,
-        total_distance_km=_route_distance_km(orders_by_id, ordered_stops),
-        expected_cod_amount=_sum_expected_cod(orders),
+        total_distance_km=route_plan.total_distance_km,
+        total_duration_minutes=route_plan.total_duration_minutes,
+        route_provider=route_plan.provider,
+        expected_cod_amount=_sum_expected_cod(
+            [orders_by_id[stop.order_id] for stop in route_plan.stops]
+        ),
     )
-
-
-def _route_distance_km(
-    orders_by_id: dict[UUID, Order],
-    ordered_stops: list,
-) -> float:
-    settings = get_settings()
-    current_lat = settings.shop_latitude
-    current_lon = settings.shop_longitude
-    total = 0.0
-
-    for stop in ordered_stops:
-        order = orders_by_id[stop.order_id]
-        total += haversine_distance_km(
-            current_lat,
-            current_lon,
-            float(order.delivery_latitude),
-            float(order.delivery_longitude),
-        )
-        current_lat = float(order.delivery_latitude)
-        current_lon = float(order.delivery_longitude)
-
-    return round(total, 3)
 
 
 def _route_stop_from_order(order: Order) -> RouteStop:
@@ -518,6 +513,42 @@ def _route_stop_from_order(order: Order) -> RouteStop:
         order_id=order.id,
         latitude=order.delivery_latitude,
         longitude=order.delivery_longitude,
+        created_at=order.created_at,
+    )
+
+
+async def _route_plan_for_orders(orders: list[Order]) -> RoutePlan:
+    if len(orders) > MAX_EXACT_TSP_STOPS:
+        raise ServiceError(
+            "delivery_batch_too_large_for_exact_tsp",
+            status_code=422,
+            context={"max_orders_per_trip": MAX_EXACT_TSP_STOPS},
+        )
+    return await optimize_route_exact_tsp(
+        [_route_stop_from_order(order) for order in orders]
+    )
+
+
+def _manual_route_plan(orders: list[Order]) -> RoutePlan:
+    stops: list[RouteStop] = []
+    for index, order in enumerate(orders, start=1):
+        stop = _route_stop_from_order(order)
+        stops.append(
+            RouteStop(
+                order_id=stop.order_id,
+                latitude=stop.latitude,
+                longitude=stop.longitude,
+                created_at=stop.created_at,
+                stop_order=index,
+                distance_from_previous_km=0.0,
+                duration_from_previous_minutes=0,
+            )
+        )
+    return RoutePlan(
+        stops=stops,
+        total_distance_km=0.0,
+        total_duration_minutes=0,
+        provider="manual",
     )
 
 
@@ -561,16 +592,6 @@ def _validate_order_for_trip(order: Order) -> None:
             status_code=409,
             context={"order_id": str(order.id)},
         )
-
-
-def _auto_order_ids(orders: list[Order]) -> list[UUID]:
-    settings = get_settings()
-    route = order_stops_nearest_neighbor(
-        [_route_stop_from_order(order) for order in orders],
-        shop_latitude=settings.shop_latitude,
-        shop_longitude=settings.shop_longitude,
-    )
-    return [stop.order_id for stop in route]
 
 
 def _order_like_request(orders: list[Order], order_ids: list[UUID]) -> list[Order]:

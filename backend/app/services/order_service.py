@@ -29,6 +29,7 @@ from app.schemas.order import (
     OrderReadyForDelivery,
 )
 from app.services.errors import ServiceError
+from app.services import map_service
 
 MONEY_QUANT = Decimal("0.01")
 LOYALTY_AMOUNT_PER_POINT = Decimal("10000.00")
@@ -50,6 +51,11 @@ class ResolvedOrderCustomer:
     delivery_address: str | None
     delivery_latitude: Decimal | None
     delivery_longitude: Decimal | None
+    delivery_formatted_address: str | None = None
+    delivery_place_id: str | None = None
+    geocoded_at: datetime | None = None
+    geocoding_status: str | None = None
+    map_provider: str | None = None
 
 
 def utc_now() -> datetime:
@@ -89,6 +95,11 @@ async def create_order(
             delivery_address=resolved_customer.delivery_address,
             delivery_latitude=resolved_customer.delivery_latitude,
             delivery_longitude=resolved_customer.delivery_longitude,
+            delivery_formatted_address=resolved_customer.delivery_formatted_address,
+            delivery_place_id=resolved_customer.delivery_place_id,
+            geocoded_at=resolved_customer.geocoded_at,
+            geocoding_status=resolved_customer.geocoding_status,
+            map_provider=resolved_customer.map_provider,
             note=payload.note,
             created_by=created_by,
         )
@@ -420,6 +431,11 @@ async def _resolve_instore_customer(
             delivery_address=None,
             delivery_latitude=None,
             delivery_longitude=None,
+            delivery_formatted_address=None,
+            delivery_place_id=None,
+            geocoded_at=None,
+            geocoding_status=None,
+            map_provider=None,
         )
 
     return ResolvedOrderCustomer(
@@ -429,6 +445,11 @@ async def _resolve_instore_customer(
         delivery_address=None,
         delivery_latitude=None,
         delivery_longitude=None,
+        delivery_formatted_address=None,
+        delivery_place_id=None,
+        geocoded_at=None,
+        geocoding_status=None,
+        map_provider=None,
     )
 
 
@@ -436,6 +457,7 @@ async def _resolve_delivery_customer(
     db: AsyncSession,
     payload: OrderCreate,
 ) -> ResolvedOrderCustomer:
+    geocode = await _resolve_delivery_coordinates(payload)
     customer: Customer | None = None
     if payload.customer_id is not None:
         customer = await customer_repo.get_customer_by_id(db, payload.customer_id)
@@ -462,8 +484,13 @@ async def _resolve_delivery_customer(
         customer_name=payload.customer_name,
         customer_phone=payload.customer_phone,
         delivery_address=payload.delivery_address,
-        delivery_latitude=payload.delivery_latitude,
-        delivery_longitude=payload.delivery_longitude,
+        delivery_latitude=geocode.latitude,
+        delivery_longitude=geocode.longitude,
+        delivery_formatted_address=geocode.formatted_address,
+        delivery_place_id=geocode.place_id,
+        geocoded_at=geocode.geocoded_at,
+        geocoding_status=geocode.status,
+        map_provider=geocode.provider,
     )
 
 
@@ -477,8 +504,6 @@ def _validate_delivery_fields(payload: OrderCreate) -> None:
             "customer_name",
             "customer_phone",
             "delivery_address",
-            "delivery_latitude",
-            "delivery_longitude",
         )
         if not getattr(payload, field)
     ]
@@ -488,6 +513,34 @@ def _validate_delivery_fields(payload: OrderCreate) -> None:
             status_code=422,
             context={"fields": missing},
         )
+
+
+async def _resolve_delivery_coordinates(
+    payload: OrderCreate,
+) -> map_service.GeocodeResult:
+    if payload.delivery_latitude is not None and payload.delivery_longitude is not None:
+        return map_service.GeocodeResult(
+            latitude=payload.delivery_latitude,
+            longitude=payload.delivery_longitude,
+            formatted_address=payload.delivery_address or "",
+            place_id=None,
+            provider="manual",
+            status="provided",
+            geocoded_at=utc_now(),
+        )
+    if payload.delivery_latitude is not None or payload.delivery_longitude is not None:
+        raise ServiceError(
+            "delivery_coordinates_incomplete",
+            status_code=422,
+            context={"fields": ["delivery_latitude", "delivery_longitude"]},
+        )
+    if not payload.delivery_address:
+        raise ServiceError(
+            "delivery_fields_required",
+            status_code=422,
+            context={"fields": ["delivery_address"]},
+        )
+    return await map_service.geocode_address(payload.delivery_address)
 
 
 async def _validate_ready_for_delivery(

@@ -128,6 +128,11 @@ async def create_order_header(
     delivery_address: str | None = None,
     delivery_latitude: Decimal | None = None,
     delivery_longitude: Decimal | None = None,
+    delivery_formatted_address: str | None = None,
+    delivery_place_id: str | None = None,
+    geocoded_at: datetime | None = None,
+    geocoding_status: str | None = None,
+    map_provider: str | None = None,
     note: str | None = None,
 ) -> Order:
     order = Order(
@@ -144,6 +149,11 @@ async def create_order_header(
         delivery_address=delivery_address,
         delivery_latitude=delivery_latitude,
         delivery_longitude=delivery_longitude,
+        delivery_formatted_address=delivery_formatted_address,
+        delivery_place_id=delivery_place_id,
+        geocoded_at=geocoded_at,
+        geocoding_status=geocoding_status,
+        map_provider=map_provider,
         note=note,
         created_by=created_by,
     )

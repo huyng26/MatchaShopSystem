@@ -1,8 +1,12 @@
 from decimal import Decimal
 from uuid import uuid4
 
+import pytest
+
+from app.services.errors import ServiceError
 from app.services.routing_service import (
     RouteStop,
+    exact_tsp_order,
     order_stops_nearest_neighbor,
     suggest_batches_by_distance,
 )
@@ -36,13 +40,48 @@ def test_order_stops_nearest_neighbor_orders_by_next_closest_stop() -> None:
     assert all(stop.distance_from_previous_km >= 0 for stop in ordered)
 
 
-def test_suggest_batches_by_distance_respects_max_orders_per_trip() -> None:
+def test_exact_tsp_order_picks_lowest_duration_route() -> None:
+    # Matrix indexes: 0 = shop, 1..3 = stops. Best route is stop 2 -> 3 -> 1.
+    duration = [
+        [0, 8, 2, 9],
+        [8, 0, 7, 2],
+        [2, 7, 0, 3],
+        [9, 2, 3, 0],
+    ]
+    distance = [
+        [0.0, 8.0, 2.0, 9.0],
+        [8.0, 0.0, 7.0, 2.0],
+        [2.0, 7.0, 0.0, 3.0],
+        [9.0, 2.0, 3.0, 0.0],
+    ]
+
+    assert exact_tsp_order(duration_minutes=duration, distance_km=distance) == [
+        1,
+        2,
+        0,
+    ]
+
+
+@pytest.mark.asyncio
+async def test_suggest_batches_by_distance_respects_max_orders_per_trip() -> None:
     stops = [
         RouteStop(uuid4(), Decimal("10.7700000"), Decimal("106.7000000")),
         RouteStop(uuid4(), Decimal("10.7710000"), Decimal("106.7010000")),
         RouteStop(uuid4(), Decimal("10.9000000"), Decimal("106.9000000")),
     ]
 
-    batches = suggest_batches_by_distance(stops, max_orders_per_trip=2)
+    batches = await suggest_batches_by_distance(stops, max_orders_per_trip=2)
 
-    assert [len(batch) for batch in batches] == [2, 1]
+    assert [len(batch.stops) for batch in batches] == [2, 1]
+
+
+@pytest.mark.asyncio
+async def test_suggest_batches_rejects_more_than_twelve_stops() -> None:
+    stops = [
+        RouteStop(uuid4(), Decimal("10.7700000"), Decimal("106.7000000")),
+    ]
+
+    with pytest.raises(ServiceError) as error:
+        await suggest_batches_by_distance(stops, max_orders_per_trip=13)
+
+    assert error.value.code == "max_orders_per_trip_exceeds_exact_tsp_limit"
