@@ -1486,6 +1486,7 @@ function initShipper() {
   const tripFilter = document.getElementById('shipper-trip-filter');
   const refreshButton = document.getElementById('shipper-refresh');
   const startTripButton = document.getElementById('shipper-start-trip');
+  const trackLocationButton = document.getElementById('shipper-track-location');
   const sendLocationButton = document.getElementById('shipper-send-location');
   const useCurrentLocationButton = document.getElementById('shipper-use-current-location');
   const latitudeInput = document.getElementById('shipper-latitude');
@@ -1507,7 +1508,11 @@ function initShipper() {
     selectedTrip: null,
     selectedStop: null,
     stopAction: 'delivered',
+    isSendingLocation: false,
+    isTrackingLocation: false,
+    locationTimerId: null,
   };
+  const SHIPPER_LOCATION_UPDATE_INTERVAL_SECONDS = 30;
 
   const tripStatusMeta = {
     pending_dispatch: { label: 'Pending dispatch', className: 'bg-tertiary-fixed text-on-tertiary-fixed-variant' },
@@ -1581,6 +1586,68 @@ function initShipper() {
   };
 
   const hasCapturedLocation = () => latitudeInput?.value !== '' && longitudeInput?.value !== '';
+  const isSelectedTripInTransit = () => state.selectedTrip?.status === 'in_transit';
+
+  const formatShipperRoute = (trip) => {
+    if (!trip) return '-';
+    const distance = trip.total_distance_km !== null && trip.total_distance_km !== undefined
+      ? `${Number(trip.total_distance_km).toFixed(1)} km`
+      : '';
+    const duration = trip.total_duration_minutes !== null && trip.total_duration_minutes !== undefined
+      ? `${Number(trip.total_duration_minutes)} min`
+      : '';
+    return [distance, duration].filter(Boolean).join(' / ') || '-';
+  };
+
+  const formatShipperLeg = (stop) => {
+    const distance = stop.distance_from_previous_km !== null && stop.distance_from_previous_km !== undefined
+      ? `${Number(stop.distance_from_previous_km).toFixed(1)} km`
+      : '';
+    const duration = stop.duration_from_previous_minutes !== null && stop.duration_from_previous_minutes !== undefined
+      ? `${Number(stop.duration_from_previous_minutes)} min`
+      : '';
+    return [distance, duration].filter(Boolean).join(' / ');
+  };
+
+  const getStartTripButtonContent = (trip) => {
+    const status = trip?.status;
+    if (status === 'assigned') {
+      return {
+        icon: 'play_arrow',
+        label: 'Start Trip',
+      };
+    }
+    if (status === 'in_transit') {
+      return {
+        icon: 'local_shipping',
+        label: 'In Transit',
+      };
+    }
+    if (status === 'completed') {
+      return {
+        icon: 'task_alt',
+        label: 'Completed',
+      };
+    }
+    if (status === 'reconciled') {
+      return {
+        icon: 'verified',
+        label: 'Reconciled',
+      };
+    }
+    return {
+      icon: 'block',
+      label: trip ? formatShipperLabel(status) : 'Select Trip',
+    };
+  };
+
+  const stopLocationTracking = () => {
+    if (state.locationTimerId) {
+      clearInterval(state.locationTimerId);
+      state.locationTimerId = null;
+    }
+    state.isTrackingLocation = false;
+  };
 
   const renderLocationStatus = () => {
     if (!locationLast) return;
@@ -1592,10 +1659,16 @@ function initShipper() {
       ? buildShipperMapUrl(latitudeInput.value, longitudeInput.value)
       : '';
 
+    const trackingLabel = isSelectedTripInTransit()
+      ? state.isTrackingLocation
+        ? `Auto updates every ${SHIPPER_LOCATION_UPDATE_INTERVAL_SECONDS}s`
+        : 'Auto tracking is off'
+      : 'Tracking starts after the trip is in transit';
+
     if (latestLocation) {
       locationLast.innerHTML = `
         <div class="flex flex-wrap items-center justify-between gap-3">
-          <span>Last sent ${escapeHtml(formatShipperDateTime(latestLocation.recorded_at))}</span>
+          <span>${escapeHtml(trackingLabel)}. Last sent ${escapeHtml(formatShipperDateTime(latestLocation.recorded_at))}</span>
           <a class="inline-flex items-center gap-1 rounded-full bg-surface-container-high px-3 py-2 text-xs font-bold text-primary hover:bg-surface-container-highest" href="${latestMapUrl}" target="_blank" rel="noreferrer">
             <span class="material-symbols-outlined text-[16px]">map</span>
             Open map
@@ -1608,7 +1681,7 @@ function initShipper() {
     if (hasCapturedLocation()) {
       locationLast.innerHTML = `
         <div class="flex flex-wrap items-center justify-between gap-3">
-          <span>Device location captured. Send it while the trip is in transit.</span>
+          <span>${escapeHtml(trackingLabel)}. Device location captured.</span>
           <a class="inline-flex items-center gap-1 rounded-full bg-surface-container-high px-3 py-2 text-xs font-bold text-primary hover:bg-surface-container-highest" href="${capturedMapUrl}" target="_blank" rel="noreferrer">
             <span class="material-symbols-outlined text-[16px]">map</span>
             Preview
@@ -1618,7 +1691,7 @@ function initShipper() {
       return;
     }
 
-    locationLast.textContent = 'No location has been captured in this session.';
+    locationLast.textContent = trackingLabel;
   };
 
   const getVisibleTrips = () => {
@@ -1635,7 +1708,12 @@ function initShipper() {
   const renderStats = () => {
     const activeTrips = state.trips.filter((trip) => ['assigned', 'in_transit'].includes(trip.status));
     const stopsLeft = getStops().filter((stop) => stop.status === 'assigned').length;
-    const codToCollect = activeTrips.reduce((sum, trip) => sum + Number(trip.expected_cod_amount || 0), 0);
+    const selectedOpenCod = getStops()
+      .filter((stop) => stop.status === 'assigned')
+      .reduce((sum, stop) => sum + Number(stop.amount_to_collect || 0), 0);
+    const codToCollect = state.selectedTrip?.orders
+      ? selectedOpenCod
+      : activeTrips.reduce((sum, trip) => sum + Number(trip.expected_cod_amount || 0), 0);
 
     setText('shipper-stat-assigned', state.trips.filter((trip) => trip.status === 'assigned').length);
     setText('shipper-stat-transit', state.trips.filter((trip) => trip.status === 'in_transit').length);
@@ -1677,12 +1755,17 @@ function initShipper() {
   };
 
   const renderCurrentStop = () => {
-    const currentStop = getStops().find((stop) => stop.status === 'assigned') || getStops()[0];
+    const currentStop = getStops().find((stop) => stop.status === 'assigned');
     const container = document.getElementById('shipper-current-stop');
     if (!container) return;
 
-    if (!state.selectedTrip || !currentStop) {
+    if (!state.selectedTrip) {
       container.innerHTML = 'Select a stop to prepare delivery update.';
+      return;
+    }
+
+    if (!currentStop) {
+      container.innerHTML = 'No assigned stops left on this trip.';
       return;
     }
 
@@ -1698,18 +1781,36 @@ function initShipper() {
     const trip = state.selectedTrip;
     const canStart = trip?.status === 'assigned';
     const canSendLocation = trip?.status === 'in_transit';
+    const canUseLocation = Boolean(canSendLocation && navigator.geolocation);
+    if (!canSendLocation && state.isTrackingLocation) stopLocationTracking();
 
     setText('shipper-trip-title', trip ? trip.trip_code : 'Trip Detail');
     setText('shipper-trip-subtitle', trip ? `Created ${formatShipperDateTime(trip.created_at)}` : 'Select an assigned trip to start shipping.');
     setText('shipper-trip-cod', formatVnd(trip?.expected_cod_amount || 0));
     setText('shipper-trip-started', trip?.started_at ? formatShipperDateTime(trip.started_at) : 'Not started');
+    setText('shipper-trip-route', formatShipperRoute(trip));
     setText('shipper-stop-count', `${getStops().length} stop${getStops().length === 1 ? '' : 's'}`);
 
     const statusContainer = document.getElementById('shipper-trip-status');
     if (statusContainer) statusContainer.innerHTML = trip ? getBadge(trip.status) : '-';
 
-    if (startTripButton) startTripButton.disabled = !canStart;
-    if (sendLocationButton) sendLocationButton.disabled = !canSendLocation || !hasCapturedLocation();
+    if (startTripButton) {
+      const buttonContent = getStartTripButtonContent(trip);
+      startTripButton.disabled = !canStart;
+      startTripButton.innerHTML = `
+        <span class="material-symbols-outlined text-[18px]">${buttonContent.icon}</span>
+        ${escapeHtml(buttonContent.label)}
+      `;
+    }
+    if (trackLocationButton) {
+      trackLocationButton.disabled = !canUseLocation;
+      trackLocationButton.innerHTML = `
+        <span class="material-symbols-outlined text-[18px]">${state.isTrackingLocation ? 'location_on' : 'location_searching'}</span>
+        ${state.isTrackingLocation ? 'Tracking On' : 'Enable Tracking'}
+      `;
+    }
+    if (useCurrentLocationButton) useCurrentLocationButton.disabled = !canUseLocation;
+    if (sendLocationButton) sendLocationButton.disabled = !canSendLocation || !hasCapturedLocation() || state.isSendingLocation;
 
     renderStops();
     renderCurrentStop();
@@ -1734,9 +1835,8 @@ function initShipper() {
     const canUpdateStops = trip.status === 'in_transit';
     stopList.innerHTML = stops.map((stop) => {
       const canUpdate = canUpdateStops && stop.status === 'assigned';
-      const mapsUrl = stop.delivery_latitude && stop.delivery_longitude
-        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${stop.delivery_latitude},${stop.delivery_longitude}`)}`
-        : '';
+      const mapsUrl = buildShipperMapUrl(stop.delivery_latitude, stop.delivery_longitude);
+      const legSummary = formatShipperLeg(stop);
       return `
         <article class="rounded-xl border border-outline-variant/30 bg-surface-container-low p-4">
           <div class="flex flex-wrap items-start justify-between gap-3">
@@ -1751,6 +1851,7 @@ function initShipper() {
                 <span><b class="text-on-surface">Phone:</b> ${escapeHtml(stop.customer_phone || '-')}</span>
                 <span><b class="text-on-surface">COD:</b> ${escapeHtml(formatVnd(stop.amount_to_collect))}</span>
               </div>
+              ${legSummary ? `<p class="mt-2 text-xs font-bold text-on-surface-variant">Leg from previous stop: ${escapeHtml(legSummary)}</p>` : ''}
               ${stop.failed_reason ? `<p class="mt-3 text-xs font-bold text-error">${escapeHtml(stop.failed_reason)}</p>` : ''}
               ${stop.note ? `<p class="mt-2 text-xs text-on-surface-variant">${escapeHtml(stop.note)}</p>` : ''}
             </div>
@@ -1793,6 +1894,7 @@ function initShipper() {
       } else {
         state.selectedTrip = null;
       }
+      if (!isSelectedTripInTransit()) stopLocationTracking();
       renderTrips();
       renderTripDetail();
       setStatus(`Loaded ${state.trips.length} assigned trip${state.trips.length === 1 ? '' : 's'}.`, 'success');
@@ -1811,6 +1913,7 @@ function initShipper() {
     setStatus('Loading trip detail...');
     try {
       state.selectedTrip = await fetchMatchaApi(`/shipper/trips/${encodeURIComponent(tripId)}`);
+      if (!isSelectedTripInTransit()) stopLocationTracking();
       renderTrips();
       renderTripDetail();
       setStatus('Trip detail loaded.', 'success');
@@ -1830,7 +1933,7 @@ function initShipper() {
       });
       await loadTrips({ keepSelectedTrip: true });
       setStatus('Trip started. Requesting device location...', 'success');
-      captureCurrentLocation({ sendAfterCapture: true });
+      startLocationTracking();
     } catch (error) {
       console.error('Failed to start shipper trip:', error);
       renderTripDetail();
@@ -1840,6 +1943,12 @@ function initShipper() {
 
   const updateLocation = async () => {
     if (!state.selectedTrip) return;
+    if (!isSelectedTripInTransit()) {
+      setStatus('Start the assigned trip before sending location.', 'error');
+      renderTripDetail();
+      return;
+    }
+    if (state.isSendingLocation) return;
     const latitude = latitudeInput?.value;
     const longitude = longitudeInput?.value;
     if (latitude === '' || longitude === '') {
@@ -1847,6 +1956,7 @@ function initShipper() {
       return;
     }
 
+    state.isSendingLocation = true;
     sendLocationButton.disabled = true;
     setStatus('Updating location...');
     try {
@@ -1866,11 +1976,18 @@ function initShipper() {
       console.error('Failed to update shipper location:', error);
       setStatus(error.message || 'Cannot update location.', 'error');
     } finally {
+      state.isSendingLocation = false;
+      if (!isSelectedTripInTransit()) stopLocationTracking();
       renderTripDetail();
     }
   };
 
   const captureCurrentLocation = ({ sendAfterCapture = false } = {}) => {
+    if (!isSelectedTripInTransit()) {
+      setStatus('Start the assigned trip before capturing delivery location.', 'error');
+      renderTripDetail();
+      return;
+    }
     if (!navigator.geolocation) {
       setStatus('Browser geolocation is not available.', 'error');
       return;
@@ -1890,6 +2007,7 @@ function initShipper() {
         setStatus('Device location captured. Send it when the trip is in transit.', 'success');
       },
       (error) => {
+        stopLocationTracking();
         setStatus(error.message || 'Cannot get current location.', 'error');
         renderTripDetail();
       },
@@ -1898,6 +2016,30 @@ function initShipper() {
     setTimeout(() => {
       useCurrentLocationButton.disabled = false;
     }, 1000);
+  };
+
+  const startLocationTracking = () => {
+    if (!isSelectedTripInTransit()) {
+      setStatus('Start the assigned trip before enabling location tracking.', 'error');
+      renderTripDetail();
+      return;
+    }
+    if (!navigator.geolocation) {
+      setStatus('Browser geolocation is not available.', 'error');
+      return;
+    }
+    if (state.locationTimerId) clearInterval(state.locationTimerId);
+    state.isTrackingLocation = true;
+    renderTripDetail();
+    captureCurrentLocation({ sendAfterCapture: true });
+    state.locationTimerId = setInterval(() => {
+      if (!isSelectedTripInTransit()) {
+        stopLocationTracking();
+        renderTripDetail();
+        return;
+      }
+      captureCurrentLocation({ sendAfterCapture: true });
+    }, SHIPPER_LOCATION_UPDATE_INTERVAL_SECONDS * 1000);
   };
 
   const openStopModal = (orderId, action) => {
@@ -1938,9 +2080,21 @@ function initShipper() {
     if (!state.selectedTrip || !state.selectedStop) return;
 
     const isDelivered = state.stopAction === 'delivered';
+    if (state.selectedTrip.status !== 'in_transit') {
+      setStopFormStatus('Trip must be in transit before updating stops.', 'error');
+      return;
+    }
     if (!isDelivered && !failedReasonInput?.value.trim()) {
       setStopFormStatus('Failed reason is required.', 'error');
       return;
+    }
+    if (isDelivered) {
+      const expectedCod = Number(state.selectedStop.amount_to_collect || 0);
+      const collectedCod = Number(codCollectedInput?.value || 0);
+      if (collectedCod !== expectedCod) {
+        setStopFormStatus(`COD collected must be ${formatVnd(expectedCod)} for this stop.`, 'error');
+        return;
+      }
     }
 
     const endpoint = isDelivered
@@ -2001,6 +2155,7 @@ function initShipper() {
     renderStats();
   });
   startTripButton?.addEventListener('click', startSelectedTrip);
+  trackLocationButton?.addEventListener('click', startLocationTracking);
   sendLocationButton?.addEventListener('click', updateLocation);
   useCurrentLocationButton?.addEventListener('click', () => captureCurrentLocation());
   stopForm?.addEventListener('submit', submitStopUpdate);

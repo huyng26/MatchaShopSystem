@@ -198,6 +198,7 @@
             let deliveryTrips = [];
             let shippers = [];
             let selectedTrip = null;
+            const TRIP_DETAIL_POLL_INTERVAL_MS = 15000;
 
             const statusMeta = {
                 pending_dispatch: { label: 'Pending dispatch', className: 'bg-tertiary-fixed text-on-tertiary-fixed-variant' },
@@ -662,6 +663,28 @@
                 }
             };
 
+            const refreshSelectedTripDetailSilently = async () => {
+                if (!selectedTrip) return;
+                const selectedTripId = selectedTrip.id;
+                try {
+                    const freshTrip = await fetchApiData(`/deliveries/trips/${encodeURIComponent(selectedTripId)}`);
+                    if (!selectedTrip || selectedTrip.id !== selectedTripId) return;
+                    selectedTrip = freshTrip;
+                    const tripIndex = deliveryTrips.findIndex((trip) => trip.id === selectedTripId);
+                    if (tripIndex >= 0) {
+                        deliveryTrips[tripIndex] = {
+                            ...deliveryTrips[tripIndex],
+                            ...freshTrip,
+                        };
+                    }
+                    renderStats();
+                    renderTrips();
+                    renderTripDetail();
+                } catch (error) {
+                    console.error('Failed to refresh selected trip detail:', error);
+                }
+            };
+
             const assignSelectedShipper = async () => {
                 const shipperId = document.getElementById('assign-shipper-select')?.value;
                 if (!selectedTrip || !shipperId) {
@@ -744,6 +767,8 @@
                 if (!button) return;
                 loadTripDetail(button.dataset.tripId);
             });
+
+            setInterval(refreshSelectedTripDetailSilently, TRIP_DETAIL_POLL_INTERVAL_MS);
 
             refreshAll({ keepSelectedTrip: false });
         });
