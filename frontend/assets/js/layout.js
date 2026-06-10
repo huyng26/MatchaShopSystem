@@ -9,6 +9,14 @@ const _NAV_INACTIVE =
 const _NAV_ACTIVE =
   'flex items-center gap-4 px-4 py-3 bg-[#06440c] text-[#f9f9f8] rounded-xl font-semibold';
 
+const LAYOUT_ROLE_LABELS = {
+  admin: 'Admin',
+  cashier: 'Cashier',
+  delivery_manager: 'Delivery Manager',
+  inventory_manager: 'Inventory Manager',
+  shipper: 'Shipper',
+};
+
 // ─── Sidebar Template ────────────────────────────────────────────────────────
 const SIDEBAR_HTML = `
   <div class="flex items-center gap-3 mb-10 px-2">
@@ -65,6 +73,7 @@ const SIDEBAR_HTML = `
 
 // ─── TopAppBar Template ──────────────────────────────────────────────────────
 function buildTopbarHTML(config) {
+  const roleLabel = LAYOUT_ROLE_LABELS[getLayoutStoredUserRole()] || 'User';
   const backBtn = config.backUrl
     ? `<a class="p-2 hover:bg-surface-container rounded-full transition-colors mr-1" href="${config.backUrl}">
         <span class="material-symbols-outlined text-primary">arrow_back</span>
@@ -93,8 +102,8 @@ function buildTopbarHTML(config) {
       <div class="h-8 w-px bg-outline-variant/30 mx-1"></div>
       <div class="flex items-center gap-3">
         <div class="text-right">
-          <p class="text-xs font-bold text-primary">Admin User</p>
-          <p class="text-[10px] text-on-surface-variant">Store Manager</p>
+          <p class="text-xs font-bold text-primary">User</p>
+          <p class="text-[10px] text-on-surface-variant">${roleLabel}</p>
         </div>
         <div class="w-10 h-10 rounded-full bg-primary-container overflow-hidden">
           <img alt="Admin Profile" class="w-full h-full object-cover"
