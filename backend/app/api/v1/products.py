@@ -51,7 +51,9 @@ async def create_product(
         payload, image_file = await _parse_product_create_request(request)
         if image_file is not None:
             uploaded_image = await upload_product_image(image_file)
-            payload = payload.model_copy(update={"image_url": uploaded_image.public_url})
+            payload = payload.model_copy(
+                update={"image_url": uploaded_image.public_url}
+            )
 
         product = await product_service.create_product(db, payload)
         product_created = True
@@ -100,14 +102,34 @@ async def get_product(
 @router.put("/{product_id}")
 async def update_product(
     product_id: UUID,
-    payload: ProductUpdate,
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, Any]:
+    uploaded_image: UploadedProductImage | None = None
+    product_updated = False
     try:
+        payload, image_file = await _parse_product_update_request(request)
+        if image_file is not None:
+            uploaded_image = await upload_product_image(image_file)
+            payload = payload.model_copy(
+                update={"image_url": uploaded_image.public_url}
+            )
+
         product = await product_service.update_product(db, product_id, payload)
+        product_updated = True
         return ok(read_one(ProductRead, product), message="Updated successfully")
     except ServiceError as error:
+        if not product_updated:
+            await _cleanup_uploaded_product_image(uploaded_image)
         raise_service_error(error)
+    except ValidationError as error:
+        if not product_updated:
+            await _cleanup_uploaded_product_image(uploaded_image)
+        raise RequestValidationError(error.errors()) from error
+    except Exception:
+        if not product_updated:
+            await _cleanup_uploaded_product_image(uploaded_image)
+        raise
 
 
 @router.patch("/{product_id}/availability")
@@ -182,14 +204,26 @@ async def _parse_product_create_request(
 ) -> tuple[ProductCreate, UploadFile | None]:
     content_type = request.headers.get("content-type", "").lower()
     if content_type.startswith("multipart/form-data"):
-        return await _parse_multipart_product_create_request(request)
+        values, image_file = await _parse_multipart_product_request(request)
+        return ProductCreate.model_validate(values), image_file
 
     return ProductCreate.model_validate(await request.json()), None
 
 
-async def _parse_multipart_product_create_request(
+async def _parse_product_update_request(
     request: Request,
-) -> tuple[ProductCreate, UploadFile | None]:
+) -> tuple[ProductUpdate, UploadFile | None]:
+    content_type = request.headers.get("content-type", "").lower()
+    if content_type.startswith("multipart/form-data"):
+        values, image_file = await _parse_multipart_product_request(request)
+        return ProductUpdate.model_validate(values), image_file
+
+    return ProductUpdate.model_validate(await request.json()), None
+
+
+async def _parse_multipart_product_request(
+    request: Request,
+) -> tuple[dict[str, Any], UploadFile | None]:
     form = await request.form()
     image_file = _get_upload_file(form.get("image")) or _get_upload_file(
         form.get("file")
@@ -218,7 +252,7 @@ async def _parse_multipart_product_create_request(
         except json.JSONDecodeError as error:
             raise ServiceError("invalid_product_recipe_json") from error
 
-    return ProductCreate.model_validate(values), image_file
+    return values, image_file
 
 
 def _get_upload_file(value: Any) -> UploadFile | None:
