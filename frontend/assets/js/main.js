@@ -1322,14 +1322,16 @@ function renderPosPaymentOrder() {
   const orderCode = document.getElementById('paymentOrderCode');
   const customerName = document.getElementById('paymentCustomerName');
   const payBtn = document.getElementById('payBtn');
-  if (!itemList || !emptyState || !subtotal || !total || !orderCode || !payBtn) return;
+  if (!itemList || !emptyState || !subtotal || !total || !payBtn) return;
 
   renderPosPaymentMode();
   populateInstoreCustomerForm();
   populateDeliveryDetailsForm();
 
   const totalAmount = getCartTotal(cart);
-  orderCode.textContent = getPosOrderCode();
+  if (orderCode) {
+    orderCode.textContent = getPosOrderCode();
+  }
   if (customerName) {
     const deliveryDetails = getPosDeliveryDetails();
     const instoreDetails = getPosInstoreCustomerDetails();
