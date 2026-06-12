@@ -1500,6 +1500,8 @@ function initShipper() {
   const codCollectedInput = document.getElementById('shipper-cod-collected');
   const failedReasonInput = document.getElementById('shipper-failed-reason');
   const stopNoteInput = document.getElementById('shipper-stop-note');
+  const routeMapPanel = document.getElementById('shipper-route-map-panel');
+  const searchInput = document.getElementById('topbar-search');
 
   if (!tripList || !stopList) return;
 
@@ -1511,6 +1513,7 @@ function initShipper() {
     isSendingLocation: false,
     isTrackingLocation: false,
     locationTimerId: null,
+    searchQuery: '',
   };
   const SHIPPER_LOCATION_UPDATE_INTERVAL_SECONDS = 30;
 
@@ -1583,6 +1586,212 @@ function initShipper() {
   const buildShipperMapUrl = (latitude, longitude) => {
     if (latitude === null || latitude === undefined || longitude === null || longitude === undefined) return '';
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${latitude},${longitude}`)}`;
+  };
+
+  const SHOP_ROUTE_POINT = {
+    label: 'Store',
+    latitude: 21.006237,
+    longitude: 105.843127,
+  };
+  const shipperRouteMaps = new Map();
+
+  const isValidRouteCoordinate = (latitude, longitude) => Number.isFinite(Number(latitude)) && Number.isFinite(Number(longitude));
+
+  const getRouteMapStatusClass = (status) => {
+    if (status === 'delivered') return 'delivered';
+    if (status === 'failed') return 'failed';
+    return 'assigned';
+  };
+
+  const getTripRoutePoints = (trip) => {
+    const allStops = [...(trip?.orders || [])].sort((first, second) => Number(first.stop_order || 0) - Number(second.stop_order || 0));
+    const stops = allStops
+      .filter((stop) => isValidRouteCoordinate(stop.delivery_latitude, stop.delivery_longitude))
+      .map((stop) => ({
+        kind: 'stop',
+        label: `${stop.stop_order}. ${stop.order_code}`,
+        subtitle: stop.delivery_address || 'Delivery stop',
+        stopOrder: stop.stop_order,
+        status: getRouteMapStatusClass(stop.status),
+        latitude: Number(stop.delivery_latitude),
+        longitude: Number(stop.delivery_longitude),
+      }));
+
+    return {
+      missingCount: allStops.length - stops.length,
+      points: [
+        { ...SHOP_ROUTE_POINT, kind: 'store', status: 'store', stopOrder: 'S', subtitle: 'Shop pickup point' },
+        ...stops,
+      ],
+      stopCount: allStops.length,
+      mappedStopCount: stops.length,
+    };
+  };
+
+  const buildRouteMapHtml = (trip, mapId = 'shipper-route-leaflet-map', buttonId = 'shipper-route-map-expand') => {
+    if (!trip) {
+      return '<p class="rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">Select a trip to see the route map.</p>';
+    }
+
+    const route = getTripRoutePoints(trip);
+    const missingCount = route.missingCount;
+
+    if (!route.mappedStopCount) {
+      return '<p class="rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">No mapped stops are available for this trip.</p>';
+    }
+
+    return `
+      <div class="trip-map-shell">
+        <div id="${mapId}" class="trip-map-canvas" role="button" tabindex="0" aria-label="Open Vietnam route map"></div>
+        <button id="${buttonId}" class="trip-map-expand" type="button">
+          <span class="material-symbols-outlined text-[16px]">open_in_full</span>
+          Open large map
+        </button>
+      </div>
+      <div class="delivery-route-map__legend">
+        <span>${route.mappedStopCount}/${route.stopCount} mapped stops</span>
+        <span class="delivery-route-map__legend-items">
+          <span class="delivery-route-map__legend-item"><span class="delivery-route-map__legend-dot delivery-route-map__legend-dot--store"></span>Store</span>
+          <span class="delivery-route-map__legend-item"><span class="delivery-route-map__legend-dot"></span>Pending</span>
+          <span class="delivery-route-map__legend-item"><span class="delivery-route-map__legend-dot delivery-route-map__legend-dot--done"></span>Delivered</span>
+          <span class="delivery-route-map__legend-item"><span class="delivery-route-map__legend-dot delivery-route-map__legend-dot--failed"></span>Failed</span>
+        </span>
+      </div>
+      ${missingCount ? `<p class="delivery-route-map__notice">${missingCount} stop${missingCount === 1 ? '' : 's'} missing coordinates.</p>` : ''}
+    `;
+  };
+
+  const createRouteIcon = (point) => {
+    const iconClass = point.kind === 'store' ? 'store' : point.status;
+    return L.divIcon({
+      className: '',
+      html: `<div class="trip-map-marker trip-map-marker--${iconClass}"><span>${escapeHtml(point.stopOrder)}</span></div>`,
+      iconAnchor: [17, 34],
+      iconSize: [34, 34],
+      popupAnchor: [0, -32],
+    });
+  };
+
+  const renderTripLeafletMap = (trip, mapId, { large = false } = {}) => {
+    const container = document.getElementById(mapId);
+    if (!container) return;
+    if (!window.L) {
+      container.innerHTML = '<div class="trip-map-fallback">Cannot load the Vietnam map library. Check your network connection.</div>';
+      return;
+    }
+
+    if (shipperRouteMaps.has(mapId)) {
+      shipperRouteMaps.get(mapId).remove();
+      shipperRouteMaps.delete(mapId);
+    }
+
+    const points = getTripRoutePoints(trip).points;
+    const map = L.map(mapId, {
+      attributionControl: large,
+      dragging: large,
+      scrollWheelZoom: large,
+      doubleClickZoom: large,
+      boxZoom: large,
+      keyboard: large,
+      tap: large,
+      zoomControl: large,
+    });
+    shipperRouteMaps.set(mapId, map);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19,
+    }).addTo(map);
+
+    points.forEach((point) => {
+      L.marker([point.latitude, point.longitude], { icon: createRouteIcon(point) })
+        .bindPopup(`<b>${escapeHtml(point.label)}</b><br>${escapeHtml(point.subtitle || '')}<br>${point.latitude.toFixed(6)}, ${point.longitude.toFixed(6)}`)
+        .addTo(map);
+    });
+
+    points.slice(0, -1).forEach((point, index) => {
+      const destination = points[index + 1];
+      const color = destination.status === 'failed'
+        ? '#ba1a1a'
+        : destination.status === 'assigned'
+          ? '#7a8478'
+          : '#496648';
+      L.polyline(
+        [[point.latitude, point.longitude], [destination.latitude, destination.longitude]],
+        {
+          color,
+          dashArray: destination.status === 'assigned' ? '8 10' : null,
+          opacity: destination.status === 'assigned' ? 0.55 : 0.95,
+          weight: large ? 5 : 4,
+        }
+      ).addTo(map);
+    });
+
+    const bounds = L.latLngBounds(points.map((point) => [point.latitude, point.longitude]));
+    if (points.length === 1) {
+      map.setView([points[0].latitude, points[0].longitude], 12);
+    } else {
+      map.fitBounds(bounds.pad(0.24), { maxZoom: large ? 15 : 13 });
+    }
+
+    if (!large) {
+      map.on('click', () => openRouteMapModal(trip));
+    }
+
+    setTimeout(() => map.invalidateSize(), 0);
+  };
+
+  const ensureRouteMapModal = () => {
+    let modal = document.getElementById('shipper-route-map-modal');
+    if (modal) return modal;
+
+    document.body.insertAdjacentHTML('beforeend', `
+      <div id="shipper-route-map-modal" class="trip-map-modal" aria-hidden="true">
+        <div class="trip-map-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="shipper-route-map-modal-title">
+          <div class="trip-map-modal__header">
+            <div>
+              <h2 id="shipper-route-map-modal-title" class="trip-map-modal__title">Vietnam Route Map</h2>
+              <p id="shipper-route-map-modal-subtitle" class="trip-map-modal__subtitle"></p>
+            </div>
+            <button class="trip-map-modal__close" type="button" data-close-trip-map>
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+          <div id="shipper-route-map-modal-canvas" class="trip-map-canvas trip-map-canvas--large"></div>
+        </div>
+      </div>
+    `);
+
+    modal = document.getElementById('shipper-route-map-modal');
+    modal.addEventListener('click', (event) => {
+      if (event.target === modal || event.target.closest('[data-close-trip-map]')) {
+        modal.classList.remove('is-open');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+    });
+    return modal;
+  };
+
+  const openRouteMapModal = (trip) => {
+    const modal = ensureRouteMapModal();
+    document.getElementById('shipper-route-map-modal-title').textContent = `${trip?.trip_code || 'Trip'} - Vietnam Route Map`;
+    document.getElementById('shipper-route-map-modal-subtitle').textContent = 'Store and delivery stops are plotted by latitude and longitude.';
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+    setTimeout(() => renderTripLeafletMap(trip, 'shipper-route-map-modal-canvas', { large: true }), 0);
+  };
+
+  const renderRouteMap = () => {
+    if (!routeMapPanel) return;
+    routeMapPanel.innerHTML = buildRouteMapHtml(state.selectedTrip);
+    renderTripLeafletMap(state.selectedTrip, 'shipper-route-leaflet-map');
+    document.getElementById('shipper-route-map-expand')?.addEventListener('click', () => openRouteMapModal(state.selectedTrip));
+    document.getElementById('shipper-route-leaflet-map')?.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        openRouteMapModal(state.selectedTrip);
+      }
+    });
   };
 
   const hasCapturedLocation = () => latitudeInput?.value !== '' && longitudeInput?.value !== '';
@@ -1696,14 +1905,65 @@ function initShipper() {
 
   const getVisibleTrips = () => {
     const filter = tripFilter?.value || 'active';
-    if (filter === 'all') return state.trips;
+    const query = state.searchQuery.trim().toLowerCase();
+    const filterTrip = (trip) => {
+      if (!query) return true;
+      const searchableValues = [
+        trip.trip_code,
+        trip.id,
+        trip.status,
+        trip.expected_cod_amount,
+        trip.total_distance_km,
+        trip.total_duration_minutes,
+        ...(trip.orders || []).flatMap((stop) => [
+          stop.order_code,
+          stop.delivery_address,
+          stop.customer_name,
+          stop.customer_phone,
+          stop.status,
+          stop.amount_to_collect,
+        ]),
+      ];
+      return searchableValues.some((value) => String(value ?? '').toLowerCase().includes(query));
+    };
+    if (filter === 'all') return state.trips.filter(filterTrip);
     if (filter === 'active') {
-      return state.trips.filter((trip) => ['assigned', 'in_transit'].includes(trip.status));
+      return state.trips.filter((trip) => ['assigned', 'in_transit'].includes(trip.status)).filter(filterTrip);
     }
-    return state.trips.filter((trip) => trip.status === filter);
+    return state.trips.filter((trip) => trip.status === filter).filter(filterTrip);
   };
 
   const getStops = () => state.selectedTrip?.orders || [];
+
+  const syncSelectedTripIntoList = () => {
+    if (!state.selectedTrip) return;
+    const index = state.trips.findIndex((trip) => trip.id === state.selectedTrip.id);
+    if (index >= 0) {
+      state.trips[index] = {
+        ...state.trips[index],
+        ...state.selectedTrip,
+      };
+    }
+  };
+
+  const getVisibleStops = () => {
+    const stops = getStops();
+    const query = state.searchQuery.trim().toLowerCase();
+    if (!query) return stops;
+    return stops.filter((stop) => [
+      stop.order_code,
+      stop.delivery_address,
+      stop.customer_name,
+      stop.customer_phone,
+      stop.status,
+      stop.payment_method,
+      stop.payment_status,
+      stop.amount_to_collect,
+      stop.cod_collected,
+      stop.note,
+      stop.failed_reason,
+    ].some((value) => String(value ?? '').toLowerCase().includes(query)));
+  };
 
   const renderStats = () => {
     const activeTrips = state.trips.filter((trip) => ['assigned', 'in_transit'].includes(trip.status));
@@ -1726,7 +1986,7 @@ function initShipper() {
     setText('shipper-trip-count', `${visibleTrips.length}`);
 
     if (!visibleTrips.length) {
-      tripList.innerHTML = '<p class="rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">No trips found for this filter.</p>';
+      tripList.innerHTML = `<p class="rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">${state.searchQuery ? 'No trips match your search.' : 'No trips found for this filter.'}</p>`;
       return;
     }
 
@@ -1815,20 +2075,27 @@ function initShipper() {
     renderStops();
     renderCurrentStop();
     renderLocationStatus();
+    renderRouteMap();
     renderStats();
   };
 
   const renderStops = () => {
     const trip = state.selectedTrip;
-    const stops = getStops();
+    const allStops = getStops();
+    const stops = getVisibleStops();
 
     if (!trip) {
       stopList.innerHTML = '<p class="rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">Select a trip to see stops.</p>';
       return;
     }
 
-    if (!stops.length) {
+    if (!allStops.length) {
       stopList.innerHTML = '<p class="rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">No stops found for this trip.</p>';
+      return;
+    }
+
+    if (!stops.length) {
+      stopList.innerHTML = '<p class="rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">No stops match your search.</p>';
       return;
     }
 
@@ -1894,6 +2161,7 @@ function initShipper() {
       } else {
         state.selectedTrip = null;
       }
+      syncSelectedTripIntoList();
       if (!isSelectedTripInTransit()) stopLocationTracking();
       renderTrips();
       renderTripDetail();
@@ -1913,6 +2181,7 @@ function initShipper() {
     setStatus('Loading trip detail...');
     try {
       state.selectedTrip = await fetchMatchaApi(`/shipper/trips/${encodeURIComponent(tripId)}`);
+      syncSelectedTripIntoList();
       if (!isSelectedTripInTransit()) stopLocationTracking();
       renderTrips();
       renderTripDetail();
@@ -2150,6 +2419,17 @@ function initShipper() {
   });
 
   refreshButton?.addEventListener('click', () => loadTrips());
+  searchInput?.addEventListener('input', () => {
+    state.searchQuery = searchInput.value || '';
+    renderTrips();
+    renderStops();
+  });
+  searchInput?.addEventListener('focus', () => {
+    searchInput.parentElement?.classList.add('scale-[1.02]');
+  });
+  searchInput?.addEventListener('blur', () => {
+    searchInput.parentElement?.classList.remove('scale-[1.02]');
+  });
   tripFilter?.addEventListener('change', () => {
     renderTrips();
     renderStats();

@@ -9,7 +9,8 @@
     <script src="../assets/js/tailwind-config.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,600;6..72,700;6..72,800&amp;family=Manrope:wght@300;400;500;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="../assets/css/style.css?v=header-subtitle-20260605" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="../assets/css/style.css?v=leaflet-route-map-20260610" />
 </head>
 
 <body class="page-delivery-manage bg-background text-on-surface antialiased overflow-x-hidden" data-page="delivery-manage">
@@ -166,7 +167,7 @@
                 </div>
             </section>
 
-            <section class="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
+            <section id="trip-detail-section" class="scroll-mt-28 rounded-xl bg-surface-container-lowest p-6 shadow-sm">
                 <div class="mb-5">
                     <h2 class="font-headline text-2xl font-bold text-primary">Trip Detail</h2>
                     <p id="selected-trip-caption" class="mt-1 text-sm text-on-surface-variant">Select a trip to manage dispatch and COD.</p>
@@ -175,10 +176,15 @@
                     <p class="rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">No trip selected.</p>
                 </div>
             </section>
+
+            <div class="mt-12 text-center">
+                <p class="text-[10px] text-stone-400 font-label uppercase tracking-widest">Hoppers' Matcha Internal Portal © 2026</p>
+            </div>
         </div>
     </main>
 
     <script src="../assets/js/layout.js?v=topbar-role-20260610"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="../assets/js/main.js?v=fm-20260530"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -191,14 +197,23 @@
             const maxOrdersInput = document.getElementById('max-orders-per-trip');
             const tripStatusFilter = document.getElementById('trip-status-filter');
             const tripDetailPanel = document.getElementById('trip-detail-panel');
+            const tripDetailSection = document.getElementById('trip-detail-section');
             const selectedTripCaption = document.getElementById('selected-trip-caption');
             const shippersList = document.getElementById('active-shippers-list');
+            const topbarSearchInput = document.getElementById('topbar-search');
 
             let deliveryQueue = [];
             let deliveryTrips = [];
             let shippers = [];
             let selectedTrip = null;
+            let reconcileNotice = null;
+            let deliverySearchQuery = '';
             const TRIP_DETAIL_POLL_INTERVAL_MS = 15000;
+            const SHOP_ROUTE_POINT = {
+                label: 'Store',
+                latitude: 21.006237,
+                longitude: 105.843127,
+            };
 
             const statusMeta = {
                 pending_dispatch: { label: 'Pending dispatch', className: 'bg-tertiary-fixed text-on-tertiary-fixed-variant' },
@@ -248,6 +263,277 @@
                 return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${latitude},${longitude}`)}`;
             };
 
+            const normalizeSearchText = (value) => String(value ?? '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .trim();
+
+            const matchesDeliverySearch = (values) => {
+                const query = normalizeSearchText(deliverySearchQuery);
+                if (!query) return true;
+                return values.some((value) => normalizeSearchText(value).includes(query));
+            };
+
+            const getVisibleQueueOrders = () => deliveryQueue.filter((order) => matchesDeliverySearch([
+                order.order_code,
+                order.customer_name,
+                order.customer_phone,
+                order.delivery_address,
+                order.payment_status,
+                order.amount_to_collect,
+                order.waiting_time,
+                order.geocoding_status,
+            ]));
+
+            const getVisibleTrips = () => deliveryTrips.filter((trip) => matchesDeliverySearch([
+                trip.trip_code,
+                trip.id,
+                trip.status,
+                getShipperName(trip.shipper_id),
+                trip.expected_cod_amount,
+                trip.total_distance_km,
+                trip.total_duration_minutes,
+                trip.route_provider,
+                ...(trip.orders || []).flatMap((order) => [
+                    order.order_code,
+                    order.delivery_address,
+                    order.customer_name,
+                    order.customer_phone,
+                    order.status,
+                    order.amount_to_collect,
+                    order.cod_collected,
+                    order.failed_reason,
+                    order.note,
+                ]),
+            ]));
+
+            const getVisibleShippers = () => shippers.filter((shipper) => {
+                const activeTrip = deliveryTrips.find((trip) => trip.shipper_id === shipper.id && ['assigned', 'in_transit'].includes(trip.status));
+                return matchesDeliverySearch([
+                    shipper.full_name,
+                    shipper.phone,
+                    shipper.email,
+                    shipper.role,
+                    shipper.status,
+                    activeTrip?.trip_code,
+                    activeTrip?.status,
+                ]);
+            });
+
+            const getVisibleTripStops = () => {
+                const orders = selectedTrip?.orders || [];
+                return orders.filter((order) => matchesDeliverySearch([
+                    order.order_code,
+                    order.delivery_address,
+                    order.customer_name,
+                    order.customer_phone,
+                    order.status,
+                    order.amount_to_collect,
+                    order.cod_collected,
+                    order.failed_reason,
+                    order.note,
+                ]));
+            };
+
+            const syncSelectedTripIntoList = () => {
+                if (!selectedTrip) return;
+                const tripIndex = deliveryTrips.findIndex((trip) => trip.id === selectedTrip.id);
+                if (tripIndex >= 0) {
+                    deliveryTrips[tripIndex] = {
+                        ...deliveryTrips[tripIndex],
+                        ...selectedTrip,
+                    };
+                }
+            };
+
+            const deliveryRouteMaps = new Map();
+
+            const isValidCoordinate = (latitude, longitude) => Number.isFinite(Number(latitude)) && Number.isFinite(Number(longitude));
+
+            const getRouteMapStatusClass = (status) => {
+                if (status === 'delivered') return 'delivered';
+                if (status === 'failed') return 'failed';
+                return 'assigned';
+            };
+
+            const getTripRoutePoints = (trip) => {
+                const allStops = [...(trip?.orders || [])].sort((first, second) => Number(first.stop_order || 0) - Number(second.stop_order || 0));
+                const stops = allStops
+                    .filter((stop) => isValidCoordinate(stop.delivery_latitude, stop.delivery_longitude))
+                    .map((stop) => ({
+                        kind: 'stop',
+                        label: `${stop.stop_order}. ${stop.order_code}`,
+                        subtitle: stop.delivery_address || 'Delivery stop',
+                        stopOrder: stop.stop_order,
+                        status: getRouteMapStatusClass(stop.status),
+                        latitude: Number(stop.delivery_latitude),
+                        longitude: Number(stop.delivery_longitude),
+                    }));
+
+                return {
+                    missingCount: allStops.length - stops.length,
+                    points: [
+                        { ...SHOP_ROUTE_POINT, kind: 'store', status: 'store', stopOrder: 'S', subtitle: 'Shop pickup point' },
+                        ...stops,
+                    ],
+                    stopCount: allStops.length,
+                    mappedStopCount: stops.length,
+                };
+            };
+
+            const buildTripMapPanel = (trip, mapId, buttonId) => {
+                const route = getTripRoutePoints(trip);
+                if (!route.mappedStopCount) {
+                    return `
+                        <div class="rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">
+                            No mapped stops are available for this trip.
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="trip-map-shell">
+                        <div id="${mapId}" class="trip-map-canvas" role="button" tabindex="0" aria-label="Open Vietnam route map"></div>
+                        <button id="${buttonId}" class="trip-map-expand" type="button">
+                            <span class="material-symbols-outlined text-[16px]">open_in_full</span>
+                            Open large map
+                        </button>
+                    </div>
+                    <div class="delivery-route-map__legend">
+                        <span>${route.mappedStopCount}/${route.stopCount} mapped stops</span>
+                        <span class="delivery-route-map__legend-items">
+                            <span class="delivery-route-map__legend-item"><span class="delivery-route-map__legend-dot delivery-route-map__legend-dot--store"></span>Store</span>
+                            <span class="delivery-route-map__legend-item"><span class="delivery-route-map__legend-dot"></span>Pending</span>
+                            <span class="delivery-route-map__legend-item"><span class="delivery-route-map__legend-dot delivery-route-map__legend-dot--done"></span>Delivered</span>
+                            <span class="delivery-route-map__legend-item"><span class="delivery-route-map__legend-dot delivery-route-map__legend-dot--failed"></span>Failed</span>
+                        </span>
+                    </div>
+                    ${route.missingCount ? `<p class="delivery-route-map__notice">${route.missingCount} stop${route.missingCount === 1 ? '' : 's'} missing coordinates.</p>` : ''}
+                `;
+            };
+
+            const createRouteIcon = (point) => {
+                const iconClass = point.kind === 'store' ? 'store' : point.status;
+                return L.divIcon({
+                    className: '',
+                    html: `<div class="trip-map-marker trip-map-marker--${iconClass}"><span>${escapeHtml(point.stopOrder)}</span></div>`,
+                    iconAnchor: [17, 34],
+                    iconSize: [34, 34],
+                    popupAnchor: [0, -32],
+                });
+            };
+
+            const renderTripLeafletMap = (trip, mapId, { large = false } = {}) => {
+                const container = document.getElementById(mapId);
+                if (!container) return;
+                if (!window.L) {
+                    container.innerHTML = '<div class="trip-map-fallback">Cannot load the Vietnam map library. Check your network connection.</div>';
+                    return;
+                }
+
+                if (deliveryRouteMaps.has(mapId)) {
+                    deliveryRouteMaps.get(mapId).remove();
+                    deliveryRouteMaps.delete(mapId);
+                }
+
+                const route = getTripRoutePoints(trip);
+                const points = route.points;
+                const map = L.map(mapId, {
+                    attributionControl: large,
+                    dragging: large,
+                    scrollWheelZoom: large,
+                    doubleClickZoom: large,
+                    boxZoom: large,
+                    keyboard: large,
+                    tap: large,
+                    zoomControl: large,
+                });
+                deliveryRouteMaps.set(mapId, map);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors',
+                    maxZoom: 19,
+                }).addTo(map);
+
+                points.forEach((point) => {
+                    L.marker([point.latitude, point.longitude], { icon: createRouteIcon(point) })
+                        .bindPopup(`<b>${escapeHtml(point.label)}</b><br>${escapeHtml(point.subtitle || '')}<br>${point.latitude.toFixed(6)}, ${point.longitude.toFixed(6)}`)
+                        .addTo(map);
+                });
+
+                points.slice(0, -1).forEach((point, index) => {
+                    const destination = points[index + 1];
+                    const color = destination.status === 'failed'
+                        ? '#ba1a1a'
+                        : destination.status === 'assigned'
+                            ? '#7a8478'
+                            : '#496648';
+                    L.polyline(
+                        [[point.latitude, point.longitude], [destination.latitude, destination.longitude]],
+                        {
+                            color,
+                            dashArray: destination.status === 'assigned' ? '8 10' : null,
+                            opacity: destination.status === 'assigned' ? 0.55 : 0.95,
+                            weight: large ? 5 : 4,
+                        }
+                    ).addTo(map);
+                });
+
+                const bounds = L.latLngBounds(points.map((point) => [point.latitude, point.longitude]));
+                if (points.length === 1) {
+                    map.setView([points[0].latitude, points[0].longitude], 12);
+                } else {
+                    map.fitBounds(bounds.pad(0.24), { maxZoom: large ? 15 : 13 });
+                }
+
+                if (!large) {
+                    map.on('click', () => openTripMapModal(trip));
+                }
+
+                setTimeout(() => map.invalidateSize(), 0);
+            };
+
+            const ensureTripMapModal = () => {
+                let modal = document.getElementById('delivery-trip-map-modal');
+                if (modal) return modal;
+
+                document.body.insertAdjacentHTML('beforeend', `
+                    <div id="delivery-trip-map-modal" class="trip-map-modal" aria-hidden="true">
+                        <div class="trip-map-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="delivery-trip-map-modal-title">
+                            <div class="trip-map-modal__header">
+                                <div>
+                                    <h2 id="delivery-trip-map-modal-title" class="trip-map-modal__title">Vietnam Route Map</h2>
+                                    <p id="delivery-trip-map-modal-subtitle" class="trip-map-modal__subtitle"></p>
+                                </div>
+                                <button class="trip-map-modal__close" type="button" data-close-trip-map>
+                                    <span class="material-symbols-outlined">close</span>
+                                </button>
+                            </div>
+                            <div id="delivery-trip-map-modal-canvas" class="trip-map-canvas trip-map-canvas--large"></div>
+                        </div>
+                    </div>
+                `);
+
+                modal = document.getElementById('delivery-trip-map-modal');
+                modal.addEventListener('click', (event) => {
+                    if (event.target === modal || event.target.closest('[data-close-trip-map]')) {
+                        modal.classList.remove('is-open');
+                        modal.setAttribute('aria-hidden', 'true');
+                    }
+                });
+                return modal;
+            };
+
+            const openTripMapModal = (trip) => {
+                const modal = ensureTripMapModal();
+                document.getElementById('delivery-trip-map-modal-title').textContent = `${trip?.trip_code || 'Trip'} - Vietnam Route Map`;
+                document.getElementById('delivery-trip-map-modal-subtitle').textContent = 'Store and delivery stops are plotted by latitude and longitude.';
+                modal.classList.add('is-open');
+                modal.setAttribute('aria-hidden', 'false');
+                setTimeout(() => renderTripLeafletMap(trip, 'delivery-trip-map-modal-canvas', { large: true }), 0);
+            };
+
             const getTokenHeaders = () => {
                 const token = localStorage.getItem('matcha_access_token');
                 return token ? { Authorization: `Bearer ${token}` } : {};
@@ -282,6 +568,34 @@
                 pageStatus.classList.toggle('hidden', !message);
             };
 
+            const getReconcileNoticeHtml = () => {
+                if (!reconcileNotice?.message) {
+                    return '<p id="reconcile-cod-status" class="mt-3 hidden rounded-xl px-4 py-3 text-sm font-bold"></p>';
+                }
+
+                const className = reconcileNotice.type === 'error'
+                    ? 'bg-error-container/30 text-error'
+                    : 'bg-secondary-container/30 text-secondary';
+                return `<p id="reconcile-cod-status" class="mt-3 rounded-xl px-4 py-3 text-sm font-bold ${className}">${escapeHtml(reconcileNotice.message)}</p>`;
+            };
+
+            const setReconcileNotice = (message = '', type = 'info') => {
+                reconcileNotice = message ? { message, type } : null;
+                const status = document.getElementById('reconcile-cod-status');
+                if (!status) return;
+
+                status.textContent = message;
+                status.className = `mt-3 rounded-xl px-4 py-3 text-sm font-bold ${type === 'error' ? 'bg-error-container/30 text-error' : 'bg-secondary-container/30 text-secondary'}`;
+                status.classList.toggle('hidden', !message);
+            };
+
+            const scrollToTripDetail = () => {
+                tripDetailSection?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start',
+                });
+            };
+
             const getSelectedOrderIds = () => [...document.querySelectorAll('.queue-order-checkbox:checked')]
                 .map((checkbox) => checkbox.value);
 
@@ -309,13 +623,14 @@
             const renderQueue = () => {
                 selectAllQueue.checked = false;
                 queueBody.innerHTML = '';
+                const visibleQueue = getVisibleQueueOrders();
 
-                if (!deliveryQueue.length) {
-                    queueBody.innerHTML = '<tr><td class="px-4 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="6">No orders are ready for delivery.</td></tr>';
+                if (!visibleQueue.length) {
+                    queueBody.innerHTML = `<tr><td class="px-4 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="6">${deliverySearchQuery ? 'No queue orders match your search.' : 'No orders are ready for delivery.'}</td></tr>`;
                     return;
                 }
 
-                deliveryQueue.forEach((order) => {
+                visibleQueue.forEach((order) => {
                     const hasCoordinates = order.delivery_latitude !== null && order.delivery_longitude !== null;
                     const mapUrl = buildMapUrl(order.delivery_latitude, order.delivery_longitude);
                     const row = document.createElement('tr');
@@ -348,13 +663,14 @@
 
             const renderTrips = () => {
                 tripsBody.innerHTML = '';
+                const visibleTrips = getVisibleTrips();
 
-                if (!deliveryTrips.length) {
-                    tripsBody.innerHTML = '<tr><td class="px-4 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="6">No delivery trips found.</td></tr>';
+                if (!visibleTrips.length) {
+                    tripsBody.innerHTML = `<tr><td class="px-4 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="6">${deliverySearchQuery ? 'No delivery trips match your search.' : 'No delivery trips found.'}</td></tr>`;
                     return;
                 }
 
-                deliveryTrips.forEach((trip) => {
+                visibleTrips.forEach((trip) => {
                     const row = document.createElement('tr');
                     row.className = `hover:bg-surface-container-low ${selectedTrip?.id === trip.id ? 'bg-secondary-container/20' : ''}`;
                     row.innerHTML = `
@@ -379,13 +695,14 @@
 
             const renderShippers = () => {
                 shippersList.innerHTML = '';
+                const visibleShippers = getVisibleShippers();
 
-                if (!shippers.length) {
-                    shippersList.innerHTML = '<p class="rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">No active shippers found.</p>';
+                if (!visibleShippers.length) {
+                    shippersList.innerHTML = `<p class="rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">${deliverySearchQuery ? 'No shippers match your search.' : 'No active shippers found.'}</p>`;
                     return;
                 }
 
-                shippers.forEach((shipper) => {
+                visibleShippers.forEach((shipper) => {
                     const activeTrip = deliveryTrips.find((trip) => trip.shipper_id === shipper.id && ['assigned', 'in_transit'].includes(trip.status));
                     const item = document.createElement('div');
                     item.className = 'flex items-center gap-3 rounded-xl bg-surface-container-low p-4';
@@ -459,6 +776,7 @@
                 const deliveredCod = deliveredCodForTrip(selectedTrip);
                 const latestLocation = selectedTrip.latest_location;
                 const latestLocationUrl = latestLocation ? buildMapUrl(latestLocation.latitude, latestLocation.longitude) : '';
+                const visibleStops = getVisibleTripStops();
 
                 tripDetailPanel.innerHTML = `
                     <div class="grid grid-cols-1 gap-5 xl:grid-cols-2">
@@ -480,7 +798,7 @@
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                 <div class="rounded-xl bg-surface-container-low p-4">
                                     <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Route</p>
                                     <p class="mt-2 text-sm font-bold text-primary">${Number(selectedTrip.total_distance_km || 0).toFixed(2)} km</p>
@@ -489,16 +807,12 @@
                                     <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Duration</p>
                                     <p class="mt-2 text-sm font-bold text-primary">${escapeHtml(formatDuration(selectedTrip.total_duration_minutes))}</p>
                                 </div>
-                                <div class="rounded-xl bg-surface-container-low p-4">
-                                    <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Provider</p>
-                                    <p class="mt-2 truncate text-sm font-bold text-primary">${escapeHtml(selectedTrip.route_provider || 'manual')}</p>
-                                </div>
                             </div>
 
                             <div class="rounded-xl border border-outline-variant/30 p-4">
                                 <p class="mb-3 font-bold text-primary">Stops</p>
                                 <div class="max-h-[420px] space-y-2 overflow-y-auto pr-1">
-                                    ${(selectedTrip.orders || []).map((order) => `
+                                    ${visibleStops.map((order) => `
                                         <div class="rounded-lg bg-surface-container-low p-3">
                                             <div class="flex items-start justify-between gap-3">
                                                 <div>
@@ -518,28 +832,33 @@
                                             </div>
                                             ${order.failed_reason ? `<p class="mt-2 text-xs font-bold text-error">${escapeHtml(order.failed_reason)}</p>` : ''}
                                         </div>
-                                    `).join('') || '<p class="text-sm font-bold text-on-surface-variant">No stops found.</p>'}
+                                    `).join('') || `<p class="text-sm font-bold text-on-surface-variant">${deliverySearchQuery ? 'No stops match your search.' : 'No stops found.'}</p>`}
                                 </div>
+                            </div>
+
+                            <div class="rounded-xl border border-outline-variant/30 p-4">
+                              <p class="mb-3 font-bold text-primary">Live Tracking</p>
+                              <div class="rounded-xl bg-surface-container-low p-4">
+                                  <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Latest shipper location</p>
+                                  ${
+                                      latestLocation
+                                          ? `<div class="mt-2 flex flex-wrap items-center justify-between gap-3">
+                                              <p class="text-sm font-bold text-primary">${escapeHtml(formatDateTime(latestLocation.recorded_at))}</p>
+                                              <a class="inline-flex items-center gap-1 rounded-full bg-surface-container-high px-3 py-2 text-xs font-bold text-primary hover:bg-surface-container-highest" href="${latestLocationUrl}" target="_blank" rel="noreferrer">
+                                                  <span class="material-symbols-outlined text-[16px]">my_location</span>
+                                                  Open map
+                                              </a>
+                                            </div>`
+                                          : '<p class="mt-2 text-sm font-bold text-on-surface-variant">No shipper location received yet.</p>'
+                                  }
+                              </div>
                             </div>
                         </div>
 
                         <div class="space-y-5">
                           <div class="rounded-xl border border-outline-variant/30 p-4">
-                            <p class="mb-3 font-bold text-primary">Live Tracking</p>
-                            <div class="rounded-xl bg-surface-container-low p-4">
-                                <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Latest shipper location</p>
-                                ${
-                                    latestLocation
-                                        ? `<div class="mt-2 flex flex-wrap items-center justify-between gap-3">
-                                            <p class="text-sm font-bold text-primary">${escapeHtml(formatDateTime(latestLocation.recorded_at))}</p>
-                                            <a class="inline-flex items-center gap-1 rounded-full bg-surface-container-high px-3 py-2 text-xs font-bold text-primary hover:bg-surface-container-highest" href="${latestLocationUrl}" target="_blank" rel="noreferrer">
-                                                <span class="material-symbols-outlined text-[16px]">my_location</span>
-                                                Open map
-                                            </a>
-                                          </div>`
-                                        : '<p class="mt-2 text-sm font-bold text-on-surface-variant">No shipper location received yet.</p>'
-                                }
-                            </div>
+                            <p class="mb-3 font-bold text-primary">Trip Map</p>
+                            ${buildTripMapPanel(selectedTrip, 'delivery-trip-leaflet-map', 'delivery-trip-map-expand')}
                           </div>
 
                           <div class="rounded-xl border border-outline-variant/30 p-4">
@@ -563,6 +882,7 @@
                                 <textarea id="cod-discrepancy-reason" rows="6" class="w-full rounded-xl border-outline bg-surface px-3 py-2 text-sm focus:border-secondary focus:ring-secondary" placeholder="Required if actual amount differs" ${canReconcile ? '' : 'disabled'}></textarea>
                             </label>
                             <button id="reconcile-cod-button" type="button" class="mt-4 w-full rounded-xl bg-secondary px-4 py-3 text-sm font-bold text-on-secondary hover:bg-secondary/90 disabled:cursor-not-allowed disabled:opacity-50" ${canReconcile ? '' : 'disabled'}>Reconcile COD</button>
+                            ${getReconcileNoticeHtml()}
                           </div>
                         </div>
                     </div>
@@ -570,6 +890,14 @@
 
                 document.getElementById('assign-shipper-button')?.addEventListener('click', assignSelectedShipper);
                 document.getElementById('reconcile-cod-button')?.addEventListener('click', reconcileSelectedTrip);
+                renderTripLeafletMap(selectedTrip, 'delivery-trip-leaflet-map');
+                document.getElementById('delivery-trip-map-expand')?.addEventListener('click', () => openTripMapModal(selectedTrip));
+                document.getElementById('delivery-trip-leaflet-map')?.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        openTripMapModal(selectedTrip);
+                    }
+                });
             };
 
             const refreshAll = async ({ keepSelectedTrip = true } = {}) => {
@@ -589,6 +917,7 @@
                     if (keepSelectedTrip && selectedTrip) {
                         const stillVisible = deliveryTrips.some((trip) => trip.id === selectedTrip.id);
                         selectedTrip = stillVisible ? await fetchApiData(`/deliveries/trips/${encodeURIComponent(selectedTrip.id)}`) : null;
+                        syncSelectedTripIntoList();
                     }
 
                     renderStats();
@@ -650,13 +979,18 @@
                 }
             };
 
-            const loadTripDetail = async (tripId) => {
+            const loadTripDetail = async (tripId, { scrollToDetail = false } = {}) => {
                 setPageStatus('Loading trip detail...');
+                reconcileNotice = null;
                 try {
                     selectedTrip = await fetchApiData(`/deliveries/trips/${encodeURIComponent(tripId)}`);
+                    syncSelectedTripIntoList();
                     renderTrips();
                     renderTripDetail();
                     setPageStatus('');
+                    if (scrollToDetail) {
+                        requestAnimationFrame(scrollToTripDetail);
+                    }
                 } catch (error) {
                     console.error('Failed to load trip detail:', error);
                     setPageStatus(error.message || 'Cannot load trip detail.', 'error');
@@ -714,13 +1048,15 @@
                 const expected = deliveredCodForTrip(selectedTrip);
 
                 if (actualAmount !== expected && !reason) {
-                    setPageStatus('Enter a discrepancy reason when COD does not match.', 'error');
+                    setReconcileNotice('Enter a discrepancy reason when COD does not match.', 'error');
                     return;
                 }
 
-                setPageStatus('Reconciling COD...');
+                setPageStatus('');
+                setReconcileNotice('Reconciling COD...');
                 try {
-                    await fetchApiData(`/deliveries/trips/${encodeURIComponent(selectedTrip.id)}/reconcile`, {
+                    const selectedTripId = selectedTrip.id;
+                    await fetchApiData(`/deliveries/trips/${encodeURIComponent(selectedTripId)}/reconcile`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -728,15 +1064,33 @@
                             discrepancy_reason: reason || null,
                         }),
                     });
-                    await refreshAll({ keepSelectedTrip: false });
-                    setPageStatus('COD reconciled.');
+                    reconcileNotice = { message: 'COD reconciled successfully.', type: 'success' };
+                    await refreshAll({ keepSelectedTrip: true });
+                    if (selectedTrip?.id !== selectedTripId) {
+                        selectedTrip = await fetchApiData(`/deliveries/trips/${encodeURIComponent(selectedTripId)}`);
+                        renderTripDetail();
+                    }
+                    setReconcileNotice('COD reconciled successfully.', 'success');
                 } catch (error) {
                     console.error('Failed to reconcile COD:', error);
-                    setPageStatus(error.message || 'Cannot reconcile COD.', 'error');
+                    setReconcileNotice(error.message || 'Cannot reconcile COD.', 'error');
                 }
             };
 
             document.getElementById('refresh-delivery-data').addEventListener('click', () => refreshAll());
+            topbarSearchInput?.addEventListener('input', () => {
+                deliverySearchQuery = topbarSearchInput.value || '';
+                renderQueue();
+                renderTrips();
+                renderShippers();
+                renderTripDetail();
+            });
+            topbarSearchInput?.addEventListener('focus', () => {
+                topbarSearchInput.parentElement?.classList.add('scale-[1.02]');
+            });
+            topbarSearchInput?.addEventListener('blur', () => {
+                topbarSearchInput.parentElement?.classList.remove('scale-[1.02]');
+            });
             tripStatusFilter.addEventListener('change', () => {
                 selectedTrip = null;
                 refreshAll({ keepSelectedTrip: false });
@@ -765,7 +1119,7 @@
             tripsBody.addEventListener('click', (event) => {
                 const button = event.target.closest('.view-trip-detail');
                 if (!button) return;
-                loadTripDetail(button.dataset.tripId);
+                loadTripDetail(button.dataset.tripId, { scrollToDetail: true });
             });
 
             setInterval(refreshSelectedTripDetailSilently, TRIP_DETAIL_POLL_INTERVAL_MS);

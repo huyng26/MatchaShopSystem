@@ -9,7 +9,8 @@
   <script src="../assets/js/tailwind-config.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="../assets/css/style.css?v=header-subtitle-20260605" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="../assets/css/style.css?v=leaflet-route-map-20260610" />
 </head>
 
 <body class="page-shipper bg-background text-on-surface antialiased overflow-x-hidden" data-page="shipper">
@@ -60,17 +61,36 @@
       </section>
 
       <section class="grid grid-cols-1 gap-8 xl:grid-cols-[420px_minmax(0,1fr)]">
-        <aside class="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
-          <div class="mb-5 flex items-center justify-between gap-3">
-            <div>
-              <h2 class="font-headline text-2xl font-bold text-primary">My Trips</h2>
-              <p class="text-sm text-on-surface-variant">Trips assigned by delivery manager.</p>
+        <aside class="space-y-6">
+          <section class="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
+            <div class="mb-5 flex items-center justify-between gap-3">
+              <div>
+                <h2 class="font-headline text-2xl font-bold text-primary">My Trips</h2>
+                <p class="text-sm text-on-surface-variant">Trips assigned by delivery manager.</p>
+              </div>
+              <span id="shipper-trip-count" class="rounded-full bg-secondary-container/30 px-3 py-1 text-xs font-bold text-secondary">0</span>
             </div>
-            <span id="shipper-trip-count" class="rounded-full bg-secondary-container/30 px-3 py-1 text-xs font-bold text-secondary">0</span>
-          </div>
-          <div id="shipper-trip-list" class="max-h-[620px] space-y-3 overflow-y-auto pr-1">
-            <p class="rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">Loading trips...</p>
-          </div>
+            <div id="shipper-trip-list" class="max-h-[420px] space-y-3 overflow-y-auto pr-1">
+              <p class="rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">Loading trips...</p>
+            </div>
+          </section>
+
+          <section class="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
+            <div class="mb-4">
+              <h2 class="font-headline text-2xl font-bold text-primary">Route Map</h2>
+              <p class="text-sm text-on-surface-variant">Store, delivery stops, and trip sequence.</p>
+            </div>
+            <div id="shipper-route-map-panel">
+              <p class="rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">Select a trip to see the route map.</p>
+            </div>
+          </section>
+
+          <section class="rounded-xl bg-primary p-6 text-on-primary shadow-sm">
+            <h2 class="font-headline text-2xl font-bold">Current Stop</h2>
+            <div id="shipper-current-stop" class="mt-4 rounded-xl bg-on-primary/10 p-4 text-sm font-bold text-on-primary/80">
+              Select a stop to prepare delivery update.
+            </div>
+          </section>
         </aside>
 
         <div class="space-y-8">
@@ -142,15 +162,13 @@
               <p id="shipper-location-last" class="mt-4 rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">No location has been captured in this session.</p>
             </section>
 
-            <section class="rounded-xl bg-primary p-6 text-on-primary shadow-sm">
-              <h2 class="font-headline text-2xl font-bold">Current Stop</h2>
-              <div id="shipper-current-stop" class="mt-4 rounded-xl bg-on-primary/10 p-4 text-sm font-bold text-on-primary/80">
-                Select a stop to prepare delivery update.
-              </div>
-            </section>
           </section>
         </div>
       </section>
+
+      <div class="mt-12 text-center">
+        <p class="text-[10px] text-stone-400 font-label uppercase tracking-widest">Hoppers' Matcha Internal Portal © 2026</p>
+      </div>
     </div>
   </main>
 
@@ -188,6 +206,7 @@
   </div>
 
   <script src="../assets/js/layout.js?v=topbar-role-20260610"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="../assets/js/main.js?v=shipper-flow-20260608"></script>
 </body>
 

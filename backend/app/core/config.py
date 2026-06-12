@@ -18,8 +18,8 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
     shop_timezone: str = "Asia/Ho_Chi_Minh"
-    shop_latitude: float = 10.776889
-    shop_longitude: float = 106.700806
+    shop_latitude: float = 21.006237
+    shop_longitude: float = 105.843127
     google_maps_api_key: str | None = None
     openrouteservice_api_key: str | None = None
     maps_provider: str = "openrouteservice"
