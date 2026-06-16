@@ -4,6 +4,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.constants import UserRole
 from app.models.ingredients import Ingredient
 from app.models.inventory import (
     InventoryMovement,
@@ -17,6 +18,7 @@ from app.schemas.inventory import (
     InventoryPurchaseCreate,
 )
 from app.services.errors import ServiceError
+from app.services import notification_service
 
 MONEY_QUANT = Decimal("0.01")
 
@@ -62,6 +64,7 @@ async def update_ingredient(
 
     try:
         ingredient = await inventory_repo.update_ingredient(db, ingredient, **values)
+        await _notify_low_stock_ingredient(db, ingredient)
         await db.commit()
         return ingredient
     except Exception:
@@ -137,6 +140,7 @@ async def record_ingredient_purchase(
             reference_id=purchase.id,
             created_by=created_by,
         )
+        await _notify_low_stock_ingredient(db, ingredient)
         await db.commit()
         return purchase
     except Exception:
@@ -178,3 +182,33 @@ def _validate_non_negative_inventory_values(**values: Decimal | object) -> None:
         value = values.get(field)
         if value is not None and value < Decimal("0"):
             raise ServiceError(f"{field}_must_be_non_negative")
+
+
+async def _notify_low_stock_ingredient(
+    db: AsyncSession,
+    ingredient: Ingredient,
+) -> None:
+    if ingredient.current_stock > ingredient.minimum_threshold:
+        return
+
+    await notification_service.notify_roles(
+        db,
+        (UserRole.ADMIN, UserRole.INVENTORY_MANAGER),
+        notification_type="inventory.low_stock",
+        title="Low stock ingredient",
+        message=(
+            f"{ingredient.name} stock is {ingredient.current_stock} "
+            f"{ingredient.unit}, at or below the minimum threshold."
+        ),
+        severity="warning",
+        entity_type="ingredient",
+        entity_id=ingredient.id,
+        action_url="inventory_list.html",
+        metadata={
+            "ingredient_name": ingredient.name,
+            "current_stock": str(ingredient.current_stock),
+            "minimum_threshold": str(ingredient.minimum_threshold),
+            "unit": ingredient.unit,
+        },
+        dedupe_key=f"inventory.low_stock:{ingredient.id}:{ingredient.current_stock}",
+    )

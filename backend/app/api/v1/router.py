@@ -10,6 +10,7 @@ from app.api.v1 import (
     ingredients,
     inventory,
     maps,
+    notifications,
     orders,
     payments,
     products,
@@ -35,6 +36,11 @@ api_router.include_router(inventory.router, prefix="/inventory", tags=["inventor
 api_router.include_router(maps.router, prefix="/maps", tags=["maps"])
 api_router.include_router(orders.router, prefix="/orders", tags=["orders"])
 api_router.include_router(payments.router, prefix="/payments", tags=["payments"])
+api_router.include_router(
+    notifications.router,
+    prefix="/notifications",
+    tags=["notifications"],
+)
 api_router.include_router(
     deliveries.router,
     prefix="/deliveries",

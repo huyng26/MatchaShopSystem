@@ -121,3 +121,24 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     ip_address varchar(100),
     created_at timestamptz NOT NULL DEFAULT now()
 );
+
+CREATE TABLE IF NOT EXISTS notifications (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id uuid NOT NULL REFERENCES users (id),
+    type varchar(100) NOT NULL,
+    severity varchar(20) NOT NULL DEFAULT 'info',
+    title varchar(255) NOT NULL,
+    message text NOT NULL,
+    entity_type varchar(100),
+    entity_id uuid,
+    action_url text,
+    metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+    dedupe_key varchar(255),
+    read_at timestamptz,
+    dismissed_at timestamptz,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    expires_at timestamptz,
+    CONSTRAINT notifications_severity_valid CHECK (
+        severity IN ('info', 'warning', 'critical')
+    )
+);
