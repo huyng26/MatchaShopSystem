@@ -39,6 +39,20 @@
                         <span class="material-symbols-outlined text-7xl">restaurant</span>
                     </div>
                 </div>
+                <div class="mt-4 flex flex-wrap items-center gap-3">
+                    <input id="product-detail-image-file" class="hidden" type="file" accept="image/jpeg,image/png,image/webp" />
+                    <label for="product-detail-image-file"
+                        class="inline-flex cursor-pointer items-center gap-2 rounded-full bg-secondary px-5 py-3 text-sm font-bold text-white shadow-lg shadow-secondary/20 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                        <span class="material-symbols-outlined text-base">upload</span>
+                        Upload Image
+                    </label>
+                    <button id="clear-product-detail-image-file" type="button"
+                        class="hidden h-11 w-11 items-center justify-center rounded-full bg-surface-container text-on-surface-variant transition-colors hover:bg-error-container/30 hover:text-error"
+                        aria-label="Clear selected image">
+                        <span class="material-symbols-outlined text-base">close</span>
+                    </button>
+                    <p id="product-detail-image-file-name" class="text-xs font-bold text-on-surface-variant">No local image selected</p>
+                </div>
             </div>
             <!-- Primary Meta Fields -->
             <div class="lg:col-span-7 space-y-8">
@@ -152,6 +166,9 @@
         const priceInput = document.getElementById('product-detail-price');
         const categorySelect = document.getElementById('product-detail-category');
         const imageUrlInput = document.getElementById('product-detail-image-url');
+        const imageFileInput = document.getElementById('product-detail-image-file');
+        const imageFileName = document.getElementById('product-detail-image-file-name');
+        const clearImageFileButton = document.getElementById('clear-product-detail-image-file');
         const statusElement = document.getElementById('product-detail-status');
         const saveButton = document.getElementById('save-product-detail');
         const discardButton = document.getElementById('discard-product-detail');
@@ -162,6 +179,7 @@
         let currentProduct = null;
         let productCategories = [];
         let ingredients = [];
+        let selectedImagePreviewUrl = null;
 
         const fetchApiData = async (path, options = {}) => {
             const response = await fetch(`${API_BASE_URL}${path}`, options);
@@ -210,6 +228,77 @@
             statusElement.textContent = message;
             statusElement.className = `text-sm font-bold ${type === 'error' ? 'text-error' : 'text-secondary'}`;
             statusElement.classList.toggle('hidden', !message);
+        };
+
+        const revokeSelectedImagePreview = () => {
+            if (!selectedImagePreviewUrl) return;
+            URL.revokeObjectURL(selectedImagePreviewUrl);
+            selectedImagePreviewUrl = null;
+        };
+
+        const renderImagePreview = (imageUrl, altText) => {
+            const mainImage = document.getElementById('product-detail-main-image');
+            const imagePlaceholder = document.getElementById('product-detail-image-placeholder');
+            if (!mainImage) return;
+
+            mainImage.alt = altText || 'Product image';
+            if (imageUrl) {
+                mainImage.src = imageUrl;
+                mainImage.classList.remove('hidden');
+                imagePlaceholder?.classList.add('hidden');
+            } else {
+                mainImage.removeAttribute('src');
+                mainImage.classList.add('hidden');
+                imagePlaceholder?.classList.remove('hidden');
+            }
+        };
+
+        const clearSelectedImageFile = ({ restorePreview = true } = {}) => {
+            revokeSelectedImagePreview();
+            if (imageFileInput) {
+                imageFileInput.value = '';
+            }
+            if (imageFileName) {
+                imageFileName.textContent = 'No local image selected';
+            }
+            clearImageFileButton?.classList.add('hidden');
+            clearImageFileButton?.classList.remove('inline-flex');
+
+            if (restorePreview) {
+                renderImagePreview(
+                    imageUrlInput.value.trim() || currentProduct?.image_url || '',
+                    nameElement.value.trim() || currentProduct?.name || 'Product image',
+                );
+            }
+        };
+
+        const updateSelectedImagePreview = () => {
+            const file = imageFileInput?.files?.[0];
+            revokeSelectedImagePreview();
+
+            if (!file) {
+                clearSelectedImageFile();
+                return;
+            }
+
+            const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
+            if (!allowedTypes.has(file.type)) {
+                clearSelectedImageFile();
+                setStatus('Please choose a JPG, PNG, or WebP image.', 'error');
+                return;
+            }
+
+            selectedImagePreviewUrl = URL.createObjectURL(file);
+            renderImagePreview(
+                selectedImagePreviewUrl,
+                nameElement.value.trim() || currentProduct?.name || file.name,
+            );
+            if (imageFileName) {
+                imageFileName.textContent = file.name;
+            }
+            clearImageFileButton?.classList.remove('hidden');
+            clearImageFileButton?.classList.add('inline-flex');
+            setStatus('Image selected. Save product details to upload it.');
         };
 
         const deriveCategories = (products) => (
@@ -353,22 +442,10 @@
             setFieldValue(descriptionElement, description);
             priceInput.value = formatPriceValue(product.selling_price);
             imageUrlInput.value = product.image_url || '';
+            clearSelectedImageFile({ restorePreview: false });
             populateCategorySelect(productCategories, product.category);
 
-            const mainImage = document.getElementById('product-detail-main-image');
-            const imagePlaceholder = document.getElementById('product-detail-image-placeholder');
-            if (mainImage) {
-                mainImage.alt = name;
-                if (product.image_url) {
-                    mainImage.src = product.image_url;
-                    mainImage.classList.remove('hidden');
-                    imagePlaceholder?.classList.add('hidden');
-                } else {
-                    mainImage.removeAttribute('src');
-                    mainImage.classList.add('hidden');
-                    imagePlaceholder?.classList.remove('hidden');
-                }
-            }
+            renderImagePreview(product.image_url || '', name);
 
             setAvailability(Boolean(product.is_available));
         };
@@ -437,13 +514,34 @@
             setStatus('Saving product...');
 
             try {
-                const product = await fetchApiData(`/products/${encodeURIComponent(productId)}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(payload),
-                });
+                const imageFile = imageFileInput?.files?.[0];
+                const requestOptions = imageFile
+                    ? {
+                        method: 'PUT',
+                        body: (() => {
+                            const formData = new FormData();
+                            formData.append('category', payload.category);
+                            formData.append('name', payload.name);
+                            formData.append('description', payload.description || '');
+                            formData.append('selling_price', String(payload.selling_price));
+                            formData.append('is_available', String(payload.is_available));
+                            formData.append('image_url', payload.image_url || '');
+                            formData.append('image', imageFile);
+                            return formData;
+                        })(),
+                    }
+                    : {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(payload),
+                    };
+
+                const product = await fetchApiData(
+                    `/products/${encodeURIComponent(productId)}`,
+                    requestOptions,
+                );
                 renderProduct(product);
                 setStatus('Product details saved.');
             } catch (error) {
@@ -545,6 +643,15 @@
         };
 
         saveButton?.addEventListener('click', saveProduct);
+        imageFileInput?.addEventListener('change', updateSelectedImagePreview);
+        clearImageFileButton?.addEventListener('click', () => clearSelectedImageFile());
+        imageUrlInput?.addEventListener('input', () => {
+            if (imageFileInput?.files?.[0]) return;
+            renderImagePreview(
+                imageUrlInput.value.trim(),
+                nameElement.value.trim() || currentProduct?.name || 'Product image',
+            );
+        });
         saveRecipeButton?.addEventListener('click', saveRecipe);
         addRecipeIngredientButton?.addEventListener('click', () => createRecipeRow());
         discardButton?.addEventListener('click', renderProductDetail);

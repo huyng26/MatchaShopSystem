@@ -494,6 +494,7 @@ const POS_INSTORE_CUSTOMER_DETAILS_STORAGE_KEY = 'matcha_pos_instore_customer_de
 let POS_TOPPINGS = [];
 let POS_MENU_ITEMS = [];
 let POS_MENU_SEARCH_QUERY = '';
+let POS_PREPARING_DELIVERY_ORDERS = [];
 
 const POS_FALLBACK_IMAGE =
   'https://images.unsplash.com/photo-1515823662972-da6a2e4d3002?auto=format&fit=crop&w=900&q=80';
@@ -849,19 +850,6 @@ async function submitPosOrder(selectedPayment, checkoutDetails = {}, onStep = ()
   });
 
   if (orderType === 'delivery') {
-    if (deliveryDetails.ready_for_queue) {
-      onStep('Marking prepared delivery order ready for queue...');
-      return fetchMatchaApi(`/orders/${processingOrder.id || order.id}/ready-for-delivery`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          payment_method: paymentMethod === 'cod' ? 'cod' : null,
-        }),
-      });
-    }
-
     return processingOrder || order;
   }
 
@@ -972,6 +960,194 @@ function renderPosToppingOptions() {
   ).join('');
 }
 
+function setPosPreparingDeliveryStatus(message = '', type = 'info') {
+  const status = document.getElementById('posPreparingDeliveryStatus');
+  if (!status) return;
+
+  status.textContent = message;
+  status.classList.toggle('hidden', !message);
+  status.classList.remove('bg-error/10', 'bg-secondary-container/20', 'bg-surface-container-low', 'text-error', 'text-secondary', 'text-on-surface-variant');
+  if (type === 'error') {
+    status.classList.add('bg-error/10', 'text-error');
+  } else if (type === 'success') {
+    status.classList.add('bg-secondary-container/20', 'text-secondary');
+  } else {
+    status.classList.add('bg-surface-container-low', 'text-on-surface-variant');
+  }
+}
+
+function formatPosOrderDateTime(value) {
+  if (!value) return '-';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '-';
+  return date.toLocaleString('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+  });
+}
+
+function buildPosPreparingDeliveryItemsSummary(order) {
+  const items = Array.isArray(order?.items) ? order.items : [];
+  if (!items.length) return 'No items listed';
+  return items
+    .map((item) => `${item.quantity || 0}x ${item.product_name || 'Item'}`)
+    .join(', ');
+}
+
+function setPosPreparingDeliveryDropdownExpanded(expanded) {
+  const content = document.getElementById('posPreparingDeliveryContent');
+  const toggle = document.getElementById('posPreparingDeliveryToggle');
+  const chevron = document.getElementById('posPreparingDeliveryChevron');
+  if (!content || !toggle) return;
+
+  content.classList.toggle('hidden', !expanded);
+  toggle.setAttribute('aria-expanded', String(expanded));
+  chevron?.classList.toggle('rotate-180', expanded);
+}
+
+function renderPosPreparingDeliveryOrders() {
+  const list = document.getElementById('posPreparingDeliveryList');
+  const count = document.getElementById('posPreparingDeliveryCount');
+  if (!list || !count) return;
+
+  count.textContent = String(POS_PREPARING_DELIVERY_ORDERS.length);
+
+  if (!POS_PREPARING_DELIVERY_ORDERS.length) {
+    list.innerHTML = `
+      <div class="rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">
+        No delivery orders are currently in preparation.
+      </div>
+    `;
+    return;
+  }
+
+  list.innerHTML = POS_PREPARING_DELIVERY_ORDERS.map(
+    (order) => `
+      <article class="flex flex-col gap-3 rounded-xl border border-outline-variant/10 bg-surface px-4 py-3 shadow-sm lg:flex-row lg:items-center">
+        <div class="grid min-w-0 flex-1 grid-cols-1 gap-3 md:grid-cols-[150px_180px_minmax(0,1fr)_minmax(0,1fr)_120px] md:items-center">
+          <div class="min-w-0">
+            <p class="truncate font-mono text-xs font-extrabold uppercase tracking-widest text-secondary">${escapeHtml(order.order_code || String(order.id).slice(0, 8))}</p>
+            <p class="mt-1 text-xs font-bold text-on-surface-variant">${escapeHtml(formatPosOrderDateTime(order.created_at))}</p>
+          </div>
+          <div class="min-w-0">
+            <h4 class="truncate text-sm font-extrabold text-primary">${escapeHtml(order.customer_name || 'Delivery customer')}</h4>
+            <p class="mt-1 truncate text-xs font-bold text-on-surface-variant">${escapeHtml(order.customer_phone || 'No phone')}</p>
+          </div>
+          <p class="min-w-0 truncate text-sm text-on-surface-variant">${escapeHtml(buildPosPreparingDeliveryItemsSummary(order))}</p>
+          <p class="min-w-0 truncate text-xs font-semibold text-on-surface-variant">${escapeHtml(order.delivery_address || 'No delivery address')}</p>
+          <div class="text-sm font-extrabold text-secondary md:text-right">${formatVnd(order.total_amount)}</div>
+        </div>
+        <button class="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-secondary/90 disabled:cursor-not-allowed disabled:opacity-60" data-pos-prepared-delivery-id="${escapeHtml(order.id)}" type="button">
+          <span class="material-symbols-outlined text-lg">task_alt</span>
+          <span class="whitespace-nowrap">Order is prepared</span>
+        </button>
+      </article>
+    `
+  ).join('');
+}
+
+function renderPosPreparingDeliveryLoading() {
+  const list = document.getElementById('posPreparingDeliveryList');
+  if (!list) return;
+
+  list.innerHTML = `
+    <div class="rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">
+      Loading delivery orders...
+    </div>
+  `;
+}
+
+async function loadPosPreparingDeliveryOrders() {
+  const list = document.getElementById('posPreparingDeliveryList');
+  if (!list) return;
+
+  setPosPreparingDeliveryStatus('Loading delivery orders in preparation...');
+  renderPosPreparingDeliveryLoading();
+
+  try {
+    POS_PREPARING_DELIVERY_ORDERS = getApiListData(
+      await fetchMatchaApi('/orders?order_type=delivery&status=in_progress')
+    );
+    renderPosPreparingDeliveryOrders();
+    setPosPreparingDeliveryStatus('');
+  } catch (error) {
+    console.error('Failed to load preparing delivery orders:', error);
+    POS_PREPARING_DELIVERY_ORDERS = [];
+    renderPosPreparingDeliveryOrders();
+    setPosPreparingDeliveryStatus(
+      error.message || 'Cannot load delivery orders in preparation.',
+      'error'
+    );
+  }
+}
+
+function openPosPreparedDeliveryModal(order) {
+  const modal = document.getElementById('posPreparedDeliveryModal');
+  const title = document.getElementById('posPreparedDeliveryModalTitle');
+  const text = document.getElementById('posPreparedDeliveryModalText');
+  if (!modal) return;
+
+  if (title) {
+    title.textContent = 'Delivery Order Ready';
+  }
+  if (text) {
+    const orderCode = order?.order_code || order?.id || 'This order';
+    text.textContent = `${orderCode} has been sent to Delivery Manager.`;
+  }
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+function closePosPreparedDeliveryModal() {
+  const modal = document.getElementById('posPreparedDeliveryModal');
+  if (!modal) return;
+
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+
+async function markPosDeliveryOrderPrepared(orderId, button) {
+  const order = POS_PREPARING_DELIVERY_ORDERS.find((item) => String(item.id) === String(orderId));
+  if (!order) return;
+
+  const originalButtonHtml = button?.innerHTML;
+  if (button) {
+    button.disabled = true;
+    button.innerHTML = '<span class="material-symbols-outlined animate-spin text-lg">progress_activity</span> Sending...';
+  }
+  setPosPreparingDeliveryStatus(`Sending ${order.order_code || 'delivery order'} to Delivery Manager...`);
+
+  try {
+    await fetchMatchaApi(`/orders/${order.id}/ready-for-delivery`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        payment_method: order.payment_status === 'unpaid' ? 'cod' : null,
+      }),
+    });
+    POS_PREPARING_DELIVERY_ORDERS = POS_PREPARING_DELIVERY_ORDERS.filter(
+      (item) => String(item.id) !== String(order.id)
+    );
+    renderPosPreparingDeliveryOrders();
+    setPosPreparingDeliveryStatus(`${order.order_code || 'Delivery order'} sent to Delivery Manager.`, 'success');
+    openPosPreparedDeliveryModal(order);
+  } catch (error) {
+    console.error('Failed to mark delivery order prepared:', error);
+    setPosPreparingDeliveryStatus(
+      error.message || 'Cannot send this order to Delivery Manager.',
+      'error'
+    );
+    if (button) {
+      button.disabled = false;
+      button.innerHTML = originalButtonHtml;
+    }
+  }
+}
+
 async function loadPosMenuProducts() {
   renderPosMenuState('Loading available products...');
   const products = getApiListData(await fetchMatchaApi('/products?is_available=true'));
@@ -1072,12 +1248,18 @@ async function initPosMenu() {
     console.error('Failed to load POS products:', error);
     renderPosMenuState('Cannot load products for Point of Sale. Please check the backend server.', 'error');
   }
+  await loadPosPreparingDeliveryOrders();
 
   localStorage.removeItem(POS_CUSTOMER_STORAGE_KEY);
   updatePosOrderModeUi();
   renderPosCart();
 
   const menuContainer = document.getElementById('posMenuSections');
+  const preparingDeliveryToggle = document.getElementById('posPreparingDeliveryToggle');
+  const preparingDeliveryList = document.getElementById('posPreparingDeliveryList');
+  const preparingDeliveryRefreshBtn = document.getElementById('posRefreshPreparingDeliveryBtn');
+  const preparedDeliveryModal = document.getElementById('posPreparedDeliveryModal');
+  const preparedDeliveryModalClose = document.getElementById('posPreparedDeliveryModalClose');
   const form = document.getElementById('posCustomizeForm');
   const closeBtn = document.getElementById('posModalCloseBtn');
   const backdrop = document.getElementById('posModalBackdrop');
@@ -1101,6 +1283,29 @@ async function initPosMenu() {
     const itemButton = event.target.closest('[data-pos-item-id]');
     if (!itemButton) return;
     openPosCustomizeModal(itemButton.dataset.posItemId);
+  });
+
+  preparingDeliveryToggle?.addEventListener('click', () => {
+    const expanded = preparingDeliveryToggle.getAttribute('aria-expanded') === 'true';
+    setPosPreparingDeliveryDropdownExpanded(!expanded);
+  });
+
+  preparingDeliveryList?.addEventListener('click', (event) => {
+    if (!(event.target instanceof Element)) return;
+    const preparedButton = event.target.closest('[data-pos-prepared-delivery-id]');
+    if (!preparedButton) return;
+    markPosDeliveryOrderPrepared(preparedButton.dataset.posPreparedDeliveryId, preparedButton);
+  });
+
+  preparingDeliveryRefreshBtn?.addEventListener('click', () => {
+    loadPosPreparingDeliveryOrders();
+  });
+
+  preparedDeliveryModalClose?.addEventListener('click', closePosPreparedDeliveryModal);
+  preparedDeliveryModal?.addEventListener('click', (event) => {
+    if (event.target === preparedDeliveryModal) {
+      closePosPreparedDeliveryModal();
+    }
   });
 
   closeBtn?.addEventListener('click', closePosCustomizeModal);
@@ -1275,7 +1480,6 @@ function populateDeliveryDetailsForm() {
   const details = {
     delivery_address: '',
     note: '',
-    ready_for_queue: false,
     ...storedDetails,
     customer_name: storedDetails.customer_name || '',
     customer_phone: storedDetails.customer_phone || '',
@@ -1295,10 +1499,6 @@ function populateDeliveryDetailsForm() {
     }
   });
 
-  const readyForQueue = document.getElementById('deliveryReadyForQueue');
-  if (readyForQueue) {
-    readyForQueue.checked = details.ready_for_queue !== false;
-  }
 }
 
 function collectDeliveryDetailsForm() {
@@ -1307,7 +1507,6 @@ function collectDeliveryDetailsForm() {
     customer_phone: document.getElementById('deliveryCustomerPhone')?.value.trim() || '',
     delivery_address: document.getElementById('deliveryAddress')?.value.trim() || '',
     note: document.getElementById('deliveryOrderNote')?.value.trim() || '',
-    ready_for_queue: Boolean(document.getElementById('deliveryReadyForQueue')?.checked),
   };
   setPosDeliveryDetails(details);
   return details;
@@ -1414,20 +1613,16 @@ function initPosPayment() {
         paymentOrderCode.textContent = orderCode;
       }
       if (successTitle) {
-        successTitle.textContent = isDelivery
-          ? deliveryDetails?.ready_for_queue
-            ? 'Ready For Delivery'
-            : 'Order In Preparation'
-          : 'Order Completed';
+        successTitle.textContent = isDelivery ? 'Order In Preparation' : 'Order Completed';
       }
       if (successText) {
         successText.textContent = isDelivery
-          ? `${orderCode} delivery order created with ${getPosPaymentLabel(selectedPayment)}${deliveryDetails?.ready_for_queue ? ' and sent to delivery queue' : ' and kept in preparation'}.`
+          ? `${orderCode} delivery order created with ${getPosPaymentLabel(selectedPayment)} and kept in preparation.`
           : `${orderCode} completed successfully by ${getPosPaymentLabel(selectedPayment)}.`;
       }
       setPosPaymentStatus(
         isDelivery
-          ? `Delivery order created${deliveryDetails?.ready_for_queue ? ' and sent to delivery queue' : ' and kept in preparation'}.`
+          ? 'Delivery order created and kept in preparation.'
           : 'Order completed successfully.',
         'success'
       );
@@ -2457,6 +2652,7 @@ const FINANCE_STATE = {
   records: [],
   recordPage: 1,
   expensePage: 1,
+  searchQuery: '',
 };
 
 const FINANCE_RECORD_PAGE_SIZE = 5;
@@ -2555,6 +2751,50 @@ function renderFinanceSummary(summary) {
   setFinanceText('finance-net-profit', formatVnd(summary?.net_profit || 0));
 }
 
+function normalizeFinanceSearchText(value) {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function matchesFinanceSearch(values) {
+  const query = normalizeFinanceSearchText(FINANCE_STATE.searchQuery);
+  if (!query) return true;
+  return values.some((value) => normalizeFinanceSearchText(value).includes(query));
+}
+
+function getVisibleFinanceExpenses() {
+  return FINANCE_STATE.expenses.filter((expense) => matchesFinanceSearch([
+    expense.id,
+    expense.category,
+    formatFinanceLabel(expense.category),
+    expense.description,
+    expense.amount,
+    formatVnd(expense.amount),
+    expense.expense_month,
+    formatFinanceMonth(expense.expense_month),
+    expense.invoice_photo_url,
+  ]));
+}
+
+function getVisibleFinanceRecords() {
+  return FINANCE_STATE.records.filter((record) => matchesFinanceSearch([
+    record.id,
+    record.record_type,
+    formatFinanceLabel(record.record_type),
+    record.source_type,
+    formatFinanceLabel(record.source_type),
+    record.source_id,
+    record.amount,
+    formatVnd(record.amount),
+    record.record_date,
+    formatFinanceDate(record.record_date),
+    record.locked ? 'locked' : 'open',
+  ]));
+}
+
 function getFinanceExpenseTotalPages(expenseCount) {
   return Math.max(1, Math.ceil(expenseCount / FINANCE_EXPENSE_PAGE_SIZE));
 }
@@ -2585,7 +2825,7 @@ function renderFinanceExpenses(expenses) {
     updateFinanceExpensePagination(0);
     body.innerHTML = `
       <tr>
-        <td class="px-6 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="6">No expenses found for this month.</td>
+        <td class="px-6 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="6">${FINANCE_STATE.searchQuery ? 'No expenses match your search.' : 'No expenses found for this month.'}</td>
       </tr>
     `;
     return;
@@ -2652,7 +2892,7 @@ function renderFinanceRecords(records) {
     updateFinanceRecordPagination(0);
     body.innerHTML = `
       <tr>
-        <td class="px-6 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="6">No financial records found for this month.</td>
+        <td class="px-6 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="6">${FINANCE_STATE.searchQuery ? 'No financial records match your search.' : 'No financial records found for this month.'}</td>
       </tr>
     `;
     return;
@@ -2701,7 +2941,7 @@ function renderFinanceBreakdown(expenses) {
   setFinanceText('finance-breakdown-total', formatVnd(total));
 
   if (!total) {
-    list.innerHTML = '<p class="text-sm font-bold text-on-surface-variant">No expenses for this month.</p>';
+    list.innerHTML = `<p class="text-sm font-bold text-on-surface-variant">${FINANCE_STATE.searchQuery ? 'No expense categories match your search.' : 'No expenses for this month.'}</p>`;
     return;
   }
 
@@ -2726,10 +2966,12 @@ function renderFinanceBreakdown(expenses) {
 }
 
 function renderFinancePage() {
+  const visibleExpenses = getVisibleFinanceExpenses();
+  const visibleRecords = getVisibleFinanceRecords();
   renderFinanceSummary(FINANCE_STATE.summary || {});
-  renderFinanceExpenses(FINANCE_STATE.expenses);
-  renderFinanceRecords(FINANCE_STATE.records);
-  renderFinanceBreakdown(FINANCE_STATE.expenses);
+  renderFinanceExpenses(visibleExpenses);
+  renderFinanceRecords(visibleRecords);
+  renderFinanceBreakdown(visibleExpenses);
 }
 
 function renderFinanceLoading() {
@@ -2834,6 +3076,7 @@ async function initFinancialManagement() {
   const recordNextBtn = document.getElementById('finance-record-next');
   const expensePrevBtn = document.getElementById('finance-expense-prev');
   const expenseNextBtn = document.getElementById('finance-expense-next');
+  const searchInput = document.getElementById('topbar-search');
 
   const initialMonth = getCurrentFinanceMonth();
   if (periodInput) periodInput.value = initialMonth;
@@ -2913,25 +3156,37 @@ async function initFinancialManagement() {
   });
 
   exportBtn?.addEventListener('click', downloadFinanceCsv);
+  searchInput?.addEventListener('input', () => {
+    FINANCE_STATE.searchQuery = searchInput.value || '';
+    FINANCE_STATE.expensePage = 1;
+    FINANCE_STATE.recordPage = 1;
+    renderFinancePage();
+  });
+  searchInput?.addEventListener('focus', () => {
+    searchInput.parentElement?.classList.add('scale-[1.02]');
+  });
+  searchInput?.addEventListener('blur', () => {
+    searchInput.parentElement?.classList.remove('scale-[1.02]');
+  });
   expensePrevBtn?.addEventListener('click', () => {
     if (FINANCE_STATE.expensePage <= 1) return;
     FINANCE_STATE.expensePage -= 1;
-    renderFinanceExpenses(FINANCE_STATE.expenses);
+    renderFinanceExpenses(getVisibleFinanceExpenses());
   });
   expenseNextBtn?.addEventListener('click', () => {
-    if (FINANCE_STATE.expensePage >= getFinanceExpenseTotalPages(FINANCE_STATE.expenses.length)) return;
+    if (FINANCE_STATE.expensePage >= getFinanceExpenseTotalPages(getVisibleFinanceExpenses().length)) return;
     FINANCE_STATE.expensePage += 1;
-    renderFinanceExpenses(FINANCE_STATE.expenses);
+    renderFinanceExpenses(getVisibleFinanceExpenses());
   });
   recordPrevBtn?.addEventListener('click', () => {
     if (FINANCE_STATE.recordPage <= 1) return;
     FINANCE_STATE.recordPage -= 1;
-    renderFinanceRecords(FINANCE_STATE.records);
+    renderFinanceRecords(getVisibleFinanceRecords());
   });
   recordNextBtn?.addEventListener('click', () => {
-    if (FINANCE_STATE.recordPage >= getFinanceRecordTotalPages(FINANCE_STATE.records.length)) return;
+    if (FINANCE_STATE.recordPage >= getFinanceRecordTotalPages(getVisibleFinanceRecords().length)) return;
     FINANCE_STATE.recordPage += 1;
-    renderFinanceRecords(FINANCE_STATE.records);
+    renderFinanceRecords(getVisibleFinanceRecords());
   });
 
   await loadFinanceData(initialMonth);

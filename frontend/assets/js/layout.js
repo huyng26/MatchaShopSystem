@@ -62,9 +62,6 @@ const SIDEBAR_HTML = `
     </a>
   </nav>
   <div class="pt-6 border-t border-[#06440c]/80 space-y-1">
-    <a class="${_NAV_INACTIVE}" data-nav="settings" href="settings.html">
-      <span class="material-symbols-outlined">settings</span><span>Settings</span>
-    </a>
     <a class="${_NAV_INACTIVE}" href="#" id="app-logout-link">
       <span class="material-symbols-outlined">logout</span><span>Log out</span>
     </a>
@@ -154,7 +151,6 @@ const LAYOUT_NAV_PAGE = {
   customers: 'customer-list',
   employees: 'employee-list',
   account: 'account-list',
-  settings: 'settings',
 };
 
 // ─── Frontend Auth Guard ─────────────────────────────────────────────────────
