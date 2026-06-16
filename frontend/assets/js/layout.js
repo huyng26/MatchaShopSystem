@@ -17,6 +17,31 @@ const LAYOUT_ROLE_LABELS = {
   shipper: 'Shipper',
 };
 
+const LAYOUT_NOTIFICATION_API_BASE_URL =
+  window.MATCHA_API_BASE_URL || 'http://localhost:8000/api/v1';
+const LAYOUT_NOTIFICATION_POLL_INTERVAL_MS = 10000;
+const LAYOUT_NOTIFICATION_LIMIT = 20;
+const LAYOUT_NOTIFICATION_TOAST_DURATION_MS = 5000;
+
+const LAYOUT_NOTIFICATION_TYPE_ICONS = {
+  'order.ready_for_delivery': 'local_shipping',
+  'delivery.trip_assigned': 'route',
+  'delivery.order_failed': 'warning',
+  'delivery.cod_discrepancy': 'priority_high',
+  'delivery.order_delivered': 'task_alt',
+  'delivery.trip_completed': 'done_all',
+  'inventory.low_stock': 'inventory_2',
+  'product.created': 'add_circle',
+  'product.updated': 'edit',
+  'product.availability_updated': 'toggle_on',
+};
+
+const LAYOUT_NOTIFICATION_SEVERITY_LABELS = {
+  info: 'Info',
+  warning: 'Warning',
+  critical: 'Critical',
+};
+
 // ─── Sidebar Template ────────────────────────────────────────────────────────
 const SIDEBAR_HTML = `
   <div class="flex items-center gap-3 mb-10 px-2">
@@ -92,10 +117,23 @@ function buildTopbarHTML(config) {
       ${searchBar}
     </div>
     <div class="flex items-center gap-3">
-      <button class="hover:bg-surface-container rounded-full p-2.5 transition-all relative">
-        <span class="material-symbols-outlined text-[#002c04]">notifications</span>
-        <span class="absolute top-2 right-2 w-2 h-2 bg-secondary rounded-full border-2 border-surface"></span>
-      </button>
+      <div class="notification-menu" id="notification-menu">
+        <button class="notification-trigger" id="notification-trigger" type="button"
+          aria-label="Open notifications" aria-haspopup="true" aria-expanded="false">
+          <span class="material-symbols-outlined text-[#002c04]">notifications</span>
+          <span class="notification-badge" id="notification-badge" hidden>0</span>
+        </button>
+        <section class="notification-panel" id="notification-panel" aria-label="Notifications" hidden>
+          <div class="notification-panel-header">
+            <div>
+              <p class="notification-panel-title">Notifications</p>
+              <p class="notification-panel-subtitle" id="notification-panel-subtitle">Recent operational alerts</p>
+            </div>
+            <button class="notification-mark-all" id="notification-mark-all" type="button">Mark all read</button>
+          </div>
+          <div class="notification-list custom-scrollbar" id="notification-list"></div>
+        </section>
+      </div>
       <div class="h-8 w-px bg-outline-variant/30 mx-1"></div>
       <div class="flex items-center gap-3">
         <div class="text-right">
@@ -167,6 +205,503 @@ function getLayoutStoredUserRole() {
   } catch (error) {
     return '';
   }
+}
+
+function getLayoutNotificationAuthHeaders() {
+  const token = localStorage.getItem('matcha_access_token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+function hasLayoutNotificationAccessToken() {
+  return Boolean(localStorage.getItem('matcha_access_token'));
+}
+
+async function requestLayoutNotificationApi(path, options = {}) {
+  const response = await fetch(`${LAYOUT_NOTIFICATION_API_BASE_URL}${path}`, {
+    ...options,
+    headers: {
+      ...getLayoutNotificationAuthHeaders(),
+      ...(options.headers || {}),
+    },
+  });
+  const payload = await response.json().catch(() => null);
+
+  if (response.status === 401 || response.status === 403) {
+    const error = new Error('Notification access expired');
+    error.status = response.status;
+    throw error;
+  }
+
+  if (!response.ok || payload?.success === false) {
+    throw new Error(payload?.message || 'Notification request failed');
+  }
+
+  return payload?.data ?? payload;
+}
+
+function escapeLayoutNotificationHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function formatLayoutNotificationTime(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+
+  const diffMs = Date.now() - date.getTime();
+  const minuteMs = 60 * 1000;
+  const hourMs = 60 * minuteMs;
+  const dayMs = 24 * hourMs;
+
+  if (diffMs < minuteMs) return 'Just now';
+  if (diffMs < hourMs) return `${Math.max(1, Math.floor(diffMs / minuteMs))}m ago`;
+  if (diffMs < dayMs) return `${Math.floor(diffMs / hourMs)}h ago`;
+
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+function getLayoutNotificationIcon(notification) {
+  return LAYOUT_NOTIFICATION_TYPE_ICONS[notification?.type] || 'notifications';
+}
+
+function getLayoutNotificationSeverityLabel(notification) {
+  return LAYOUT_NOTIFICATION_SEVERITY_LABELS[notification?.severity] || 'Info';
+}
+
+function normalizeLayoutNotificationActionUrl(actionUrl) {
+  const value = String(actionUrl || '').trim();
+  if (!value) return '';
+  if (/^https?:\/\//i.test(value)) return '';
+  if (value.includes('/') || value.includes('\\')) return '';
+  if (!/^[A-Za-z0-9_.-]+\.html([?#].*)?$/.test(value)) return '';
+  return value;
+}
+
+function renderLayoutNotificationItem(notification) {
+  const unreadClass = notification.read_at ? '' : ' is-unread';
+  const severity = escapeLayoutNotificationHtml(notification.severity || 'info');
+  const title = escapeLayoutNotificationHtml(notification.title || 'Notification');
+  const message = escapeLayoutNotificationHtml(notification.message || '');
+  const time = escapeLayoutNotificationHtml(formatLayoutNotificationTime(notification.created_at));
+  const typeLabel = escapeLayoutNotificationHtml(getLayoutNotificationSeverityLabel(notification));
+  const icon = escapeLayoutNotificationHtml(getLayoutNotificationIcon(notification));
+
+  return `
+    <button class="notification-item${unreadClass}" type="button"
+      data-notification-id="${escapeLayoutNotificationHtml(notification.id)}">
+      <span class="notification-item-icon notification-item-icon--${severity}">
+        <span class="material-symbols-outlined">${icon}</span>
+      </span>
+      <span class="notification-item-body">
+        <span class="notification-item-meta">
+          <span>${typeLabel}</span>
+          <span>${time}</span>
+        </span>
+        <span class="notification-item-title">${title}</span>
+        <span class="notification-item-message">${message}</span>
+      </span>
+    </button>
+  `;
+}
+
+function renderLayoutNotificationList(listEl, notifications, stateText = '') {
+  if (!listEl) return;
+
+  if (stateText) {
+    listEl.innerHTML = `<div class="notification-empty">${escapeLayoutNotificationHtml(stateText)}</div>`;
+    return;
+  }
+
+  if (!notifications.length) {
+    listEl.innerHTML = `
+      <div class="notification-empty">
+        <span class="material-symbols-outlined">notifications_off</span>
+        <span>No notifications yet</span>
+      </div>
+    `;
+    return;
+  }
+
+  listEl.innerHTML = notifications.map(renderLayoutNotificationItem).join('');
+}
+
+function updateLayoutNotificationBadge(badgeEl, subtitleEl, count) {
+  const unreadCount = Number(count) || 0;
+  if (badgeEl) {
+    if (unreadCount <= 0) {
+      badgeEl.hidden = true;
+      badgeEl.textContent = '0';
+    } else {
+      badgeEl.hidden = false;
+      badgeEl.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+    }
+  }
+
+  if (subtitleEl) {
+    subtitleEl.textContent =
+      unreadCount > 0
+        ? `${unreadCount} unread notification${unreadCount === 1 ? '' : 's'}`
+        : 'Recent operational alerts';
+  }
+}
+
+function ensureLayoutNotificationToastContainer() {
+  let container = document.getElementById('notification-toast-stack');
+  if (container) return container;
+
+  container = document.createElement('div');
+  container.className = 'notification-toast-stack';
+  container.id = 'notification-toast-stack';
+  container.setAttribute('aria-live', 'polite');
+  container.setAttribute('aria-atomic', 'false');
+  document.body.appendChild(container);
+  return container;
+}
+
+function rememberLayoutNotificationIds(state, notifications) {
+  notifications.forEach((notification) => {
+    if (notification?.id) {
+      state.seenNotificationIds.add(String(notification.id));
+    }
+  });
+}
+
+function showLayoutNotificationToast(container, notification, onActivate) {
+  if (!container || !notification?.id) return;
+
+  const severity = escapeLayoutNotificationHtml(notification.severity || 'info');
+  const icon = escapeLayoutNotificationHtml(getLayoutNotificationIcon(notification));
+  const severityLabel = escapeLayoutNotificationHtml(
+    getLayoutNotificationSeverityLabel(notification),
+  );
+  const title = escapeLayoutNotificationHtml(notification.title || 'Notification');
+  const message = escapeLayoutNotificationHtml(notification.message || '');
+  const time = escapeLayoutNotificationHtml(
+    formatLayoutNotificationTime(notification.created_at),
+  );
+
+  const toast = document.createElement('button');
+  toast.className = `notification-toast notification-toast--${severity}`;
+  toast.type = 'button';
+  toast.dataset.notificationId = String(notification.id);
+  toast.innerHTML = `
+    <span class="notification-toast-icon">
+      <span class="material-symbols-outlined">${icon}</span>
+    </span>
+    <span class="notification-toast-body">
+      <span class="notification-toast-meta">
+        <span>${severityLabel}</span>
+        <span>${time}</span>
+      </span>
+      <span class="notification-toast-title">${title}</span>
+      <span class="notification-toast-message">${message}</span>
+    </span>
+  `;
+
+  let closing = false;
+  const closeToast = () => {
+    if (closing) return;
+    closing = true;
+    toast.classList.remove('is-visible');
+    toast.classList.add('is-leaving');
+    window.setTimeout(() => {
+      toast.remove();
+    }, 260);
+  };
+
+  const hideTimer = window.setTimeout(closeToast, LAYOUT_NOTIFICATION_TOAST_DURATION_MS);
+
+  toast.addEventListener('click', () => {
+    window.clearTimeout(hideTimer);
+    closeToast();
+    onActivate(notification);
+  });
+
+  container.prepend(toast);
+  window.requestAnimationFrame(() => {
+    toast.classList.add('is-visible');
+  });
+}
+
+function stopLayoutNotificationPolling(state) {
+  if (state.pollTimer) {
+    window.clearInterval(state.pollTimer);
+    state.pollTimer = null;
+  }
+  state.stopped = true;
+}
+
+function initLayoutNotifications() {
+  const menu = document.getElementById('notification-menu');
+  const trigger = document.getElementById('notification-trigger');
+  const panel = document.getElementById('notification-panel');
+  const badge = document.getElementById('notification-badge');
+  const list = document.getElementById('notification-list');
+  const markAll = document.getElementById('notification-mark-all');
+  const subtitle = document.getElementById('notification-panel-subtitle');
+
+  if (!menu || !trigger || !panel || !badge || !list || !markAll) return;
+
+  const state = {
+    isOpen: false,
+    isPolling: false,
+    isCheckingNew: false,
+    isLoadingList: false,
+    pollTimer: null,
+    stopped: false,
+    notifications: [],
+    seenNotificationIds: new Set(),
+    baselineReady: false,
+    toastContainer: ensureLayoutNotificationToastContainer(),
+  };
+
+  const handleApiError = (error) => {
+    if (error?.status === 401 || error?.status === 403) {
+      stopLayoutNotificationPolling(state);
+      return;
+    }
+    console.error('Notification API failed:', error);
+  };
+
+  const activateNotification = async (notification, options = {}) => {
+    if (!notification?.id || !hasLayoutNotificationAccessToken()) return;
+
+    const actionUrl = normalizeLayoutNotificationActionUrl(notification.action_url);
+    try {
+      await requestLayoutNotificationApi(`/notifications/${notification.id}/read`, {
+        method: 'POST',
+      });
+      await refreshCount({ checkNew: false });
+      if (actionUrl) {
+        window.location.href = actionUrl;
+        return;
+      }
+      if (options.refreshList) {
+        await refreshList();
+      }
+    } catch (error) {
+      handleApiError(error);
+    }
+  };
+
+  const handleIncomingUnreadNotifications = (
+    notifications,
+    { showToasts = true } = {},
+  ) => {
+    const unreadNotifications = notifications.filter(
+      (notification) => notification?.id && !notification.read_at,
+    );
+    const newNotifications = unreadNotifications.filter(
+      (notification) =>
+        notification?.id && !state.seenNotificationIds.has(String(notification.id)),
+    );
+
+    rememberLayoutNotificationIds(state, unreadNotifications);
+
+    if (!state.baselineReady) {
+      state.baselineReady = true;
+      return;
+    }
+
+    if (showToasts && newNotifications.length) {
+      [...newNotifications].reverse().forEach((notification) => {
+        showLayoutNotificationToast(
+          state.toastContainer,
+          notification,
+          activateNotification,
+        );
+      });
+    }
+  };
+
+  const checkNewUnreadNotifications = async ({ showToasts = true } = {}) => {
+    if (state.stopped || state.isCheckingNew || !hasLayoutNotificationAccessToken()) return;
+    if (document.hidden) return;
+
+    state.isCheckingNew = true;
+    try {
+      const data = await requestLayoutNotificationApi(
+        `/notifications?unread_only=true&limit=${LAYOUT_NOTIFICATION_LIMIT}`,
+      );
+      handleIncomingUnreadNotifications(Array.isArray(data) ? data : [], {
+        showToasts,
+      });
+    } catch (error) {
+      handleApiError(error);
+    } finally {
+      state.isCheckingNew = false;
+    }
+  };
+
+  const refreshCount = async ({ checkNew = true } = {}) => {
+    if (state.stopped || state.isPolling || !hasLayoutNotificationAccessToken()) return;
+    if (document.hidden) return;
+
+    state.isPolling = true;
+    try {
+      const data = await requestLayoutNotificationApi('/notifications/unread-count');
+      updateLayoutNotificationBadge(badge, subtitle, data?.unread_count);
+      if (checkNew) {
+        await checkNewUnreadNotifications({ showToasts: true });
+      }
+    } catch (error) {
+      handleApiError(error);
+    } finally {
+      state.isPolling = false;
+    }
+  };
+
+  const refreshList = async () => {
+    if (state.stopped || state.isLoadingList || !hasLayoutNotificationAccessToken()) return;
+
+    state.isLoadingList = true;
+    if (!state.notifications.length) {
+      renderLayoutNotificationList(list, [], 'Loading notifications...');
+    }
+
+    try {
+      const data = await requestLayoutNotificationApi(
+        `/notifications?unread_only=false&limit=${LAYOUT_NOTIFICATION_LIMIT}`,
+      );
+      state.notifications = Array.isArray(data) ? data : [];
+      handleIncomingUnreadNotifications(state.notifications, {
+        showToasts: true,
+      });
+      rememberLayoutNotificationIds(state, state.notifications);
+      renderLayoutNotificationList(list, state.notifications);
+    } catch (error) {
+      handleApiError(error);
+      if (error?.status !== 401 && error?.status !== 403) {
+        renderLayoutNotificationList(list, [], 'Unable to load notifications.');
+      }
+    } finally {
+      state.isLoadingList = false;
+    }
+  };
+
+  if (!window.__matchaNotificationFetchPatched) {
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = async (input, options = {}) => {
+      const response = await originalFetch(input, options);
+      const requestUrl = typeof input === 'string' ? input : input?.url || '';
+      const requestMethod = String(options.method || input?.method || 'GET').toUpperCase();
+      const isMutatingRequest = !['GET', 'HEAD', 'OPTIONS'].includes(requestMethod);
+      const isAppApiRequest = requestUrl.includes('/api/v1/');
+      const isNotificationRequest = requestUrl.includes('/notifications');
+
+      if (
+        isMutatingRequest &&
+        isAppApiRequest &&
+        !isNotificationRequest &&
+        hasLayoutNotificationAccessToken()
+      ) {
+        window.setTimeout(() => {
+          refreshCount({ checkNew: true });
+        }, 500);
+      }
+
+      return response;
+    };
+    window.__matchaNotificationFetchPatched = true;
+  }
+
+  const openPanel = async () => {
+    state.isOpen = true;
+    panel.hidden = false;
+    trigger.setAttribute('aria-expanded', 'true');
+    await refreshList();
+  };
+
+  const closePanel = () => {
+    state.isOpen = false;
+    panel.hidden = true;
+    trigger.setAttribute('aria-expanded', 'false');
+  };
+
+  trigger.addEventListener('click', async () => {
+    if (state.isOpen) {
+      closePanel();
+      return;
+    }
+    await openPanel();
+  });
+
+  markAll.addEventListener('click', async () => {
+    if (!hasLayoutNotificationAccessToken()) return;
+    markAll.disabled = true;
+    try {
+      await requestLayoutNotificationApi('/notifications/read-all', { method: 'POST' });
+      state.notifications = state.notifications.map((notification) => ({
+        ...notification,
+        read_at: notification.read_at || new Date().toISOString(),
+      }));
+      rememberLayoutNotificationIds(state, state.notifications);
+      renderLayoutNotificationList(list, state.notifications);
+      updateLayoutNotificationBadge(badge, subtitle, 0);
+    } catch (error) {
+      handleApiError(error);
+    } finally {
+      markAll.disabled = false;
+    }
+  });
+
+  list.addEventListener('click', async (event) => {
+    const item = event.target.closest('[data-notification-id]');
+    if (!item || !hasLayoutNotificationAccessToken()) return;
+
+    const notificationId = item.dataset.notificationId;
+    const notification = state.notifications.find(
+      (current) => String(current.id) === String(notificationId),
+    );
+    const actionUrl = normalizeLayoutNotificationActionUrl(notification?.action_url);
+
+    item.disabled = true;
+    await activateNotification(
+      notification || { id: notificationId, action_url: actionUrl },
+      { refreshList: true },
+    );
+    if (document.body.contains(item)) {
+      item.disabled = false;
+    }
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!state.isOpen || menu.contains(event.target)) return;
+    closePanel();
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && state.isOpen) {
+      closePanel();
+      trigger.focus();
+    }
+  });
+
+  document.addEventListener('visibilitychange', async () => {
+    if (state.stopped || document.hidden) return;
+    await refreshCount();
+    if (state.isOpen) {
+      await refreshList();
+    }
+  });
+
+  if (!hasLayoutNotificationAccessToken()) return;
+
+  refreshCount();
+  state.pollTimer = window.setInterval(async () => {
+    await refreshCount();
+    if (state.isOpen) {
+      await refreshList();
+    }
+  }, LAYOUT_NOTIFICATION_POLL_INTERVAL_MS);
 }
 
 function canLayoutRoleAccessPage(role, page) {
@@ -244,6 +779,7 @@ function initLayout() {
   const topbar = document.getElementById('app-topbar');
   if (topbar) {
     topbar.innerHTML = buildTopbarHTML(config);
+    initLayoutNotifications();
   }
 }
 
