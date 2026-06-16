@@ -50,19 +50,19 @@
                 </div>
             </div>
             <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
-                <p class="text-xs font-label uppercase tracking-widest text-stone-400 mb-1">Gold Members</p>
-                <p id="gold-customers-stat" class="text-3xl font-serif font-bold text-primary">0</p>
-                <div class="mt-4 flex items-center text-xs text-tertiary-container font-bold">
-                    <span class="material-symbols-outlined text-sm mr-1" data-icon="military_tech">military_tech</span>
-                    1000+ points
-                </div>
-            </div>
-            <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
-                <p class="text-xs font-label uppercase tracking-widest text-stone-400 mb-1">Retention Rate</p>
-                <p id="active-customers-stat" class="text-3xl font-serif font-bold text-primary">0</p>
+                <p class="text-xs font-label uppercase tracking-widest text-stone-400 mb-1">Customers With Points</p>
+                <p id="point-customers-stat" class="text-3xl font-serif font-bold text-primary">0</p>
                 <div class="mt-4 flex items-center text-xs text-secondary font-bold">
                     <span class="material-symbols-outlined text-sm mr-1" data-icon="favorite">favorite</span>
                     Customers with points
+                </div>
+            </div>
+            <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
+                <p class="text-xs font-label uppercase tracking-widest text-stone-400 mb-1">Average Points</p>
+                <p id="average-points-stat" class="text-3xl font-serif font-bold text-primary">0</p>
+                <div class="mt-4 flex items-center text-xs text-stone-400">
+                    <span class="material-symbols-outlined text-sm mr-1" data-icon="monitoring">monitoring</span>
+                    Points per customer
                 </div>
             </div>
             <div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10">
@@ -88,10 +88,7 @@
                                 class="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-stone-400 font-label">
                                 Full Name</th>
                             <th
-                                class="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-stone-400 font-label">
-                                Membership Tier</th>
-                            <th
-                                class="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-stone-400 font-label text-right">
+                                class="px-6 py-4 text-center text-[10px] uppercase tracking-widest font-bold text-stone-400 font-label">
                                 Loyalty Points</th>
                             <th
                                 class="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-stone-400 font-label">
@@ -100,7 +97,7 @@
                     </thead>
                     <tbody id="customer-table-body" class="divide-y divide-surface-container">
                         <tr>
-                            <td class="px-6 py-8 text-center text-sm font-bold text-stone-500" colspan="5">Loading customers...</td>
+                            <td class="px-6 py-8 text-center text-sm font-bold text-stone-500" colspan="4">Loading customers...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -201,8 +198,8 @@
         const formStatus = document.getElementById('customer-form-status');
         const saveButton = document.getElementById('save-customer');
         const totalCustomersStat = document.getElementById('total-customers-stat');
-        const goldCustomersStat = document.getElementById('gold-customers-stat');
-        const activeCustomersStat = document.getElementById('active-customers-stat');
+        const pointCustomersStat = document.getElementById('point-customers-stat');
+        const averagePointsStat = document.getElementById('average-points-stat');
         const loyaltyPointsStat = document.getElementById('loyalty-points-stat');
         const pageSize = 5;
         let customersCache = [];
@@ -225,12 +222,6 @@
             if (!words.length) return 'CU';
             if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
             return `${words[0][0]}${words[words.length - 1][0]}`.toUpperCase();
-        };
-        const getTier = (points) => {
-            const loyaltyPoints = Number(points) || 0;
-            if (loyaltyPoints >= 1000) return { label: 'Gold', className: 'bg-amber-100 text-amber-800' };
-            if (loyaltyPoints >= 300) return { label: 'Silver', className: 'bg-stone-200 text-stone-700' };
-            return { label: 'Bronze', className: 'bg-orange-100 text-orange-800' };
         };
         const getTokenHeaders = () => {
             const token = localStorage.getItem('matcha_access_token');
@@ -274,8 +265,8 @@
         const renderStats = (customers) => {
             const totalPoints = customers.reduce((sum, customer) => sum + (Number(customer.loyalty_points) || 0), 0);
             totalCustomersStat.textContent = formatNumber(customers.length);
-            goldCustomersStat.textContent = formatNumber(customers.filter((customer) => Number(customer.loyalty_points) >= 1000).length);
-            activeCustomersStat.textContent = formatNumber(customers.filter((customer) => Number(customer.loyalty_points) > 0).length);
+            pointCustomersStat.textContent = formatNumber(customers.filter((customer) => Number(customer.loyalty_points) > 0).length);
+            averagePointsStat.textContent = formatNumber(customers.length ? Math.round(totalPoints / customers.length) : 0);
             loyaltyPointsStat.textContent = formatNumber(totalPoints);
         };
         const getTotalPages = (customerCount) => Math.max(1, Math.ceil(customerCount / pageSize));
@@ -298,7 +289,7 @@
                 updatePaginationControls(0);
                 tableBody.innerHTML = `
                     <tr>
-                        <td class="px-6 py-8 text-center text-sm font-bold text-stone-500" colspan="5">No customers found.</td>
+                        <td class="px-6 py-8 text-center text-sm font-bold text-stone-500" colspan="4">No customers found.</td>
                     </tr>
                 `;
                 return;
@@ -314,7 +305,6 @@
             updatePaginationControls(customers.length);
 
             pageCustomers.forEach((customer) => {
-                const tier = getTier(customer.loyalty_points);
                 const href = `customer_detail.html?id=${encodeURIComponent(customer.id)}`;
                 const row = document.createElement('tr');
                 row.className = 'hover:bg-surface-container-low/30 transition-colors group cursor-pointer';
@@ -334,13 +324,7 @@
                             </div>
                         </a>
                     </td>
-                    <td class="px-6 py-5">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${tier.className}">
-                            <span class="material-symbols-outlined text-sm mr-1" data-icon="stars" style="font-variation-settings: 'FILL' 1;">stars</span>
-                            ${tier.label}
-                        </span>
-                    </td>
-                    <td class="px-6 py-5 text-right font-bold text-primary text-sm">${escapeHtml(formatNumber(customer.loyalty_points))} pts</td>
+                    <td class="px-6 py-5 text-center font-bold text-primary text-sm">${escapeHtml(formatNumber(customer.loyalty_points))} pts</td>
                     <td class="px-6 py-5 text-stone-500 text-xs font-label">${escapeHtml(formatDate(customer.created_at))}</td>
                 `;
                 tableBody.appendChild(row);
@@ -360,7 +344,7 @@
                 renderStats([]);
                 tableBody.innerHTML = `
                     <tr>
-                        <td class="px-6 py-8 text-center text-sm font-bold text-error" colspan="5">Cannot load customers. Please sign in with an admin or cashier account and check the backend server.</td>
+                        <td class="px-6 py-8 text-center text-sm font-bold text-error" colspan="4">Cannot load customers. Please sign in with an admin or cashier account and check the backend server.</td>
                     </tr>
                 `;
             }

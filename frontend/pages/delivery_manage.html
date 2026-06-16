@@ -165,6 +165,22 @@
                         </tbody>
                     </table>
                 </div>
+                <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+                    <p id="delivery-trips-count" class="text-xs font-medium text-on-surface-variant">Loading trips...</p>
+                    <div class="flex items-center gap-2">
+                        <button id="delivery-trips-page-prev" type="button"
+                            class="flex h-8 w-8 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant transition-colors hover:bg-surface-container-highest disabled:cursor-not-allowed disabled:opacity-40"
+                            aria-label="Previous delivery trips page">
+                            <span class="material-symbols-outlined text-sm" data-icon="chevron_left">chevron_left</span>
+                        </button>
+                        <span id="delivery-trips-page-label" class="text-xs font-medium text-on-surface-variant">Page 1 of 1</span>
+                        <button id="delivery-trips-page-next" type="button"
+                            class="flex h-8 w-8 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant transition-colors hover:bg-surface-container-highest disabled:cursor-not-allowed disabled:opacity-40"
+                            aria-label="Next delivery trips page">
+                            <span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+                        </button>
+                    </div>
+                </div>
             </section>
 
             <section id="trip-detail-section" class="scroll-mt-28 rounded-xl bg-surface-container-lowest p-6 shadow-sm">
@@ -191,6 +207,10 @@
             const API_BASE_URL = window.MATCHA_API_BASE_URL || 'http://localhost:8000/api/v1';
             const queueBody = document.getElementById('delivery-queue-body');
             const tripsBody = document.getElementById('delivery-trips-body');
+            const tripsCount = document.getElementById('delivery-trips-count');
+            const previousTripsPageButton = document.getElementById('delivery-trips-page-prev');
+            const nextTripsPageButton = document.getElementById('delivery-trips-page-next');
+            const tripsPageLabel = document.getElementById('delivery-trips-page-label');
             const pageStatus = document.getElementById('delivery-page-status');
             const selectAllQueue = document.getElementById('select-all-queue');
             const suggestedBatches = document.getElementById('suggested-batches');
@@ -208,6 +228,8 @@
             let selectedTrip = null;
             let reconcileNotice = null;
             let deliverySearchQuery = '';
+            let currentTripsPage = 1;
+            const TRIPS_PAGE_SIZE = 5;
             const TRIP_DETAIL_POLL_INTERVAL_MS = 15000;
             const SHOP_ROUTE_POINT = window.MATCHA_SHOP_ROUTE_POINT;
 
@@ -657,16 +679,44 @@
                 });
             };
 
+            const getTripsTotalPages = (tripCount) => Math.max(1, Math.ceil(tripCount / TRIPS_PAGE_SIZE));
+
+            const updateTripsPaginationControls = (tripCount, startIndex, pageTripCount) => {
+                const totalPages = getTripsTotalPages(tripCount);
+                const showingStart = tripCount ? startIndex + 1 : 0;
+                const showingEnd = tripCount ? startIndex + pageTripCount : 0;
+
+                if (tripsCount) {
+                    tripsCount.textContent = tripCount
+                        ? `Showing ${showingStart}-${showingEnd} of ${tripCount} trip${tripCount === 1 ? '' : 's'}`
+                        : 'Showing 0 of 0 trips';
+                }
+                if (tripsPageLabel) {
+                    tripsPageLabel.textContent = `Page ${currentTripsPage} of ${totalPages}`;
+                }
+                if (previousTripsPageButton) {
+                    previousTripsPageButton.disabled = currentTripsPage <= 1;
+                }
+                if (nextTripsPageButton) {
+                    nextTripsPageButton.disabled = currentTripsPage >= totalPages;
+                }
+            };
+
             const renderTrips = () => {
                 tripsBody.innerHTML = '';
                 const visibleTrips = getVisibleTrips();
+                const totalPages = getTripsTotalPages(visibleTrips.length);
+                currentTripsPage = Math.min(Math.max(currentTripsPage, 1), totalPages);
+                const startIndex = (currentTripsPage - 1) * TRIPS_PAGE_SIZE;
+                const pageTrips = visibleTrips.slice(startIndex, startIndex + TRIPS_PAGE_SIZE);
+                updateTripsPaginationControls(visibleTrips.length, startIndex, pageTrips.length);
 
                 if (!visibleTrips.length) {
                     tripsBody.innerHTML = `<tr><td class="px-4 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="6">${deliverySearchQuery ? 'No delivery trips match your search.' : 'No delivery trips found.'}</td></tr>`;
                     return;
                 }
 
-                visibleTrips.forEach((trip) => {
+                pageTrips.forEach((trip) => {
                     const row = document.createElement('tr');
                     row.className = `hover:bg-surface-container-low ${selectedTrip?.id === trip.id ? 'bg-secondary-container/20' : ''}`;
                     row.innerHTML = `
@@ -1076,6 +1126,7 @@
             document.getElementById('refresh-delivery-data').addEventListener('click', () => refreshAll());
             topbarSearchInput?.addEventListener('input', () => {
                 deliverySearchQuery = topbarSearchInput.value || '';
+                currentTripsPage = 1;
                 renderQueue();
                 renderTrips();
                 renderShippers();
@@ -1089,7 +1140,18 @@
             });
             tripStatusFilter.addEventListener('change', () => {
                 selectedTrip = null;
+                currentTripsPage = 1;
                 refreshAll({ keepSelectedTrip: false });
+            });
+            previousTripsPageButton?.addEventListener('click', () => {
+                if (currentTripsPage <= 1) return;
+                currentTripsPage -= 1;
+                renderTrips();
+            });
+            nextTripsPageButton?.addEventListener('click', () => {
+                if (currentTripsPage >= getTripsTotalPages(getVisibleTrips().length)) return;
+                currentTripsPage += 1;
+                renderTrips();
             });
             selectAllQueue.addEventListener('change', () => {
                 document.querySelectorAll('.queue-order-checkbox:not(:disabled)').forEach((checkbox) => {

@@ -31,15 +31,10 @@
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
                 <!-- Profile Summary Card -->
                 <div
-                    class="lg:col-span-8 bg-surface-container-lowest rounded-xl p-8 shadow-[32px_0_64px_-12px_rgba(0,44,4,0.04)] flex flex-col md:flex-row gap-8 items-start">
+                    class="lg:col-span-12 bg-surface-container-lowest rounded-xl p-8 shadow-[32px_0_64px_-12px_rgba(0,44,4,0.04)] flex flex-col md:flex-row gap-8 items-start">
                     <div class="relative">
                         <div id="customer-avatar" class="w-32 h-32 rounded-2xl overflow-hidden bg-primary-fixed flex items-center justify-center text-on-primary-fixed text-4xl font-bold">
                             CU
-                        </div>
-                        <div
-                            id="customer-tier-badge"
-                            class="absolute -bottom-2 -right-2 bg-secondary text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter">
-                            Loading
                         </div>
                     </div>
                     <div class="flex-1">
@@ -81,30 +76,6 @@
                         </div>
                     </div>
                 </div>
-                <!-- Status Activity -->
-                <div class="lg:col-span-4 flex flex-col gap-4">
-                    <div class="bg-primary-container p-6 rounded-xl text-white relative overflow-hidden">
-                        <div class="relative z-10">
-                            <h3 class="text-emerald-200 text-[10px] font-bold uppercase tracking-widest mb-4">Next Tier
-                                Progress</h3>
-                            <p id="customer-next-tier" class="text-xl font-serif mb-2">Loading tier</p>
-                            <div class="w-full bg-white/10 h-1.5 rounded-full overflow-hidden mb-2">
-                                <div id="customer-tier-progress" class="bg-secondary-container h-full" style="width: 0%"></div>
-                            </div>
-                            <p id="customer-tier-copy" class="text-xs text-emerald-100/70">Loading loyalty progress</p>
-                        </div>
-                        <span class="material-symbols-outlined absolute -bottom-4 -right-4 text-white/5 text-[120px]"
-                            style="font-variation-settings: 'FILL' 1;">eco</span>
-                    </div>
-                    <div class="bg-surface-container-high p-6 rounded-xl flex-1 flex items-center justify-between">
-                        <div>
-                            <p class="text-[10px] uppercase font-bold text-stone-500 mb-1">Last Active</p>
-                            <p id="customer-last-active" class="font-bold text-primary">Loading...</p>
-                        </div>
-                        <span
-                            class="w-3 h-3 bg-secondary rounded-full animate-pulse shadow-[0_0_12px_rgba(59,166,51,0.5)]"></span>
-                    </div>
-                </div>
             </div>
             <!-- Bento Information Layout -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
@@ -135,14 +106,6 @@
                                 <div>
                                     <p class="text-[10px] uppercase font-bold text-stone-400">Address</p>
                                     <p id="customer-address" class="text-sm font-semibold text-primary">--</p>
-                                </div>
-                            </div>
-                            <div class="flex items-start gap-4">
-                                <span
-                                    class="material-symbols-outlined text-secondary bg-secondary/5 p-2 rounded-lg">military_tech</span>
-                                <div>
-                                    <p class="text-[10px] uppercase font-bold text-stone-400">Loyalty Tier</p>
-                                    <p id="customer-tier-label" class="text-sm font-semibold text-primary">--</p>
                                 </div>
                             </div>
                             <div class="flex items-start gap-4">
@@ -307,36 +270,6 @@
             if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
             return `${words[0][0]}${words[words.length - 1][0]}`.toUpperCase();
         };
-        const getTier = (points) => {
-            const loyaltyPoints = Number(points) || 0;
-            if (loyaltyPoints >= 1000) {
-                return {
-                    label: 'Gold',
-                    nextLabel: 'Gold Tier',
-                    progress: 100,
-                    copy: `${formatNumber(loyaltyPoints)} loyalty points`,
-                    badgeClass: 'bg-amber-500 text-white',
-                };
-            }
-            if (loyaltyPoints >= 300) {
-                const progress = Math.min(99, Math.round((loyaltyPoints / 1000) * 100));
-                return {
-                    label: 'Silver',
-                    nextLabel: 'Gold Tier',
-                    progress,
-                    copy: `${formatNumber(1000 - loyaltyPoints)} points until Gold`,
-                    badgeClass: 'bg-stone-400 text-white',
-                };
-            }
-            const progress = Math.min(99, Math.round((loyaltyPoints / 300) * 100));
-            return {
-                label: 'Bronze',
-                nextLabel: 'Silver Tier',
-                progress,
-                copy: `${formatNumber(300 - loyaltyPoints)} points until Silver`,
-                badgeClass: 'bg-orange-500 text-white',
-            };
-        };
         const getStatusClass = (status) => {
             const normalized = String(status || '').toLowerCase();
             if (['completed', 'paid', 'done'].includes(normalized)) return 'bg-secondary/10 text-secondary';
@@ -473,36 +406,22 @@
                 });
         };
         const renderCustomer = (customer, orders) => {
-            const tier = getTier(customer.loyalty_points);
             const totalSpent = orders.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0);
             const averageOrder = orders.length ? totalSpent / orders.length : 0;
-            const latestOrderDate = orders
-                .map((order) => order.created_at)
-                .filter(Boolean)
-                .sort((first, second) => new Date(second) - new Date(first))[0];
-            const lastActive = latestOrderDate || customer.updated_at || customer.created_at;
             const note = customer.note || 'No note available.';
 
             document.getElementById('customer-avatar').textContent = getInitials(customer.name);
-            const tierBadge = document.getElementById('customer-tier-badge');
-            tierBadge.textContent = tier.label;
-            tierBadge.className = `absolute -bottom-2 -right-2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter ${tier.badgeClass}`;
             setText('customer-name-heading', customer.name || 'Unnamed customer');
             setText('customer-id-label', customer.id || '--');
             setText('customer-loyalty-points', `${formatNumber(customer.loyalty_points)} pts`);
             setText('customer-total-spent', formatCurrency(totalSpent));
             setText('customer-total-orders', formatNumber(orders.length));
             setText('customer-average-order', formatCurrency(averageOrder));
-            setText('customer-next-tier', tier.nextLabel);
-            setText('customer-tier-copy', tier.copy);
-            setText('customer-last-active', formatDate(lastActive));
             setText('customer-phone', customer.phone || '--');
             setText('customer-note-summary', note);
             setText('customer-address', customer.address || '--');
-            setText('customer-tier-label', tier.label);
             setText('customer-registered', formatDate(customer.created_at));
             setText('customer-note', note);
-            document.getElementById('customer-tier-progress').style.width = `${tier.progress}%`;
         };
         const showLoadError = (message) => {
             setText('customer-name-heading', 'Cannot load customer');
