@@ -1,5 +1,8 @@
 from enum import Enum
 
+SHOP_LATITUDE = 21.006237
+SHOP_LONGITUDE = 105.843127
+
 
 class UserRole(str, Enum):
     ADMIN = "admin"

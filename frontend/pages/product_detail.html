@@ -206,6 +206,14 @@
         }[character]));
 
         const formatPriceValue = (value) => new Intl.NumberFormat('vi-VN').format(Number(value) || 0);
+        const formatQuantityPerServingValue = (value) => {
+            const text = String(value ?? '').trim();
+            if (!text || !text.includes('.')) return text;
+
+            return text
+                .replace(/(\.\d*?[1-9])0+$/, '$1')
+                .replace(/\.0+$/, '');
+        };
         const parsePriceValue = (value) => {
             const normalized = String(value || '').trim();
             if (!normalized) return 0;
@@ -389,7 +397,7 @@
                 <label class="space-y-2">
                     <span class="text-xs font-bold text-on-surface-variant">Quantity per serving</span>
                     <input class="recipe-ingredient-quantity w-full rounded-xl border-outline bg-surface px-3 py-2 text-sm focus:border-secondary focus:ring-secondary"
-                        type="number" min="0.001" step="0.001" value="${escapeHtml(item.quantity_per_serving ?? '')}" />
+                        type="number" min="0.001" step="0.001" value="${escapeHtml(formatQuantityPerServingValue(item.quantity_per_serving))}" />
                 </label>
                 <button type="button"
                     class="remove-recipe-ingredient mt-6 flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant hover:bg-error-container/30 hover:text-error"

@@ -4,6 +4,8 @@ from typing import Any
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.core.constants import SHOP_LATITUDE, SHOP_LONGITUDE
+
 
 class Settings(BaseSettings):
     app_name: str = "Matcha Shop Backend"
@@ -18,8 +20,8 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
     shop_timezone: str = "Asia/Ho_Chi_Minh"
-    shop_latitude: float = 21.006237
-    shop_longitude: float = 105.843127
+    shop_latitude: float = SHOP_LATITUDE
+    shop_longitude: float = SHOP_LONGITUDE
     google_maps_api_key: str | None = None
     openrouteservice_api_key: str | None = None
     maps_provider: str = "openrouteservice"

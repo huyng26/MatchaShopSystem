@@ -90,6 +90,8 @@ async def test_geocode_address_returns_openrouteservice_result(monkeypatch):
             openrouteservice_api_key="key",
             maps_request_timeout_seconds=1,
             maps_provider="openrouteservice",
+            shop_latitude=21.006237,
+            shop_longitude=105.843127,
         ),
     )
     monkeypatch.setattr(map_service.httpx, "AsyncClient", FakeOpenRouteServiceClient)
@@ -102,6 +104,63 @@ async def test_geocode_address_returns_openrouteservice_result(monkeypatch):
     assert result.place_id == "ors-place-123"
     assert result.provider == "openrouteservice"
     assert result.status == "OK"
+
+
+@pytest.mark.asyncio
+async def test_geocode_address_openrouteservice_prefers_candidate_near_shop(
+    monkeypatch,
+):
+    class MultiCandidateOpenRouteServiceClient(FakeAsyncClient):
+        async def get(self, url, params, headers=None):
+            assert params["focus.point.lat"] == 21.006237
+            assert params["focus.point.lon"] == 105.843127
+            assert params["size"] == map_service.OPENROUTESERVICE_GEOCODE_CANDIDATE_LIMIT
+            return FakeResponse(
+                {
+                    "features": [
+                        {
+                            "geometry": {"coordinates": [106.6934, 10.7829]},
+                            "properties": {
+                                "label": "100 Truong Dinh, TP.HCM, Viet Nam",
+                                "id": "ors-hcm",
+                                "confidence": 0.94,
+                            },
+                        },
+                        {
+                            "geometry": {"coordinates": [105.8429, 21.0008]},
+                            "properties": {
+                                "label": "100 Truong Dinh, Ha Noi, Viet Nam",
+                                "id": "ors-hanoi",
+                                "confidence": 0.9,
+                            },
+                        },
+                    ],
+                }
+            )
+
+    monkeypatch.setattr(
+        map_service,
+        "get_settings",
+        lambda: SimpleNamespace(
+            openrouteservice_api_key="key",
+            maps_request_timeout_seconds=1,
+            maps_provider="openrouteservice",
+            shop_latitude=21.006237,
+            shop_longitude=105.843127,
+        ),
+    )
+    monkeypatch.setattr(
+        map_service.httpx,
+        "AsyncClient",
+        MultiCandidateOpenRouteServiceClient,
+    )
+
+    result = await map_service.geocode_address("100 Truong Dinh, Ha Noi")
+
+    assert result.latitude == Decimal("21.0008000")
+    assert result.longitude == Decimal("105.8429000")
+    assert result.formatted_address == "100 Truong Dinh, Ha Noi, Viet Nam"
+    assert result.place_id == "ors-hanoi"
 
 
 @pytest.mark.asyncio

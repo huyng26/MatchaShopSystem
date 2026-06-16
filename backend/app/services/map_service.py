@@ -6,6 +6,7 @@ from typing import Any
 import httpx
 
 from app.core.config import get_settings
+from app.core.constants import SHOP_LATITUDE, SHOP_LONGITUDE
 from app.services.errors import ServiceError
 from app.utils.distance import haversine_distance_km
 
@@ -40,6 +41,7 @@ OPENROUTESERVICE_GEOCODE_URL = "https://api.openrouteservice.org/geocode/search"
 OPENROUTESERVICE_MATRIX_URL = "https://api.openrouteservice.org/v2/matrix/driving-car"
 FALLBACK_SPEED_KMPH = 25.0
 MIN_OPENROUTESERVICE_CONFIDENCE = 0.6
+OPENROUTESERVICE_GEOCODE_CANDIDATE_LIMIT = 5
 
 
 async def geocode_address(address: str) -> GeocodeResult:
@@ -85,7 +87,9 @@ async def _geocode_address_openrouteservice(address: str, settings: Any) -> Geoc
     params = {
         "text": address,
         "boundary.country": "VN",
-        "size": 1,
+        "focus.point.lat": getattr(settings, "shop_latitude", SHOP_LATITUDE),
+        "focus.point.lon": getattr(settings, "shop_longitude", SHOP_LONGITUDE),
+        "size": OPENROUTESERVICE_GEOCODE_CANDIDATE_LIMIT,
         "lang": "vi",
     }
     headers = {"Authorization": api_key, "Accept": "application/json"}
@@ -109,20 +113,13 @@ async def _geocode_address_openrouteservice(address: str, settings: Any) -> Geoc
     if not features:
         raise ServiceError("geocoding_no_results", status_code=422)
 
-    result = features[0]
+    result = _best_openrouteservice_geocode_result(features, settings)
     geometry = result.get("geometry") or {}
     coordinates = geometry.get("coordinates") or []
     if len(coordinates) < 2:
         raise ServiceError("geocoding_missing_coordinates", status_code=422)
 
     properties = result.get("properties") or {}
-    confidence = _optional_float(properties.get("confidence"))
-    if confidence is not None and confidence < MIN_OPENROUTESERVICE_CONFIDENCE:
-        raise ServiceError(
-            "geocoding_low_confidence",
-            status_code=422,
-            context={"provider_confidence": confidence},
-        )
 
     return GeocodeResult(
         latitude=_decimal_coordinate(coordinates[1]),
@@ -315,6 +312,51 @@ def _best_google_geocode_result(results: list[dict[str, Any]]) -> dict[str, Any]
         if not result.get("partial_match"):
             return result
     raise ServiceError("geocoding_ambiguous_address", status_code=422)
+
+
+def _best_openrouteservice_geocode_result(
+    features: list[dict[str, Any]],
+    settings: Any,
+) -> dict[str, Any]:
+    shop_latitude = float(getattr(settings, "shop_latitude", SHOP_LATITUDE))
+    shop_longitude = float(getattr(settings, "shop_longitude", SHOP_LONGITUDE))
+    candidates: list[tuple[float, dict[str, Any]]] = []
+    low_confidence_values: list[float] = []
+
+    for feature in features:
+        coordinates = (feature.get("geometry") or {}).get("coordinates") or []
+        if len(coordinates) < 2:
+            continue
+
+        properties = feature.get("properties") or {}
+        confidence = _optional_float(properties.get("confidence"))
+        if confidence is not None and confidence < MIN_OPENROUTESERVICE_CONFIDENCE:
+            low_confidence_values.append(confidence)
+            continue
+
+        try:
+            distance = haversine_distance_km(
+                shop_latitude,
+                shop_longitude,
+                float(coordinates[1]),
+                float(coordinates[0]),
+            )
+        except (TypeError, ValueError):
+            continue
+
+        candidates.append((distance, feature))
+
+    if candidates:
+        return min(candidates, key=lambda candidate: candidate[0])[1]
+
+    if low_confidence_values:
+        raise ServiceError(
+            "geocoding_low_confidence",
+            status_code=422,
+            context={"provider_confidence": max(low_confidence_values)},
+        )
+
+    raise ServiceError("geocoding_missing_coordinates", status_code=422)
 
 
 def _decimal_coordinate(value: float | int | str) -> Decimal:

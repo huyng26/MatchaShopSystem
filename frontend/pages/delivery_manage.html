@@ -209,11 +209,7 @@
             let reconcileNotice = null;
             let deliverySearchQuery = '';
             const TRIP_DETAIL_POLL_INTERVAL_MS = 15000;
-            const SHOP_ROUTE_POINT = {
-                label: 'Store',
-                latitude: 21.006237,
-                longitude: 105.843127,
-            };
+            const SHOP_ROUTE_POINT = window.MATCHA_SHOP_ROUTE_POINT;
 
             const statusMeta = {
                 pending_dispatch: { label: 'Pending dispatch', className: 'bg-tertiary-fixed text-on-tertiary-fixed-variant' },

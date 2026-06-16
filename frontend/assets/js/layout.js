@@ -17,6 +17,25 @@ const LAYOUT_ROLE_LABELS = {
   shipper: 'Shipper',
 };
 
+const MATCHA_SHOP_LATITUDE = Number.isFinite(Number(window.MATCHA_SHOP_LATITUDE))
+  ? Number(window.MATCHA_SHOP_LATITUDE)
+  : 21.006237;
+const MATCHA_SHOP_LONGITUDE = Number.isFinite(Number(window.MATCHA_SHOP_LONGITUDE))
+  ? Number(window.MATCHA_SHOP_LONGITUDE)
+  : 105.843127;
+
+window.MATCHA_SHOP_LATITUDE = MATCHA_SHOP_LATITUDE;
+window.MATCHA_SHOP_LONGITUDE = MATCHA_SHOP_LONGITUDE;
+window.MATCHA_SHOP_ROUTE_POINT = Object.freeze({
+  label: 'Store',
+  get latitude() {
+    return window.MATCHA_SHOP_LATITUDE;
+  },
+  get longitude() {
+    return window.MATCHA_SHOP_LONGITUDE;
+  },
+});
+
 const LAYOUT_NOTIFICATION_API_BASE_URL =
   window.MATCHA_API_BASE_URL || 'http://localhost:8000/api/v1';
 const LAYOUT_NOTIFICATION_POLL_INTERVAL_MS = 10000;
@@ -173,7 +192,7 @@ const PAGE_CONFIG = {
 const LAYOUT_ROLE_DEFAULT_PAGE = {
   admin: 'dashboard.html',
   cashier: 'POS_menu.html',
-  delivery_manager: 'dashboard.html',
+  delivery_manager: 'delivery_manage.html',
   inventory_manager: 'inventory_list.html',
   shipper: 'shipper.html',
 };
@@ -713,7 +732,7 @@ function canLayoutRoleAccessPage(role, page) {
 
   const allowedPagesByRole = {
     cashier: new Set(['pos-menu', 'pos-payment']),
-    delivery_manager: new Set(['dashboard', 'delivery-manage']),
+    delivery_manager: new Set(['delivery-manage']),
     inventory_manager: new Set(['inventory-list', 'inventory-detail']),
     shipper: new Set(['shipper']),
   };

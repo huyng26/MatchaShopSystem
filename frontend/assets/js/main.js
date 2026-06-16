@@ -124,7 +124,7 @@ const MATCHA_PUBLIC_PAGES = new Set([
 const MATCHA_ROLE_DEFAULT_PAGE = {
   admin: 'dashboard.html',
   cashier: 'POS_menu.html',
-  delivery_manager: 'dashboard.html',
+  delivery_manager: 'delivery_manage.html',
   inventory_manager: 'inventory_list.html',
   shipper: 'shipper.html',
 };
@@ -195,7 +195,7 @@ function canFrontendRoleAccessPage(role, page) {
 
   const allowedPagesByRole = {
     cashier: new Set(['pos-menu', 'pos-payment']),
-    delivery_manager: new Set(['dashboard', 'delivery-manage']),
+    delivery_manager: new Set(['delivery-manage']),
     inventory_manager: new Set(['inventory-list', 'inventory-detail']),
     shipper: new Set(['shipper']),
   };
@@ -1785,11 +1785,7 @@ function initShipper() {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${latitude},${longitude}`)}`;
   };
 
-  const SHOP_ROUTE_POINT = {
-    label: 'Store',
-    latitude: 21.006237,
-    longitude: 105.843127,
-  };
+  const SHOP_ROUTE_POINT = window.MATCHA_SHOP_ROUTE_POINT;
   const shipperRouteMaps = new Map();
 
   const isValidRouteCoordinate = (latitude, longitude) => Number.isFinite(Number(latitude)) && Number.isFinite(Number(longitude));
