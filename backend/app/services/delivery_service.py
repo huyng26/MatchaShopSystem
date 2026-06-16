@@ -300,6 +300,7 @@ async def mark_order_delivered(
             await order_service.complete_order_without_commit(db, order.id)
 
         await _complete_trip_when_all_stops_final(db, trip)
+        await _notify_delivery_order_delivered(db, trip, trip_order)
         await db.commit()
         return await _get_trip_detail_or_404(db, trip_id)
     except Exception:
@@ -370,6 +371,7 @@ async def complete_trip(
         trip.status = DeliveryTripStatus.COMPLETED
         trip.completed_at = now
         trip.updated_at = now
+        await _notify_trip_completed(db, trip)
         await db.commit()
         return await _get_trip_detail_or_404(db, trip_id)
     except Exception:
@@ -504,6 +506,56 @@ async def _notify_delivery_order_failed(
             "failed_reason": trip_order.failed_reason,
         },
         dedupe_key=f"delivery.order_failed:{trip.id}:{order.id}",
+    )
+
+
+async def _notify_delivery_order_delivered(
+    db: AsyncSession,
+    trip: DeliveryTrip,
+    trip_order: DeliveryTripOrder,
+) -> None:
+    order = trip_order.order
+    trip_code = getattr(trip, "trip_code", str(trip.id))
+
+    await notification_service.notify_roles(
+        db,
+        (UserRole.DELIVERY_MANAGER,),
+        notification_type="delivery.order_delivered",
+        title="Delivery order completed",
+        message=f"Order {order.order_code} was delivered in trip {trip_code}.",
+        entity_type="order",
+        entity_id=order.id,
+        action_url="delivery_manage.html",
+        metadata={
+            "trip_id": str(trip.id),
+            "trip_code": trip_code,
+            "order_code": order.order_code,
+            "cod_collected": str(trip_order.cod_collected),
+        },
+        dedupe_key=f"delivery.order_delivered:{trip.id}:{order.id}",
+    )
+
+
+async def _notify_trip_completed(
+    db: AsyncSession,
+    trip: DeliveryTrip,
+) -> None:
+    trip_code = getattr(trip, "trip_code", str(trip.id))
+    await notification_service.notify_roles(
+        db,
+        (UserRole.DELIVERY_MANAGER,),
+        notification_type="delivery.trip_completed",
+        title="Delivery trip completed",
+        message=f"Trip {trip_code} is completed. The assigned shipper is available.",
+        entity_type="delivery_trip",
+        entity_id=trip.id,
+        action_url="delivery_manage.html",
+        metadata={
+            "trip_id": str(trip.id),
+            "trip_code": trip_code,
+            "shipper_id": str(trip.shipper_id) if trip.shipper_id else None,
+        },
+        dedupe_key=f"delivery.trip_completed:{trip.id}",
     )
 
 
@@ -873,11 +925,12 @@ async def _complete_trip_when_all_stops_final(
     trip: DeliveryTrip,
 ) -> None:
     trip_orders = await delivery_repo.list_trip_orders(db, trip.id)
-    if _all_stops_final(trip_orders):
+    if _all_stops_final(trip_orders) and trip.status != DeliveryTripStatus.COMPLETED:
         now = utc_now()
         trip.status = DeliveryTripStatus.COMPLETED
         trip.completed_at = now
         trip.updated_at = now
+        await _notify_trip_completed(db, trip)
 
 
 def _all_stops_final(trip_orders: Sequence[DeliveryTripOrder]) -> bool:
