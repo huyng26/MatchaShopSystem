@@ -16,6 +16,7 @@ The system must support these core business areas:
 - Customer management
 - Delivery queue, batching, shipper assignment, routing, delivery status, and COD reconciliation
 - Dashboard/reporting APIs
+- In-app notifications for operational events using polling
 
 The most important backend principle is this:
 
@@ -45,7 +46,8 @@ Password hashing: bcrypt
 Testing: Pytest
 Containerization: Docker + Docker Compose
 API style: REST JSON API
-Optional real-time: WebSocket or Server-Sent Events for delivery tracking
+Notification style: DB-backed polling every 10 seconds
+Optional real-time: WebSocket or Server-Sent Events for delivery tracking later
 ```
 
 ### 1.2 Backend Principles
@@ -88,6 +90,7 @@ matcha-backend/
 │   │       ├── deliveries.py
 │   │       ├── shipper.py
 │   │       ├── finance.py
+│   │       ├── notifications.py
 │   │       └── dashboard.py
 │   │
 │   ├── core/
@@ -111,6 +114,7 @@ matcha-backend/
 │   │   ├── delivery.py
 │   │   ├── shipper.py
 │   │   ├── finance.py
+│   │   ├── notification.py
 │   │   └── audit.py
 │   │
 │   ├── schemas/
@@ -124,6 +128,7 @@ matcha-backend/
 │   │   ├── payment.py
 │   │   ├── delivery.py
 │   │   ├── finance.py
+│   │   ├── notification.py
 │   │   └── common.py
 │   │
 │   ├── services/
@@ -139,6 +144,7 @@ matcha-backend/
 │   │   ├── shipper_service.py
 │   │   ├── routing_service.py
 │   │   ├── finance_service.py
+│   │   ├── notification_service.py
 │   │   └── dashboard_service.py
 │   │
 │   ├── repositories/
@@ -150,6 +156,7 @@ matcha-backend/
 │   │   ├── order_repo.py
 │   │   ├── payment_repo.py
 │   │   ├── delivery_repo.py
+│   │   ├── notification_repo.py
 │   │   └── finance_repo.py
 │   │
 │   ├── utils/
@@ -957,6 +964,51 @@ Log these actions:
 - Order completed/cancelled
 - COD reconciliation discrepancy
 
+### 4.22 Notifications
+
+Purpose: in-app operational notifications shown in the top bar. Version 1 uses
+one row per receiving user to keep the implementation simple. Notification
+records are created by backend services after business state changes succeed;
+the frontend only polls, displays, and marks notifications as read.
+
+```text
+notifications
+- id UUID PK
+- user_id UUID FK users.id not null
+- type varchar not null
+- severity varchar not null default 'info'
+- title varchar not null
+- message text not null
+- entity_type varchar nullable
+- entity_id UUID nullable
+- action_url text nullable
+- metadata jsonb not null default '{}'
+- dedupe_key varchar nullable
+- read_at timestamptz nullable
+- dismissed_at timestamptz nullable
+- created_at timestamptz not null
+- expires_at timestamptz nullable
+```
+
+Allowed severity:
+
+```text
+info
+warning
+critical
+```
+
+Initial notification producers:
+
+- `order.ready_for_delivery`: sent to admin and delivery_manager.
+- `delivery.trip_assigned`: sent to the assigned shipper user.
+- `delivery.order_failed`: sent to admin and delivery_manager.
+- `delivery.cod_discrepancy`: sent to admin and delivery_manager.
+- `inventory.low_stock`: sent to admin and inventory_manager.
+
+Version 1 uses polling every 10 seconds instead of WebSocket/SSE. The table is
+still persistent, so users can see unread notifications after being offline.
+
 ---
 
 ## 5. Relationship Summary
@@ -979,6 +1031,7 @@ delivery_trips 1 --- many delivery_location_logs
 delivery_trips 1 --- 0/1 cod_reconciliations
 expenses 1 --- 1 financial_records
 orders 1 --- many financial_records
+users 1 --- many notifications
 ```
 
 ---
@@ -1018,6 +1071,9 @@ delivery_trip_orders.trip_id
 delivery_trip_orders.order_id
 delivery_location_logs.trip_id
 delivery_location_logs.recorded_at
+notifications.user_id + notifications.read_at + notifications.created_at desc
+notifications.user_id + notifications.created_at desc
+unique notifications.user_id + notifications.dedupe_key where dedupe_key is not null
 ```
 
 ---
@@ -2357,7 +2413,95 @@ Net Profit = Revenue - Material Cost - Operating Expense
 
 ---
 
-## Phase 12 — Reporting Views, Optional
+## Phase 12 — Notifications
+
+### Goal
+
+Provide lightweight in-app notifications without WebSocket/SSE. Backend services
+create records in `notifications`; frontend polls the notification API every 10
+seconds and renders the top-bar badge/dropdown.
+
+### Notification Endpoints
+
+```http
+GET  /api/v1/notifications?unread_only=false&limit=20
+GET  /api/v1/notifications/unread-count
+POST /api/v1/notifications/{notification_id}/read
+POST /api/v1/notifications/read-all
+```
+
+Access:
+
+```text
+All authenticated users can access their own notifications only.
+Users must never see or mark notifications owned by another user.
+```
+
+### Backend Rules
+
+```text
+notification_service.notify_user(db, user_id, ...)
+notification_service.notify_roles(db, roles, ...)
+notification_service.notify_staff(db, staff_id, ...)
+```
+
+- `notify_roles` resolves active, non-deleted users with matching roles.
+- Notification inserts happen in the same transaction as the business event.
+- A nullable `dedupe_key` prevents duplicate alerts per user.
+- Dedupe conflicts are ignored instead of failing the main business request.
+
+### Initial Producers
+
+```text
+order.ready_for_delivery
+- created when an order becomes ready_for_delivery
+- recipients: admin, delivery_manager
+- action_url: delivery_manage.html
+
+delivery.trip_assigned
+- created when a trip is assigned to a shipper
+- recipient: assigned shipper's linked user
+- action_url: shipper.html
+
+delivery.order_failed
+- created when a shipper marks a delivery order failed
+- recipients: admin, delivery_manager
+- severity: warning
+- action_url: delivery_manage.html
+
+delivery.cod_discrepancy
+- created when COD reconciliation has non-zero discrepancy
+- recipients: admin, delivery_manager
+- severity: critical
+- action_url: delivery_manage.html
+
+inventory.low_stock
+- created when ingredient stock is at or below minimum_threshold
+- recipients: admin, inventory_manager
+- severity: warning
+- action_url: inventory_list.html
+```
+
+### Frontend Polling Rules
+
+- Poll immediately after top bar initialization, then every 10 seconds.
+- Poll only when the user has an access token.
+- Skip polling while the browser tab is hidden; refresh immediately when visible.
+- Avoid concurrent polling requests.
+- Stop polling when notification API returns 401 or 403.
+- Badge is hidden when unread count is zero.
+- Clicking a notification marks it read, then navigates to `action_url` if present.
+
+### Done when
+
+- Each role sees only its own notification records.
+- Unread count updates from the top bar without page-specific code.
+- Mark read and mark all read work.
+- Initial order, delivery, COD, and inventory producers create expected records.
+
+---
+
+## Phase 13 — Reporting Views, Optional
 
 Do not implement this until basic reporting APIs work.
 
@@ -2390,6 +2534,7 @@ If views are slow, convert heavy ones to materialized views.
 | Finance | Yes | Limited/View | COD summary | No | No |
 | Customer | Yes | No | No | Yes/limited | No |
 | Dashboard | Yes | Limited | Limited | Limited | No |
+| Notifications | Own only | Own only | Own only | Own only | Own only |
 
 ---
 
@@ -2461,6 +2606,15 @@ Delivery:
 
 Finance:
 - Revenue/material/expense/net profit calculation
+
+Notifications:
+- User cannot list or mark another user's notifications
+- Unread count only counts unread and non-dismissed records
+- Mark read updates only the current user's notification
+- Mark all read updates only the current user's unread notifications
+- notify_roles creates rows for active users in matching roles
+- dedupe_key prevents duplicate notification rows for the same user
+- Initial producers create correct type, severity, action_url, and dedupe_key
 ```
 
 ### 9.2 Integration Tests
@@ -2693,7 +2847,7 @@ Person 2 owns the most critical transaction in the system. This code must be hea
 Primary responsibility:
 
 ```text
-Delivery workflow, routing algorithm, COD reconciliation, finance dashboard, reporting APIs
+Delivery workflow, routing algorithm, COD reconciliation, finance dashboard, reporting APIs, notification APIs
 ```
 
 Tasks:
@@ -2733,6 +2887,13 @@ Phase 11:
 - Implement delivery performance API [done]
 
 Phase 12:
+- Create notifications model
+- Implement notification API
+- Implement notification service helpers
+- Add notification producers for order, delivery, COD, and low-stock events
+- Add frontend top-bar polling/dropdown integration
+
+Phase 13:
 - Add reporting views only if needed
 ```
 
@@ -2743,6 +2904,7 @@ Delivery manager can batch and assign orders
 Shipper can complete delivery flow
 COD reconciliation works
 Finance and dashboard APIs work
+Notifications show operational alerts by role/user
 ```
 
 Dashboard handoff notes:

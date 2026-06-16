@@ -42,3 +42,10 @@ CREATE INDEX IF NOT EXISTS idx_delivery_location_logs_recorded_at
     ON delivery_location_logs (recorded_at);
 CREATE INDEX IF NOT EXISTS idx_delivery_location_logs_trip_recorded_at
     ON delivery_location_logs (trip_id, recorded_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_read_created_at
+    ON notifications (user_id, read_at, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_created_at
+    ON notifications (user_id, created_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_notifications_user_dedupe_key
+    ON notifications (user_id, dedupe_key)
+    WHERE dedupe_key IS NOT NULL;

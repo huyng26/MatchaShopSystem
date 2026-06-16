@@ -1,4 +1,4 @@
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from decimal import Decimal
@@ -6,6 +6,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.constants import UserRole
 from app.models.finance import FinancialRecordType
 from app.models.ingredients import Ingredient
 from app.models.inventory import InventoryMovementType
@@ -30,6 +31,7 @@ from app.schemas.order import (
 )
 from app.services.errors import ServiceError
 from app.services import map_service
+from app.services import notification_service
 
 MONEY_QUANT = Decimal("0.01")
 LOYALTY_AMOUNT_PER_POINT = Decimal("10000.00")
@@ -214,6 +216,7 @@ async def mark_ready_for_delivery(
             order,
             status=OrderStatus.READY_FOR_DELIVERY,
         )
+        await _notify_order_ready_for_delivery(db, order)
         await db.commit()
         detail = await order_repo.get_order_detail(db, order.id)
         if detail is None:
@@ -275,6 +278,7 @@ async def complete_order(db: AsyncSession, order_id: UUID) -> OrderCompleteRespo
                 created_by=order.created_by,
             )
 
+        low_stock_ingredients = _low_stock_ingredients(ingredients_by_id.values())
         completed_at = utc_now()
         order = await order_repo.set_order_completed(
             db,
@@ -289,6 +293,7 @@ async def complete_order(db: AsyncSession, order_id: UUID) -> OrderCompleteRespo
             record_date=completed_at.date(),
         )
         await _add_loyalty_points_for_completed_order(db, order)
+        await _notify_low_stock_ingredients(db, low_stock_ingredients)
         await db.commit()
         return OrderCompleteResponse(
             id=order.id,
@@ -361,6 +366,7 @@ async def complete_order_without_commit(
             created_by=order.created_by,
         )
 
+    low_stock_ingredients = _low_stock_ingredients(ingredients_by_id.values())
     completed_at = utc_now()
     order = await order_repo.set_order_completed(
         db,
@@ -375,6 +381,7 @@ async def complete_order_without_commit(
         record_date=completed_at.date(),
     )
     await _add_loyalty_points_for_completed_order(db, order)
+    await _notify_low_stock_ingredients(db, low_stock_ingredients)
     return OrderCompleteResponse(
         id=order.id,
         status=order.status,
@@ -618,6 +625,62 @@ def _has_pending_cod_payment(order: Order) -> bool:
         and payment.method == PaymentMethod.COD
         for payment in order.payments
     )
+
+
+async def _notify_order_ready_for_delivery(db: AsyncSession, order: Order) -> None:
+    await notification_service.notify_roles(
+        db,
+        (UserRole.ADMIN, UserRole.DELIVERY_MANAGER),
+        notification_type="order.ready_for_delivery",
+        title="Order ready for delivery",
+        message=f"Order {order.order_code} is ready to be assigned to a delivery trip.",
+        entity_type="order",
+        entity_id=order.id,
+        action_url="delivery_manage.html",
+        metadata={
+            "order_code": order.order_code,
+            "customer_name": order.customer_name,
+            "total_amount": str(order.total_amount),
+        },
+        dedupe_key=f"order.ready_for_delivery:{order.id}",
+    )
+
+
+def _low_stock_ingredients(ingredients: Iterable[Ingredient]) -> list[Ingredient]:
+    return [
+        ingredient
+        for ingredient in ingredients
+        if ingredient.current_stock <= ingredient.minimum_threshold
+    ]
+
+
+async def _notify_low_stock_ingredients(
+    db: AsyncSession,
+    ingredients: Sequence[Ingredient],
+) -> None:
+    for ingredient in ingredients:
+        dedupe_key = f"inventory.low_stock:{ingredient.id}:{ingredient.current_stock}"
+        await notification_service.notify_roles(
+            db,
+            (UserRole.ADMIN, UserRole.INVENTORY_MANAGER),
+            notification_type="inventory.low_stock",
+            title="Low stock ingredient",
+            message=(
+                f"{ingredient.name} stock is {ingredient.current_stock} "
+                f"{ingredient.unit}, at or below the minimum threshold."
+            ),
+            severity="warning",
+            entity_type="ingredient",
+            entity_id=ingredient.id,
+            action_url="inventory_list.html",
+            metadata={
+                "ingredient_name": ingredient.name,
+                "current_stock": str(ingredient.current_stock),
+                "minimum_threshold": str(ingredient.minimum_threshold),
+                "unit": ingredient.unit,
+            },
+            dedupe_key=dedupe_key,
+        )
 
 
 async def _price_order_items(

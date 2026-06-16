@@ -40,6 +40,7 @@ from app.schemas.delivery import (
     amount_to_collect_for_order,
     payment_method_for_order,
 )
+from app.services import notification_service
 from app.services import order_service
 from app.services.errors import ServiceError
 from app.services.routing_service import (
@@ -195,6 +196,7 @@ async def assign_shipper(
         trip.shipper_id = shipper_id
         trip.status = DeliveryTripStatus.ASSIGNED
         trip.updated_at = now
+        await _notify_trip_assigned(db, trip, shipper)
         await db.commit()
         return await _get_trip_detail_or_404(db, trip_id)
     except Exception:
@@ -337,6 +339,7 @@ async def mark_order_failed(
         await db.flush()
 
         await _complete_trip_when_all_stops_final(db, trip)
+        await _notify_delivery_order_failed(db, trip, trip_order)
         await db.commit()
         return await _get_trip_detail_or_404(db, trip_id)
     except Exception:
@@ -438,6 +441,13 @@ async def reconcile_cod(
                 record_date=reconciled_at.date(),
                 locked=True,
             )
+            await _notify_cod_discrepancy(
+                db,
+                trip,
+                expected_amount=expected_amount,
+                actual_amount=payload.actual_amount,
+                discrepancy=discrepancy,
+            )
 
         await db.commit()
         await db.refresh(reconciliation)
@@ -445,6 +455,85 @@ async def reconcile_cod(
     except Exception:
         await db.rollback()
         raise
+
+
+async def _notify_trip_assigned(
+    db: AsyncSession,
+    trip: DeliveryTrip,
+    shipper: StaffProfile,
+) -> None:
+    trip_code = getattr(trip, "trip_code", str(trip.id))
+    await notification_service.notify_user(
+        db,
+        shipper.user_id,
+        notification_type="delivery.trip_assigned",
+        title="New delivery trip assigned",
+        message=f"Trip {trip_code} has been assigned to you.",
+        entity_type="delivery_trip",
+        entity_id=trip.id,
+        action_url="shipper.html",
+        metadata={
+            "trip_code": trip_code,
+            "shipper_id": str(shipper.id),
+        },
+        dedupe_key=f"delivery.trip_assigned:{trip.id}:{shipper.user_id}",
+    )
+
+
+async def _notify_delivery_order_failed(
+    db: AsyncSession,
+    trip: DeliveryTrip,
+    trip_order: DeliveryTripOrder,
+) -> None:
+    order = trip_order.order
+    trip_code = getattr(trip, "trip_code", str(trip.id))
+    await notification_service.notify_roles(
+        db,
+        (UserRole.ADMIN, UserRole.DELIVERY_MANAGER),
+        notification_type="delivery.order_failed",
+        title="Delivery order failed",
+        message=f"Order {order.order_code} failed during trip {trip_code}.",
+        severity="warning",
+        entity_type="order",
+        entity_id=order.id,
+        action_url="delivery_manage.html",
+        metadata={
+            "trip_id": str(trip.id),
+            "trip_code": trip_code,
+            "order_code": order.order_code,
+            "failed_reason": trip_order.failed_reason,
+        },
+        dedupe_key=f"delivery.order_failed:{trip.id}:{order.id}",
+    )
+
+
+async def _notify_cod_discrepancy(
+    db: AsyncSession,
+    trip: DeliveryTrip,
+    *,
+    expected_amount: Decimal,
+    actual_amount: Decimal,
+    discrepancy: Decimal,
+) -> None:
+    trip_code = getattr(trip, "trip_code", str(trip.id))
+    await notification_service.notify_roles(
+        db,
+        (UserRole.ADMIN, UserRole.DELIVERY_MANAGER),
+        notification_type="delivery.cod_discrepancy",
+        title="COD discrepancy flagged",
+        message=f"Trip {trip_code} has a COD discrepancy of {discrepancy}.",
+        severity="critical",
+        entity_type="delivery_trip",
+        entity_id=trip.id,
+        action_url="delivery_manage.html",
+        metadata={
+            "trip_code": trip_code,
+            "expected_amount": str(expected_amount),
+            "actual_amount": str(actual_amount),
+            "discrepancy": str(discrepancy),
+        },
+        dedupe_key=f"delivery.cod_discrepancy:{trip.id}",
+    )
 
 
 def _queue_item_from_order(order: Order, now: datetime) -> DeliveryQueueItem:

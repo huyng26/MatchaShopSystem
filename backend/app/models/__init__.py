@@ -18,6 +18,7 @@ from app.models.inventory import (
     InventoryPurchase,
     ProductRecipe,
 )
+from app.models.notification import Notification
 from app.models.order import (
     Order,
     OrderItem,
@@ -48,6 +49,7 @@ __all__ = [
     "InventoryMovement",
     "InventoryMovementType",
     "InventoryPurchase",
+    "Notification",
     "Order",
     "OrderItem",
     "OrderPaymentStatus",
