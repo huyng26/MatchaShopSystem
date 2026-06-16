@@ -5,6 +5,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.constants import UserRole
 from app.models.inventory import ProductRecipe
 from app.models.product import Product
 from app.repositories import product_repo
@@ -17,6 +18,7 @@ from app.schemas.product import (
     RecipeItemRead,
 )
 from app.services.errors import ServiceError
+from app.services import notification_service
 
 
 async def list_products(
@@ -58,6 +60,7 @@ async def create_product(db: AsyncSession, payload: ProductCreate) -> Product:
                 [item.model_dump() for item in payload.recipe.items],
             )
 
+        await _notify_product_created(db, product)
         await db.commit()
         return product
     except Exception:
@@ -82,6 +85,8 @@ async def update_product(
 
     try:
         product = await product_repo.update_product(db, product, **values)
+        if values:
+            await _notify_product_updated(db, product, values)
         await db.commit()
         return product
     except Exception:
@@ -116,6 +121,7 @@ async def toggle_product_availability(
             product,
             is_available=payload.is_available,
         )
+        await _notify_product_availability_changed(db, product)
         await db.commit()
         return product
     except Exception:
@@ -214,3 +220,76 @@ def _require_category(category: object) -> str:
         raise ServiceError("product_category_required")
 
     return normalized
+
+
+async def _notify_product_created(db: AsyncSession, product: Product) -> None:
+    await notification_service.notify_roles(
+        db,
+        (UserRole.ADMIN, UserRole.CASHIER),
+        notification_type="product.created",
+        title="New menu item",
+        message=f"{product.name} has been added to the menu.",
+        entity_type="product",
+        entity_id=product.id,
+        action_url="POS_menu.html",
+        metadata={
+            "product_name": product.name,
+            "category": product.category,
+            "selling_price": str(product.selling_price),
+            "is_available": product.is_available,
+        },
+        dedupe_key=f"product.created:{product.id}",
+    )
+
+
+async def _notify_product_updated(
+    db: AsyncSession,
+    product: Product,
+    changed_values: dict[str, object],
+) -> None:
+    await notification_service.notify_roles(
+        db,
+        (UserRole.CASHIER,),
+        notification_type="product.updated",
+        title="Menu item updated",
+        message=f"{product.name} has been updated on the menu.",
+        entity_type="product",
+        entity_id=product.id,
+        action_url="POS_menu.html",
+        metadata={
+            "product_name": product.name,
+            "category": product.category,
+            "changed_fields": sorted(changed_values),
+            "selling_price": str(product.selling_price),
+            "is_available": product.is_available,
+        },
+        dedupe_key=(
+            f"product.updated:{product.id}:{product.updated_at.isoformat()}"
+        ),
+    )
+
+
+async def _notify_product_availability_changed(
+    db: AsyncSession,
+    product: Product,
+) -> None:
+    status = "available" if product.is_available else "unavailable"
+    await notification_service.notify_roles(
+        db,
+        (UserRole.CASHIER,),
+        notification_type="product.availability_updated",
+        title="Menu availability updated",
+        message=f"{product.name} is now {status}.",
+        entity_type="product",
+        entity_id=product.id,
+        action_url="POS_menu.html",
+        metadata={
+            "product_name": product.name,
+            "category": product.category,
+            "is_available": product.is_available,
+        },
+        dedupe_key=(
+            f"product.availability_updated:{product.id}:"
+            f"{product.is_available}:{product.updated_at.isoformat()}"
+        ),
+    )

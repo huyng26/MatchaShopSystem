@@ -1000,8 +1000,13 @@ critical
 
 Initial notification producers:
 
+- `product.created`: sent to admin and cashier.
+- `product.updated`: sent to cashier.
+- `product.availability_updated`: sent to cashier.
 - `order.ready_for_delivery`: sent to admin and delivery_manager.
 - `delivery.trip_assigned`: sent to the assigned shipper user.
+- `delivery.order_delivered`: sent to delivery_manager.
+- `delivery.trip_completed`: sent to delivery_manager when the lot is done and the shipper is available.
 - `delivery.order_failed`: sent to admin and delivery_manager.
 - `delivery.cod_discrepancy`: sent to admin and delivery_manager.
 - `inventory.low_stock`: sent to admin and inventory_manager.
@@ -2458,10 +2463,36 @@ order.ready_for_delivery
 - recipients: admin, delivery_manager
 - action_url: delivery_manage.html
 
+product.created
+- created when a new product/menu item is added
+- recipients: admin, cashier
+- action_url: POS_menu.html
+
+product.updated
+- created when a product/menu item changes
+- recipients: cashier
+- action_url: POS_menu.html
+
+product.availability_updated
+- created when a product is enabled or disabled for sale
+- recipients: cashier
+- action_url: POS_menu.html
+
 delivery.trip_assigned
 - created when a trip is assigned to a shipper
 - recipient: assigned shipper's linked user
 - action_url: shipper.html
+
+delivery.order_delivered
+- created when a shipper marks a delivery order delivered
+- recipients: delivery_manager
+- action_url: delivery_manage.html
+
+delivery.trip_completed
+- created when all orders in a delivery trip are delivered or failed
+- recipients: delivery_manager
+- meaning: the trip lot is done and the assigned shipper is available
+- action_url: delivery_manage.html
 
 delivery.order_failed
 - created when a shipper marks a delivery order failed
@@ -2497,7 +2528,7 @@ inventory.low_stock
 - Each role sees only its own notification records.
 - Unread count updates from the top bar without page-specific code.
 - Mark read and mark all read work.
-- Initial order, delivery, COD, and inventory producers create expected records.
+- Initial product, order, delivery, COD, and inventory producers create expected records.
 
 ---
 

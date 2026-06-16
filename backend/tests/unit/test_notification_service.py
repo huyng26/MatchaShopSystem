@@ -8,6 +8,7 @@ from app.core.constants import UserRole
 from app.services import delivery_service
 from app.services import notification_service
 from app.services import order_service
+from app.services import product_service
 from app.services.errors import ServiceError
 
 
@@ -179,3 +180,90 @@ async def test_cod_discrepancy_producer_marks_critical(monkeypatch):
     assert captured["kwargs"]["severity"] == "critical"
     assert captured["kwargs"]["action_url"] == "delivery_manage.html"
     assert captured["kwargs"]["dedupe_key"] == f"delivery.cod_discrepancy:{trip.id}"
+
+
+@pytest.mark.asyncio
+async def test_product_created_producer_notifies_menu_users(monkeypatch):
+    captured = {}
+    product = SimpleNamespace(
+        id=uuid4(),
+        name="Matcha Latte",
+        category="Matcha",
+        selling_price="65000.00",
+        is_available=True,
+    )
+
+    async def notify_roles(db, roles, **kwargs):
+        captured["roles"] = tuple(roles)
+        captured["kwargs"] = kwargs
+
+    monkeypatch.setattr(
+        product_service.notification_service,
+        "notify_roles",
+        notify_roles,
+    )
+
+    await product_service._notify_product_created(FakeDb(), product)
+
+    assert captured["roles"] == (UserRole.ADMIN, UserRole.CASHIER)
+    assert captured["kwargs"]["notification_type"] == "product.created"
+    assert captured["kwargs"]["action_url"] == "POS_menu.html"
+    assert captured["kwargs"]["dedupe_key"] == f"product.created:{product.id}"
+
+
+@pytest.mark.asyncio
+async def test_delivery_delivered_producer_notifies_delivery_manager(monkeypatch):
+    captured = {}
+    trip = SimpleNamespace(id=uuid4(), trip_code="TRIP-001")
+    order = SimpleNamespace(
+        id=uuid4(),
+        order_code="ORD-001",
+    )
+    trip_order = SimpleNamespace(order=order, cod_collected="65000.00")
+
+    async def notify_roles(db, roles, **kwargs):
+        captured["roles"] = tuple(roles)
+        captured["kwargs"] = kwargs
+
+    monkeypatch.setattr(
+        delivery_service.notification_service,
+        "notify_roles",
+        notify_roles,
+    )
+
+    await delivery_service._notify_delivery_order_delivered(
+        FakeDb(),
+        trip,
+        trip_order,
+    )
+
+    assert captured["roles"] == (UserRole.DELIVERY_MANAGER,)
+    assert captured["kwargs"]["notification_type"] == "delivery.order_delivered"
+    assert captured["kwargs"]["action_url"] == "delivery_manage.html"
+    assert captured["kwargs"]["dedupe_key"] == (
+        f"delivery.order_delivered:{trip.id}:{order.id}"
+    )
+
+
+@pytest.mark.asyncio
+async def test_trip_completed_producer_marks_shipper_available(monkeypatch):
+    captured = {}
+    shipper_id = uuid4()
+    trip = SimpleNamespace(id=uuid4(), trip_code="TRIP-001", shipper_id=shipper_id)
+
+    async def notify_roles(db, roles, **kwargs):
+        captured["roles"] = tuple(roles)
+        captured["kwargs"] = kwargs
+
+    monkeypatch.setattr(
+        delivery_service.notification_service,
+        "notify_roles",
+        notify_roles,
+    )
+
+    await delivery_service._notify_trip_completed(FakeDb(), trip)
+
+    assert captured["roles"] == (UserRole.DELIVERY_MANAGER,)
+    assert captured["kwargs"]["notification_type"] == "delivery.trip_completed"
+    assert captured["kwargs"]["action_url"] == "delivery_manage.html"
+    assert captured["kwargs"]["metadata"]["shipper_id"] == str(shipper_id)
