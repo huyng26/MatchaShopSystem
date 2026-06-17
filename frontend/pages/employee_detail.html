@@ -60,16 +60,8 @@
             <h4 class="font-serif text-xl mb-6">Staff Summary</h4>
             <div class="space-y-4">
               <div class="flex justify-between items-center bg-[#06440c] p-4 rounded-xl">
-                <span class="text-[#f9f9f8]/60 text-sm">Salary</span>
-                <span id="summary-salary" class="text-lg font-semibold">--</span>
-              </div>
-              <div class="flex justify-between items-center bg-[#06440c] p-4 rounded-xl">
                 <span class="text-[#f9f9f8]/60 text-sm">Date Joined</span>
                 <span id="summary-joined" class="text-lg font-semibold">--</span>
-              </div>
-              <div class="flex justify-between items-center bg-[#06440c] p-4 rounded-xl">
-                <span class="text-[#f9f9f8]/60 text-sm">Open Tasks</span>
-                <span id="summary-open-tasks" class="text-lg font-semibold">0</span>
               </div>
               <div class="flex justify-between items-center bg-[#06440c] p-4 rounded-xl">
                 <span class="text-[#f9f9f8]/60 text-sm">Account</span>
@@ -115,11 +107,6 @@
                   <option value="cashier">Cashier</option>
                   <option value="shipper">Shipper</option>
                 </select>
-              </label>
-              <label class="space-y-2">
-                <span class="text-xs text-outline font-label tracking-wider uppercase">Salary</span>
-                <input id="staff-salary" type="number" min="0" step="0.01"
-                  class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
               </label>
               <label class="space-y-2">
                 <span class="text-xs text-outline font-label tracking-wider uppercase">Date Joined</span>
@@ -172,38 +159,6 @@
               </label>
             </form>
           </section>
-
-          <section class="bg-surface-container-lowest rounded-2xl p-8 shadow-sm border border-outline-variant/10">
-            <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <h4 class="font-serif text-2xl text-primary">Staff Tasks</h4>
-                <p id="task-count" class="text-sm text-on-surface-variant">Loading tasks...</p>
-              </div>
-              <button id="open-task-modal" type="button"
-                class="rounded-xl bg-primary px-5 py-3 text-sm font-extrabold text-white hover:bg-primary/90">
-                <span class="material-symbols-outlined align-middle text-lg" data-icon="add_task">add_task</span>
-                Add Task
-              </button>
-            </div>
-            <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse">
-                <thead>
-                  <tr class="bg-surface-container-low/50">
-                    <th class="px-4 py-4 text-[10px] uppercase tracking-widest font-bold text-outline">Title</th>
-                    <th class="px-4 py-4 text-[10px] uppercase tracking-widest font-bold text-outline">Due Date</th>
-                    <th class="px-4 py-4 text-[10px] uppercase tracking-widest font-bold text-outline">Priority</th>
-                    <th class="px-4 py-4 text-[10px] uppercase tracking-widest font-bold text-outline">Status</th>
-                    <th class="px-4 py-4 text-[10px] uppercase tracking-widest font-bold text-outline text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="task-table-body" class="divide-y divide-outline-variant/10">
-                  <tr>
-                    <td class="px-4 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="5">Loading tasks...</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
         </div>
       </section>
       <div class="mt-12 text-center">
@@ -211,71 +166,6 @@
       </div>
     </div>
   </main>
-
-  <div id="task-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4 py-8 backdrop-blur-sm">
-    <div class="w-full max-w-2xl rounded-2xl bg-surface-container-lowest shadow-2xl">
-      <div class="flex items-center justify-between border-b border-outline-variant px-8 py-5">
-        <div>
-          <h2 id="task-modal-title" class="font-serif text-3xl text-primary">New Task</h2>
-          <p class="text-sm text-on-surface-variant">Create or update a staff task.</p>
-        </div>
-        <button id="close-task-modal" type="button"
-          class="flex h-10 w-10 items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface">
-          <span class="material-symbols-outlined" data-icon="close">close</span>
-        </button>
-      </div>
-      <form id="task-form" class="space-y-5 px-8 py-7">
-        <input id="task-id" type="hidden" />
-        <label class="space-y-2 block">
-          <span class="text-sm font-bold text-on-surface">Title</span>
-          <input id="task-title" type="text" required
-            class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
-        </label>
-        <label class="space-y-2 block">
-          <span class="text-sm font-bold text-on-surface">Description</span>
-          <textarea id="task-description" rows="3"
-            class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary"></textarea>
-        </label>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <label class="space-y-2">
-            <span class="text-sm font-bold text-on-surface">Due Date</span>
-            <input id="task-due-date" type="date" required
-              class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" />
-          </label>
-          <label class="space-y-2">
-            <span class="text-sm font-bold text-on-surface">Priority</span>
-            <select id="task-priority" required
-              class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary">
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="urgent">Urgent</option>
-            </select>
-          </label>
-          <label class="space-y-2">
-            <span class="text-sm font-bold text-on-surface">Status</span>
-            <select id="task-status" required
-              class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary">
-              <option value="pending">Pending</option>
-              <option value="in_progress">In Progress</option>
-              <option value="done">Done</option>
-            </select>
-          </label>
-        </div>
-        <p id="task-form-status" class="hidden text-sm font-bold"></p>
-        <div class="flex justify-end gap-3 border-t border-outline-variant pt-5">
-          <button id="cancel-task-modal" type="button"
-            class="rounded-full bg-surface-container-high px-6 py-2.5 text-sm font-bold text-on-surface hover:bg-surface-container-highest">
-            Cancel
-          </button>
-          <button id="save-task" type="submit"
-            class="rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-white hover:bg-primary/90">
-            Save Task
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
 
   <script src="../assets/js/layout.js?v=notification-toast-fix-20260616"></script>
   <script src="../assets/js/main.js?v=fm-20260530"></script>
@@ -287,10 +177,6 @@
       const staffForm = document.getElementById('staff-form');
       const saveStaffButton = document.getElementById('save-staff');
       const deleteStaffButton = document.getElementById('delete-staff');
-      const taskModal = document.getElementById('task-modal');
-      const taskForm = document.getElementById('task-form');
-      const taskFormStatus = document.getElementById('task-form-status');
-      const taskTableBody = document.getElementById('task-table-body');
       const staffRoleInput = document.getElementById('staff-role');
       const staffUserIdInput = document.getElementById('staff-user-id');
       const accountModeInput = document.getElementById('staff-account-mode');
@@ -301,7 +187,6 @@
       const accountStatusWrap = document.getElementById('staff-account-status-wrap');
       const accountStatusInput = document.getElementById('staff-account-status');
       let currentStaff = null;
-      let taskCache = [];
       let accountCache = [];
       let staffCache = [];
 
@@ -317,9 +202,6 @@
         .replace(/\b\w/g, (character) => character.toUpperCase());
       const formatDate = (value) => value
         ? new Intl.DateTimeFormat('vi-VN').format(new Date(value))
-        : '--';
-      const formatCurrency = (value) => Number(value) || Number(value) === 0
-        ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(Number(value))
         : '--';
       const getTokenHeaders = () => {
         const token = localStorage.getItem('matcha_access_token');
@@ -349,11 +231,6 @@
         pageStatus.className = `rounded-xl px-4 py-3 text-sm font-bold ${type === 'error' ? 'bg-error-container text-error' : 'bg-secondary/10 text-secondary'}`;
         pageStatus.classList.toggle('hidden', !message);
       };
-      const setTaskFormStatus = (message, type = 'info') => {
-        taskFormStatus.textContent = message;
-        taskFormStatus.className = `text-sm font-bold ${type === 'error' ? 'text-error' : 'text-secondary'}`;
-        taskFormStatus.classList.toggle('hidden', !message);
-      };
       const getInitials = (name, email) => {
         const words = String(name || email || '').trim().split(/\s+/).filter(Boolean);
         if (!words.length) return 'ST';
@@ -363,18 +240,6 @@
       const getStatusClass = (status) => String(status).toLowerCase() === 'active'
         ? 'bg-secondary/10 text-secondary'
         : 'bg-error-container text-error';
-      const getTaskStatusClass = (status) => ({
-        pending: 'bg-surface-container-high text-on-surface-variant',
-        in_progress: 'bg-primary/10 text-primary',
-        done: 'bg-secondary/10 text-secondary',
-      }[status] || 'bg-surface-container-high text-on-surface-variant');
-      const getPriorityClass = (priority) => ({
-        low: 'bg-surface-container-high text-on-surface-variant',
-        medium: 'bg-primary/10 text-primary',
-        high: 'bg-error-container/60 text-error',
-        urgent: 'bg-error text-white',
-      }[priority] || 'bg-surface-container-high text-on-surface-variant');
-
       const getLinkedAccountIds = () => new Set(
         staffCache
           .filter((staff) => staff.id !== currentStaff?.id)
@@ -464,7 +329,6 @@
         document.getElementById('profile-status').textContent = formatLabel(staff.status);
         document.getElementById('profile-status').className = `rounded-full px-3 py-1 text-xs font-extrabold ${getStatusClass(staff.status)}`;
         document.getElementById('staff-id-label').textContent = `ID: ${staff.id}`;
-        document.getElementById('summary-salary').textContent = formatCurrency(staff.salary);
         document.getElementById('summary-joined').textContent = formatDate(staff.date_joined);
         document.getElementById('summary-account').textContent = staff.user_id ? 'Linked' : 'Not linked';
 
@@ -472,7 +336,6 @@
         document.getElementById('staff-phone').value = staff.phone || '';
         document.getElementById('staff-email').value = staff.email || '';
         staffRoleInput.value = staff.role || 'cashier';
-        document.getElementById('staff-salary').value = staff.salary ?? '';
         document.getElementById('staff-date-joined').value = staff.date_joined || '';
         document.getElementById('staff-status').value = staff.status || 'active';
         staffUserIdInput.value = staff.user_id || '';
@@ -481,55 +344,11 @@
         syncAccountControls();
       };
 
-      const renderTasks = (tasks) => {
-        taskTableBody.innerHTML = '';
-        document.getElementById('task-count').textContent = `Showing ${tasks.length} task${tasks.length === 1 ? '' : 's'}`;
-        document.getElementById('summary-open-tasks').textContent = tasks.filter((task) => task.status !== 'done').length;
-
-        if (!tasks.length) {
-          taskTableBody.innerHTML = `
-            <tr>
-              <td class="px-4 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="5">No tasks found for this employee.</td>
-            </tr>
-          `;
-          return;
-        }
-
-        tasks.forEach((task) => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td class="px-4 py-4">
-              <p class="font-bold text-primary">${escapeHtml(task.title)}</p>
-              <p class="text-xs text-on-surface-variant">${escapeHtml(task.description || 'No description')}</p>
-            </td>
-            <td class="px-4 py-4 text-sm font-medium">${escapeHtml(formatDate(task.due_date))}</td>
-            <td class="px-4 py-4">
-              <span class="rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase ${getPriorityClass(task.priority)}">${escapeHtml(formatLabel(task.priority))}</span>
-            </td>
-            <td class="px-4 py-4">
-              <span class="rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase ${getTaskStatusClass(task.status)}">${escapeHtml(formatLabel(task.status))}</span>
-            </td>
-            <td class="px-4 py-4">
-              <div class="flex justify-end gap-2">
-                <button type="button" class="edit-task rounded-lg bg-surface-container-high px-3 py-2 text-primary hover:bg-primary hover:text-white" data-task-id="${escapeHtml(task.id)}">
-                  <span class="material-symbols-outlined text-lg" data-icon="edit">edit</span>
-                </button>
-                <button type="button" class="delete-task rounded-lg bg-error-container px-3 py-2 text-error hover:bg-error hover:text-white" data-task-id="${escapeHtml(task.id)}">
-                  <span class="material-symbols-outlined text-lg" data-icon="delete">delete</span>
-                </button>
-              </div>
-            </td>
-          `;
-          taskTableBody.appendChild(row);
-        });
-      };
-
       const loadStaff = async () => {
         if (!staffId) {
           setPageStatus('Missing staff id. Open this page from Employee Management.', 'error');
           saveStaffButton.disabled = true;
           deleteStaffButton.disabled = true;
-          document.getElementById('open-task-modal').disabled = true;
           return;
         }
 
@@ -555,44 +374,15 @@
         }
       };
 
-      const loadTasks = async () => {
-        if (!staffId) {
-          document.getElementById('task-count').textContent = 'No staff selected';
-          document.getElementById('summary-open-tasks').textContent = '0';
-          taskTableBody.innerHTML = `
-            <tr>
-              <td class="px-4 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="5">Open an employee profile to manage tasks.</td>
-            </tr>
-          `;
-          return;
-        }
-
-        try {
-          const tasks = getListData(await fetchApiData(`/staff/tasks?staff_id=${encodeURIComponent(staffId)}&page_size=100`));
-          taskCache = tasks;
-          renderTasks(taskCache);
-        } catch (error) {
-          console.error('Failed to load staff tasks:', error);
-          document.getElementById('task-count').textContent = 'Cannot load tasks';
-          taskTableBody.innerHTML = `
-            <tr>
-              <td class="px-4 py-8 text-center text-sm font-bold text-error" colspan="5">Cannot load staff tasks. Please sign in with an admin account.</td>
-            </tr>
-          `;
-        }
-      };
-
       const buildStaffPayload = () => {
         const accountMode = accountModeInput.value;
         const userId = staffUserIdInput.value.trim();
         const role = staffRoleInput.value;
-        const salaryValue = document.getElementById('staff-salary').value;
         const nextPayload = {
           full_name: document.getElementById('staff-full-name').value.trim(),
           phone: document.getElementById('staff-phone').value.trim(),
           email: document.getElementById('staff-email').value.trim(),
           role,
-          salary: salaryValue === '' ? null : Number(salaryValue),
           date_joined: document.getElementById('staff-date-joined').value,
           status: document.getElementById('staff-status').value,
         };
@@ -601,15 +391,12 @@
           phone: currentStaff?.phone || '',
           email: currentStaff?.email || '',
           role: currentStaff?.role || '',
-          salary: currentStaff?.salary === null || currentStaff?.salary === undefined ? null : Number(currentStaff.salary),
           date_joined: currentStaff?.date_joined || '',
           status: currentStaff?.status || '',
         };
         const payload = Object.entries(nextPayload).reduce((result, [field, value]) => {
           const currentValue = currentPayload[field];
-          const changed = field === 'salary'
-            ? value !== currentValue
-            : String(value ?? '') !== String(currentValue ?? '');
+          const changed = String(value ?? '') !== String(currentValue ?? '');
           if (changed) result[field] = value;
           return result;
         }, {});
@@ -686,74 +473,6 @@
         }
       };
 
-      const openTaskModal = (task = null) => {
-        taskForm.reset();
-        setTaskFormStatus('');
-        document.getElementById('task-id').value = task?.id || '';
-        document.getElementById('task-modal-title').textContent = task ? 'Edit Task' : 'New Task';
-        document.getElementById('task-title').value = task?.title || '';
-        document.getElementById('task-description').value = task?.description || '';
-        document.getElementById('task-due-date').value = task?.due_date || '';
-        document.getElementById('task-priority').value = task?.priority || 'medium';
-        document.getElementById('task-status').value = task?.status || 'pending';
-        taskModal.classList.remove('hidden');
-        taskModal.classList.add('flex');
-        document.body.classList.add('overflow-hidden');
-      };
-
-      const closeTaskModal = () => {
-        taskModal.classList.add('hidden');
-        taskModal.classList.remove('flex');
-        document.body.classList.remove('overflow-hidden');
-      };
-
-      const saveTask = async (event) => {
-        event.preventDefault();
-        if (!taskForm.reportValidity() || !staffId) return;
-
-        const taskId = document.getElementById('task-id').value;
-        const payload = {
-          staff_id: staffId,
-          title: document.getElementById('task-title').value.trim(),
-          description: document.getElementById('task-description').value.trim() || null,
-          due_date: document.getElementById('task-due-date').value,
-          priority: document.getElementById('task-priority').value,
-          status: document.getElementById('task-status').value,
-        };
-        const saveTaskButton = document.getElementById('save-task');
-        saveTaskButton.disabled = true;
-        saveTaskButton.textContent = 'Saving...';
-        setTaskFormStatus('Saving task...');
-
-        try {
-          await fetchApiData(taskId ? `/staff/tasks/${encodeURIComponent(taskId)}` : '/staff/tasks', {
-            method: taskId ? 'PUT' : 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          });
-          closeTaskModal();
-          await loadTasks();
-        } catch (error) {
-          console.error('Failed to save staff task:', error);
-          setTaskFormStatus(error.message || 'Cannot save staff task.', 'error');
-        } finally {
-          saveTaskButton.disabled = false;
-          saveTaskButton.textContent = 'Save Task';
-        }
-      };
-
-      const deleteTask = async (taskId) => {
-        if (!taskId || !confirm('Delete this staff task?')) return;
-
-        try {
-          await fetchApiData(`/staff/tasks/${encodeURIComponent(taskId)}`, { method: 'DELETE' });
-          await loadTasks();
-        } catch (error) {
-          console.error('Failed to delete staff task:', error);
-          setPageStatus(error.message || 'Cannot delete staff task.', 'error');
-        }
-      };
-
       saveStaffButton.addEventListener('click', saveStaff);
       deleteStaffButton.addEventListener('click', deleteStaff);
       staffRoleInput.addEventListener('change', syncAccountControls);
@@ -761,27 +480,8 @@
       accountSelectInput.addEventListener('change', () => {
         staffUserIdInput.value = accountSelectInput.value;
       });
-      document.getElementById('open-task-modal').addEventListener('click', () => openTaskModal());
-      document.getElementById('close-task-modal').addEventListener('click', closeTaskModal);
-      document.getElementById('cancel-task-modal').addEventListener('click', closeTaskModal);
-      taskModal.addEventListener('click', (event) => {
-        if (event.target === taskModal) closeTaskModal();
-      });
-      taskForm.addEventListener('submit', saveTask);
-      taskTableBody.addEventListener('click', (event) => {
-        const editButton = event.target.closest('.edit-task');
-        const deleteButton = event.target.closest('.delete-task');
-        if (editButton) {
-          const task = taskCache.find((item) => item.id === editButton.dataset.taskId);
-          if (task) openTaskModal(task);
-        }
-        if (deleteButton) {
-          deleteTask(deleteButton.dataset.taskId);
-        }
-      });
 
       loadStaff();
-      loadTasks();
     });
   </script>
 </body>
