@@ -62,7 +62,12 @@ END $$;
 
 DO $$
 BEGIN
-    CREATE TYPE payment_method AS ENUM ('cash', 'card', 'bank_transfer', 'cod');
+    CREATE TYPE payment_method AS ENUM (
+        'cash',
+        'card',
+        'bank_transfer',
+        'cod'
+    );
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
