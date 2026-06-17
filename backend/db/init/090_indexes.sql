@@ -18,6 +18,9 @@ CREATE INDEX IF NOT EXISTS idx_order_items_product_id ON order_items (product_id
 CREATE INDEX IF NOT EXISTS idx_payments_order_id ON payments (order_id);
 CREATE INDEX IF NOT EXISTS idx_payments_method ON payments (method);
 CREATE INDEX IF NOT EXISTS idx_payments_status ON payments (status);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_payments_gateway_transaction_id
+ON payments (gateway_transaction_id)
+WHERE gateway_transaction_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_inventory_movements_ingredient_id
     ON inventory_movements (ingredient_id);
 CREATE INDEX IF NOT EXISTS idx_inventory_movements_created_at

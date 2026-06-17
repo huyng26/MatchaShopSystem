@@ -26,18 +26,6 @@ END $$;
 
 DO $$
 BEGIN
-    CREATE TYPE task_priority AS ENUM ('low', 'medium', 'high', 'urgent');
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $$;
-
-DO $$
-BEGIN
-    CREATE TYPE task_status AS ENUM ('pending', 'in_progress', 'done');
-EXCEPTION WHEN duplicate_object THEN NULL;
-END $$;
-
-DO $$
-BEGIN
     CREATE TYPE order_type AS ENUM ('instore', 'delivery');
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
@@ -62,7 +50,12 @@ END $$;
 
 DO $$
 BEGIN
-    CREATE TYPE payment_method AS ENUM ('cash', 'card', 'bank_transfer', 'cod');
+    CREATE TYPE payment_method AS ENUM (
+        'cash',
+        'card',
+        'bank_transfer',
+        'cod'
+    );
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 

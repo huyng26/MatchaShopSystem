@@ -4,6 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.models.order import OrderPaymentStatus, OrderStatus
 from app.models.payment import PaymentEventStatus, PaymentMethod
 
 
@@ -31,3 +32,29 @@ class PaymentRead(BaseModel):
 
 class PaymentMethodRead(BaseModel):
     method: PaymentMethod
+
+
+class StripeCheckoutSessionCreate(BaseModel):
+    order_id: UUID
+    ready_for_delivery: bool = False
+
+
+class StripeCheckoutSessionRead(BaseModel):
+    payment_id: UUID
+    order_id: UUID
+    stripe_checkout_session_id: str
+    checkout_url: str
+    qr_code_data_url: str
+    expires_at: datetime | None = None
+    status: PaymentEventStatus
+
+
+class StripeCheckoutSessionStatusRead(BaseModel):
+    payment_id: UUID
+    order_id: UUID
+    stripe_checkout_session_id: str
+    payment_status: PaymentEventStatus
+    order_status: OrderStatus
+    order_payment_status: OrderPaymentStatus
+    paid_at: datetime | None = None
+    completed_at: datetime | None = None

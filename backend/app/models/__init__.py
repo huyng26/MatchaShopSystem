@@ -28,7 +28,7 @@ from app.models.order import (
 )
 from app.models.payment import Payment, PaymentEventStatus, PaymentMethod
 from app.models.product import Product
-from app.models.staff import StaffProfile, StaffTask
+from app.models.staff import StaffProfile
 from app.models.user import User, UserRole, UserStatus
 
 __all__ = [
@@ -61,7 +61,6 @@ __all__ = [
     "Product",
     "ProductRecipe",
     "StaffProfile",
-    "StaffTask",
     "User",
     "UserRole",
     "UserStatus",

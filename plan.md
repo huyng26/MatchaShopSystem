@@ -397,7 +397,6 @@ staff_profiles
 - phone varchar unique not null
 - email varchar unique not null
 - role enum not null
-- salary numeric(12,2) nullable
 - date_joined date not null
 - status enum not null default 'active'
 - created_at timestamptz
@@ -412,32 +411,12 @@ account through `staff_profiles.user_id`. The user role and staff role must
 match. Shipper staff must always be linked to a shipper account because delivery
 trips, location updates, and COD actions are assigned to individual shippers.
 
-### 4.4 Staff Tasks
+### 4.4 Staff Work Scope
 
-Purpose: task assignment and tracking.
-
-```text
-staff_tasks
-- id UUID PK
-- staff_id UUID FK staff_profiles.id not null
-- title varchar not null
-- description text nullable
-- due_date date not null
-- priority enum not null
-- status enum not null default 'pending'
-- created_by UUID FK users.id not null
-- created_at timestamptz
-- updated_at timestamptz
-- deleted_at timestamptz nullable
-```
-
-Allowed task status:
-
-```text
-pending
-in_progress
-done
-```
+Do not store salary or generic task assignments in staff profiles for version 1.
+Payroll should be entered as manual finance expenses or handled by a future
+payroll module. Shipper work should be measured through delivery trips, trip
+orders, and route distance instead of generic staff tasks.
 
 ### 4.5 Customers
 
@@ -1020,7 +999,6 @@ still persistent, so users can see unread notifications after being offline.
 
 ```text
 users 1 --- 0/1 staff_profiles
-staff_profiles 1 --- many staff_tasks
 customers 1 --- many orders
 product_categories 1 --- many products
 products 1 --- many order_items
@@ -1227,7 +1205,7 @@ def create_product(
 
 ### Goal
 
-Allow admin to manage accounts, staff profiles, and staff tasks.
+Allow admin to manage accounts and staff profiles.
 
 ### Account Endpoints
 
@@ -1247,9 +1225,6 @@ GET    /api/v1/staff/{staff_id}
 POST   /api/v1/staff
 PUT    /api/v1/staff/{staff_id}
 DELETE /api/v1/staff/{staff_id}
-POST   /api/v1/staff/{staff_id}/tasks
-PATCH  /api/v1/staff/tasks/{task_id}/status
-DELETE /api/v1/staff/tasks/{task_id}
 ```
 
 ### Tasks
@@ -1257,18 +1232,16 @@ DELETE /api/v1/staff/tasks/{task_id}
 1. Account CRUD.
 2. Staff profile CRUD, including optional linked account creation.
 3. Staff search by name or role.
-4. Task assignment.
-5. Task status update.
-6. Require shipper staff to have a linked shipper account.
-7. Prevent deleting staff with active tasks or active delivery/order links.
-8. Suggest setting staff inactive instead of deleting.
+4. Require shipper staff to have a linked shipper account.
+5. Prevent deleting staff with active delivery/order links.
+6. Suggest setting staff inactive instead of deleting.
 
 ### Done when
 
 - Admin can create accounts.
 - Admin can create and update staff, with or without a linked login account.
 - Admin can create shipper staff only when a shipper account is linked or created.
-- Admin can assign and update tasks.
+- Staff profiles do not expose salary or generic staff task management.
 
 ---
 
@@ -2366,6 +2339,23 @@ GET /api/v1/dashboard/delivery-performance?month=YYYY-MM
 - average_delivery_minutes: average completed_at - started_at in minutes,
   using trips that have both timestamps
 - cod_pending: sum expected_cod_amount for completed but unreconciled trips
+
+GET /api/v1/deliveries/shippers/{shipper_id}/performance?month=YYYY-MM
+- Validates the staff profile exists and has role = shipper.
+- total_trips: non-deleted trips assigned to the shipper and created in the month
+- completed_trips: completed or reconciled trips assigned to the shipper and
+  completed in the month
+- delivered_orders / failed_orders: trip order status counts for completed or
+  reconciled trips in the month
+- planned_distance_km: sum delivery_trips.total_distance_km for completed or
+  reconciled trips; version 1 uses planned route distance, not GPS actual distance
+- average_delivery_minutes: average completed_at - started_at in minutes
+- success_rate: delivered_orders / total_orders * 100, or 0 if no orders
+
+GET /api/v1/shipper/performance?month=YYYY-MM
+- Returns the same response shape as the manager endpoint.
+- Does not accept shipper_id; backend resolves the current shipper from the
+  authenticated user so shippers can only view their own history.
 ```
 
 Backend implementation files:
@@ -2775,7 +2765,6 @@ Phase 1:
 - Create base model
 - Create users model
 - Create staff_profiles model
-- Create staff_tasks model
 - Create audit_logs model
 
 Phase 2:
@@ -2788,7 +2777,7 @@ Phase 2:
 Phase 3:
 - Implement account CRUD
 - Implement staff CRUD
-- Implement staff task APIs
+- Keep salary and generic staff task APIs out of the staff domain
 
 Support:
 - Review all PRs for project structure consistency
@@ -2949,6 +2938,8 @@ Frontend should call:
 - GET /api/v1/dashboard/low-stock
 - GET /api/v1/dashboard/best-selling-products?month=YYYY-MM
 - GET /api/v1/dashboard/delivery-performance?month=YYYY-MM
+- GET /api/v1/deliveries/shippers/{shipper_id}/performance?month=YYYY-MM
+- GET /api/v1/shipper/performance?month=YYYY-MM
 
 All responses use the standard wrapper:
 {
@@ -2962,6 +2953,8 @@ Default shop_timezone = Asia/Ho_Chi_Minh.
 
 Best-selling products are based on completed orders only.
 Delivery pending COD is based on completed but unreconciled trips.
+Shipper performance uses completed/reconciled delivery trips and planned route
+distance from delivery_trips.total_distance_km.
 
 Swagger testing doc:
 backend/docs/api-testing-dashboard-swagger.md

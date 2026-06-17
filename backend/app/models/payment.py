@@ -2,7 +2,7 @@ from enum import Enum
 
 from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Numeric, String, text
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.schema import Column
 
@@ -66,6 +66,12 @@ class Payment(Base):
     change_amount = Column(Numeric(12, 2))
     gateway_transaction_id = Column(String(255))
     bank_reference_number = Column(String(255))
+    metadata_ = Column(
+        "metadata",
+        JSONB,
+        nullable=False,
+        server_default=text("'{}'::jsonb"),
+    )
     paid_at = Column(DateTime(timezone=True))
     created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     created_at = Column(

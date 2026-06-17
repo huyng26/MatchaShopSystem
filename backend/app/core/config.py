@@ -31,6 +31,11 @@ class Settings(BaseSettings):
     supabase_service_role_key: str | None = None
     supabase_product_images_bucket: str = "product-images"
     product_image_max_size_bytes: int = 2 * 1024 * 1024
+    stripe_secret_key: str | None = None
+    stripe_webhook_secret: str | None = None
+    stripe_currency: str = "vnd"
+    stripe_success_url: str | None = None
+    stripe_cancel_url: str | None = None
 
     @field_validator("debug", mode="before")
     @classmethod

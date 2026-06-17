@@ -198,25 +198,12 @@ async def mark_ready_for_delivery(
     actor_user_id: UUID,
 ) -> Order:
     try:
-        order = await order_repo.get_order_detail(db, order_id)
-        if order is None:
-            raise ServiceError("order_not_found", status_code=404)
-        await _validate_ready_for_delivery(db, order, payload)
-
-        if order.payment_status == OrderPaymentStatus.UNPAID:
-            await _ensure_order_has_pending_cod(
-                db,
-                order,
-                payload=payload,
-                actor_user_id=actor_user_id,
-            )
-
-        order = await order_repo.update_order_status(
+        order = await mark_ready_for_delivery_without_commit(
             db,
-            order,
-            status=OrderStatus.READY_FOR_DELIVERY,
+            order_id,
+            payload,
+            actor_user_id=actor_user_id,
         )
-        await _notify_order_ready_for_delivery(db, order)
         await db.commit()
         detail = await order_repo.get_order_detail(db, order.id)
         if detail is None:
@@ -225,6 +212,35 @@ async def mark_ready_for_delivery(
     except Exception:
         await db.rollback()
         raise
+
+
+async def mark_ready_for_delivery_without_commit(
+    db: AsyncSession,
+    order_id: UUID,
+    payload: OrderReadyForDelivery,
+    *,
+    actor_user_id: UUID,
+) -> Order:
+    order = await order_repo.get_order_detail(db, order_id)
+    if order is None:
+        raise ServiceError("order_not_found", status_code=404)
+    await _validate_ready_for_delivery(db, order, payload)
+
+    if order.payment_status == OrderPaymentStatus.UNPAID:
+        await _ensure_order_has_pending_cod(
+            db,
+            order,
+            payload=payload,
+            actor_user_id=actor_user_id,
+        )
+
+    order = await order_repo.update_order_status(
+        db,
+        order,
+        status=OrderStatus.READY_FOR_DELIVERY,
+    )
+    await _notify_order_ready_for_delivery(db, order)
+    return order
 
 
 async def complete_order(db: AsyncSession, order_id: UUID) -> OrderCompleteResponse:

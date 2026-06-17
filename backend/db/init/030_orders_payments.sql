@@ -64,6 +64,7 @@ CREATE TABLE IF NOT EXISTS payments (
     change_amount numeric(12, 2),
     gateway_transaction_id varchar(255),
     bank_reference_number varchar(255),
+    metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
     paid_at timestamptz,
     created_by uuid NOT NULL REFERENCES users (id),
     created_at timestamptz NOT NULL DEFAULT now(),
