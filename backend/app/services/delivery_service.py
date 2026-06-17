@@ -1,10 +1,12 @@
 from collections.abc import Sequence
-from datetime import datetime, timezone
+from datetime import datetime, time, timezone
 from decimal import Decimal
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.core.constants import StaffStatus, UserRole
 from app.models.delivery import (
     CodReconciliation,
@@ -37,12 +39,14 @@ from app.schemas.delivery import (
     DeliverySuggestedBatch,
     DeliverySuggestedStop,
     DeliveryTripCreate,
+    ShipperPerformanceRead,
     amount_to_collect_for_order,
     payment_method_for_order,
 )
 from app.services import notification_service
 from app.services import order_service
 from app.services.errors import ServiceError
+from app.services.finance_service import parse_month
 from app.services.routing_service import (
     MAX_EXACT_TSP_STOPS,
     RoutePlan,
@@ -157,6 +161,31 @@ async def list_trips(
         status=status,
         shipper_id=shipper_id,
     )
+
+
+async def get_shipper_performance(
+    db: AsyncSession,
+    *,
+    shipper_id: UUID,
+    month: str,
+) -> ShipperPerformanceRead:
+    shipper = await staff_repo.get_staff_profile_by_id(db, shipper_id)
+    if shipper is None:
+        raise ServiceError("shipper_not_found", status_code=404)
+    if _enum_value(shipper.role) != UserRole.SHIPPER.value:
+        raise ServiceError("staff_is_not_shipper", status_code=409)
+
+    return await _build_shipper_performance(db, shipper_id=shipper.id, month=month)
+
+
+async def get_current_shipper_performance(
+    db: AsyncSession,
+    *,
+    current_user: User,
+    month: str,
+) -> ShipperPerformanceRead:
+    staff_profile = await _current_staff_profile(db, current_user)
+    return await _build_shipper_performance(db, shipper_id=staff_profile.id, month=month)
 
 
 async def get_trip(
@@ -457,6 +486,71 @@ async def reconcile_cod(
     except Exception:
         await db.rollback()
         raise
+
+
+async def _build_shipper_performance(
+    db: AsyncSession,
+    *,
+    shipper_id: UUID,
+    month: str,
+) -> ShipperPerformanceRead:
+    window_start, window_end = _month_window(month)
+    total_trips = await delivery_repo.count_shipper_trips_by_created_window(
+        db,
+        shipper_id=shipper_id,
+        window_start=window_start,
+        window_end=window_end,
+    )
+    completed_trips = (
+        await delivery_repo.count_shipper_completed_trips_by_completed_window(
+            db,
+            shipper_id=shipper_id,
+            window_start=window_start,
+            window_end=window_end,
+        )
+    )
+    planned_distance_km = (
+        await delivery_repo.sum_shipper_planned_distance_by_completed_window(
+            db,
+            shipper_id=shipper_id,
+            window_start=window_start,
+            window_end=window_end,
+        )
+    )
+    average_delivery_minutes = await delivery_repo.get_shipper_average_delivery_minutes(
+        db,
+        shipper_id=shipper_id,
+        window_start=window_start,
+        window_end=window_end,
+    )
+    delivered_orders, failed_orders = (
+        await delivery_repo.get_shipper_order_status_counts_by_completed_window(
+            db,
+            shipper_id=shipper_id,
+            window_start=window_start,
+            window_end=window_end,
+        )
+    )
+    total_orders = delivered_orders + failed_orders
+    success_rate = (
+        Decimal(delivered_orders) / Decimal(total_orders) * Decimal("100")
+        if total_orders
+        else Decimal("0")
+    )
+    return ShipperPerformanceRead(
+        shipper_id=shipper_id,
+        month=month,
+        total_trips=total_trips,
+        completed_trips=completed_trips,
+        delivered_orders=delivered_orders,
+        failed_orders=failed_orders,
+        total_orders=total_orders,
+        planned_distance_km=_decimal(planned_distance_km).quantize(DISTANCE_QUANT),
+        average_delivery_minutes=_decimal(average_delivery_minutes).quantize(
+            MONEY_QUANT
+        ),
+        success_rate=success_rate.quantize(MONEY_QUANT),
+    )
 
 
 async def _notify_trip_assigned(
@@ -765,6 +859,24 @@ def _format_waiting_time(delta) -> str:
     if hours:
         return f"{hours} hours {minutes} minutes"
     return f"{minutes} minutes"
+
+
+def _month_window(month: str) -> tuple[datetime, datetime]:
+    month_start, next_month_start = parse_month(month)
+    shop_timezone = _shop_timezone()
+    local_start = datetime.combine(month_start, time.min, tzinfo=shop_timezone)
+    local_end = datetime.combine(next_month_start, time.min, tzinfo=shop_timezone)
+    return local_start.astimezone(timezone.utc), local_end.astimezone(timezone.utc)
+
+
+def _shop_timezone() -> ZoneInfo:
+    return ZoneInfo(get_settings().shop_timezone)
+
+
+def _decimal(value: Decimal | int | float | None) -> Decimal:
+    if value is None:
+        return Decimal("0")
+    return Decimal(str(value))
 
 
 async def _get_trip_detail_or_404(

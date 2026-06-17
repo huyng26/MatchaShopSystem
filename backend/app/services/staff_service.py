@@ -7,14 +7,12 @@ from app.core.constants import StaffStatus, UserRole, UserStatus
 from app.core.exceptions import BusinessRuleError, ConflictError, NotFoundError
 from app.core.security import hash_password
 from app.models.audit import AuditLog
-from app.models.staff import StaffProfile, StaffTask
+from app.models.staff import StaffProfile
 from app.models.user import User
 from app.repositories import staff_repo, user_repo
 from app.schemas.staff import (
     StaffProfileCreate,
     StaffProfileUpdate,
-    StaffTaskCreate,
-    StaffTaskUpdate,
 )
 
 
@@ -203,109 +201,6 @@ async def delete_staff_profile(
     return staff_profile
 
 
-async def list_staff_tasks(
-    db: AsyncSession,
-    page: int,
-    page_size: int,
-    staff_id: UUID | None = None,
-    status=None,
-) -> tuple[list[StaffTask], int]:
-    offset = (page - 1) * page_size
-    tasks = await staff_repo.list_staff_tasks(
-        db,
-        offset,
-        page_size,
-        staff_id=staff_id,
-        status=status,
-    )
-    total = await staff_repo.count_staff_tasks(db, staff_id=staff_id, status=status)
-    return tasks, total
-
-
-async def get_staff_task(db: AsyncSession, task_id: UUID) -> StaffTask:
-    task = await staff_repo.get_staff_task_by_id(db, task_id)
-    if task is None:
-        raise NotFoundError("Staff task not found")
-    return task
-
-
-async def create_staff_task(
-    db: AsyncSession,
-    payload: StaffTaskCreate,
-    actor_user_id: UUID,
-) -> StaffTask:
-    await _require_staff_profile(db, payload.staff_id)
-
-    task = StaffTask(**payload.model_dump(), created_by=actor_user_id)
-    staff_repo.add_staff_task(db, task)
-    await db.flush()
-    _add_audit_log(
-        db,
-        actor_user_id,
-        "staff_task.created",
-        "staff_tasks",
-        task.id,
-        new_value=_task_audit_value(task),
-    )
-    await db.commit()
-    await db.refresh(task)
-    return task
-
-
-async def update_staff_task(
-    db: AsyncSession,
-    task_id: UUID,
-    payload: StaffTaskUpdate,
-    actor_user_id: UUID,
-) -> StaffTask:
-    task = await get_staff_task(db, task_id)
-    update_data = payload.model_dump(exclude_unset=True)
-    if not update_data:
-        return task
-
-    if "staff_id" in update_data:
-        await _require_staff_profile(db, update_data["staff_id"])
-
-    old_value = _task_audit_value(task)
-    for field, value in update_data.items():
-        setattr(task, field, value)
-
-    _add_audit_log(
-        db,
-        actor_user_id,
-        "staff_task.updated",
-        "staff_tasks",
-        task.id,
-        old_value=old_value,
-        new_value=_task_audit_value(task),
-    )
-    await db.commit()
-    await db.refresh(task)
-    return task
-
-
-async def delete_staff_task(
-    db: AsyncSession,
-    task_id: UUID,
-    actor_user_id: UUID,
-) -> StaffTask:
-    task = await get_staff_task(db, task_id)
-    old_value = _task_audit_value(task)
-    task.deleted_at = datetime.now(timezone.utc)
-    _add_audit_log(
-        db,
-        actor_user_id,
-        "staff_task.deleted",
-        "staff_tasks",
-        task.id,
-        old_value=old_value,
-        new_value=_task_audit_value(task),
-    )
-    await db.commit()
-    await db.refresh(task)
-    return task
-
-
 async def _validate_staff_uniqueness(
     db: AsyncSession,
     email: str,
@@ -481,16 +376,6 @@ def _validate_shipper_account_requirement(role, user_id: UUID | None) -> None:
         raise BusinessRuleError("Shipper staff must be linked to an account")
 
 
-async def _require_staff_profile(
-    db: AsyncSession,
-    staff_id: UUID,
-) -> StaffProfile:
-    staff_profile = await staff_repo.get_staff_profile_by_id(db, staff_id)
-    if staff_profile is None:
-        raise NotFoundError("Staff profile not found")
-    return staff_profile
-
-
 def _add_audit_log(
     db: AsyncSession,
     actor_user_id: UUID | None,
@@ -534,18 +419,6 @@ def _user_audit_value(user: User) -> dict:
         "role": _enum_value(user.role),
         "status": _enum_value(user.status),
         "deleted_at": user.deleted_at.isoformat() if user.deleted_at else None,
-    }
-
-
-def _task_audit_value(task: StaffTask) -> dict:
-    return {
-        "id": str(task.id),
-        "staff_id": str(task.staff_id),
-        "title": task.title,
-        "due_date": task.due_date.isoformat(),
-        "priority": getattr(task.priority, "value", task.priority),
-        "status": getattr(task.status, "value", task.status),
-        "deleted_at": task.deleted_at.isoformat() if task.deleted_at else None,
     }
 
 

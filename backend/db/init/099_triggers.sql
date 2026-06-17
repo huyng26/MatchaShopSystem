@@ -10,11 +10,6 @@ CREATE TRIGGER trg_staff_profiles_updated_at
 BEFORE UPDATE ON staff_profiles
 FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
-DROP TRIGGER IF EXISTS trg_staff_tasks_updated_at ON staff_tasks;
-CREATE TRIGGER trg_staff_tasks_updated_at
-BEFORE UPDATE ON staff_tasks
-FOR EACH ROW EXECUTE FUNCTION set_updated_at();
-
 DROP TRIGGER IF EXISTS trg_customers_updated_at ON customers;
 CREATE TRIGGER trg_customers_updated_at
 BEFORE UPDATE ON customers

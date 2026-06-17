@@ -20,18 +20,5 @@ class StaffStatus(str, Enum):
     INACTIVE = "inactive"
 
 
-class TaskPriority(str, Enum):
-    LOW = "low"
-    MEDIUM = "medium"
-    HIGH = "high"
-    URGENT = "urgent"
-
-
-class TaskStatus(str, Enum):
-    PENDING = "pending"
-    IN_PROGRESS = "in_progress"
-    DONE = "done"
-
-
 def enum_values(enum_class: type[Enum]) -> list[str]:
     return [item.value for item in enum_class]

@@ -14,6 +14,7 @@ from app.schemas.shipper import (
     ShipperLocationUpdate,
     ShipperOrderDelivered,
     ShipperOrderFailed,
+    ShipperPerformanceRead,
     ShipperTripDetailRead,
     ShipperTripRead,
 )
@@ -48,6 +49,23 @@ async def get_shipper_trip(
             current_user=current_user,
         )
         return ok(read_one(ShipperTripDetailRead, trip))
+    except ServiceError as error:
+        raise_service_error(error)
+
+
+@router.get("/performance")
+async def get_shipper_performance(
+    month: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_roles(UserRole.SHIPPER)),
+) -> dict[str, Any]:
+    try:
+        performance = await shipper_service.get_performance(
+            db,
+            current_user=current_user,
+            month=month,
+        )
+        return ok(ShipperPerformanceRead.model_validate(performance))
     except ServiceError as error:
         raise_service_error(error)
 

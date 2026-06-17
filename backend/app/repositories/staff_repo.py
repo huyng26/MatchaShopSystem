@@ -1,11 +1,10 @@
-from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.constants import StaffStatus, TaskStatus, UserRole
-from app.models.staff import StaffProfile, StaffTask
+from app.core.constants import StaffStatus, UserRole
+from app.models.staff import StaffProfile
 
 
 async def get_staff_profile_by_id(
@@ -83,67 +82,9 @@ async def count_staff_profiles(
     return int(result.scalar_one())
 
 
-async def sum_active_staff_salaries(db: AsyncSession) -> tuple[Decimal, int]:
-    stmt = select(
-        func.coalesce(func.sum(StaffProfile.salary), Decimal("0")),
-        func.count(StaffProfile.id),
-    ).where(
-        StaffProfile.status == StaffStatus.ACTIVE,
-        StaffProfile.deleted_at.is_(None),
-        StaffProfile.salary.is_not(None),
-    )
-    result = await db.execute(stmt)
-    total_salary, staff_count = result.one()
-    return Decimal(total_salary), int(staff_count)
-
-
 def add_staff_profile(db: AsyncSession, staff_profile: StaffProfile) -> StaffProfile:
     db.add(staff_profile)
     return staff_profile
-
-
-async def get_staff_task_by_id(
-    db: AsyncSession,
-    task_id: UUID,
-    include_deleted: bool = False,
-) -> StaffTask | None:
-    stmt = select(StaffTask).where(StaffTask.id == task_id)
-    if not include_deleted:
-        stmt = stmt.where(StaffTask.deleted_at.is_(None))
-    result = await db.execute(stmt)
-    return result.scalar_one_or_none()
-
-
-async def list_staff_tasks(
-    db: AsyncSession,
-    offset: int,
-    limit: int,
-    staff_id: UUID | None = None,
-    status: TaskStatus | None = None,
-    include_deleted: bool = False,
-) -> list[StaffTask]:
-    stmt = select(StaffTask)
-    stmt = _apply_task_filters(stmt, staff_id, status, include_deleted)
-    stmt = stmt.order_by(StaffTask.created_at.desc()).offset(offset).limit(limit)
-    result = await db.execute(stmt)
-    return list(result.scalars().all())
-
-
-async def count_staff_tasks(
-    db: AsyncSession,
-    staff_id: UUID | None = None,
-    status: TaskStatus | None = None,
-    include_deleted: bool = False,
-) -> int:
-    stmt = select(func.count()).select_from(StaffTask)
-    stmt = _apply_task_filters(stmt, staff_id, status, include_deleted)
-    result = await db.execute(stmt)
-    return int(result.scalar_one())
-
-
-def add_staff_task(db: AsyncSession, staff_task: StaffTask) -> StaffTask:
-    db.add(staff_task)
-    return staff_task
 
 
 def _apply_staff_filters(
@@ -158,19 +99,4 @@ def _apply_staff_filters(
         stmt = stmt.where(StaffProfile.status == status)
     if not include_deleted:
         stmt = stmt.where(StaffProfile.deleted_at.is_(None))
-    return stmt
-
-
-def _apply_task_filters(
-    stmt,
-    staff_id: UUID | None,
-    status: TaskStatus | None,
-    include_deleted: bool,
-):
-    if staff_id is not None:
-        stmt = stmt.where(StaffTask.staff_id == staff_id)
-    if status is not None:
-        stmt = stmt.where(StaffTask.status == status)
-    if not include_deleted:
-        stmt = stmt.where(StaffTask.deleted_at.is_(None))
     return stmt

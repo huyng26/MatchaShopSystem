@@ -226,16 +226,11 @@ POST /api/v1/staff
 GET /api/v1/staff/{staff_id}
 PUT /api/v1/staff/{staff_id}
 DELETE /api/v1/staff/{staff_id}
-GET /api/v1/staff/tasks
-POST /api/v1/staff/tasks
-GET /api/v1/staff/tasks/{task_id}
-PUT /api/v1/staff/tasks/{task_id}
-DELETE /api/v1/staff/tasks/{task_id}
 ```
 
-Auth, account, staff, and staff task APIs are backed by services and the
-database. Other domain modules may still expose lightweight mock endpoints until
-their feature phases replace them with service calls.
+Auth, account, and staff APIs are backed by services and the database. Other
+domain modules may still expose lightweight mock endpoints until their feature
+phases replace them with service calls.
 
 ## API Layer
 
@@ -423,7 +418,7 @@ All ORM models should inherit from `Base`.
 
 ```text
 user.py       users
-staff.py      staff_profiles, staff_tasks
+staff.py      staff_profiles
 customer.py   customers
 product.py    product_categories, products
 inventory.py  ingredients, product_recipes, inventory_purchases, inventory_movements
@@ -648,7 +643,6 @@ Creates identity and customer-related tables:
 ```text
 users
 staff_profiles
-staff_tasks
 customers
 ```
 
@@ -1021,14 +1015,13 @@ Health/status endpoints
 Async database connection setup
 Raw SQL bootstrap split by purpose
 Docker Postgres init mount
-Person 1 ORM models: users, staff_profiles, staff_tasks, audit_logs
+Person 1 ORM models: users, staff_profiles, audit_logs
 Person 1 Pydantic schemas
 JWT login, refresh token, current user dependency
 Password hashing with bcrypt
 Admin RBAC dependency
 Account CRUD APIs
 Staff profile CRUD APIs
-Staff task CRUD APIs
 Audit log writes for account/staff changes
 Standard API response and error handlers
 Alembic metadata wiring for implemented ORM models

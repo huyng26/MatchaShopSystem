@@ -1,4 +1,4 @@
--- Account, staff, task, and customer tables.
+-- Account, staff, and customer tables.
 
 CREATE TABLE IF NOT EXISTS users (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -19,26 +19,8 @@ CREATE TABLE IF NOT EXISTS staff_profiles (
     phone varchar(50) UNIQUE NOT NULL,
     email varchar(255) UNIQUE NOT NULL,
     role user_role NOT NULL,
-    salary numeric(12, 2),
     date_joined date NOT NULL,
     status staff_status NOT NULL DEFAULT 'active',
-    created_at timestamptz NOT NULL DEFAULT now(),
-    updated_at timestamptz NOT NULL DEFAULT now(),
-    deleted_at timestamptz,
-    CONSTRAINT staff_profiles_salary_non_negative CHECK (
-        salary IS NULL OR salary >= 0
-    )
-);
-
-CREATE TABLE IF NOT EXISTS staff_tasks (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    staff_id uuid NOT NULL REFERENCES staff_profiles (id),
-    title varchar(255) NOT NULL,
-    description text,
-    due_date date NOT NULL,
-    priority task_priority NOT NULL,
-    status task_status NOT NULL DEFAULT 'pending',
-    created_by uuid NOT NULL REFERENCES users (id),
     created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now(),
     deleted_at timestamptz
