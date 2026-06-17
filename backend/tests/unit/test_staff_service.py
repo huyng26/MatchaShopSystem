@@ -1,5 +1,4 @@
 from datetime import date
-from decimal import Decimal
 from uuid import uuid4
 
 import pytest
@@ -106,7 +105,7 @@ async def test_create_shipper_requires_linked_or_created_account(monkeypatch) ->
 
 
 @pytest.mark.asyncio
-async def test_update_staff_profile_can_update_salary_only(monkeypatch) -> None:
+async def test_update_staff_profile_can_update_phone_only(monkeypatch) -> None:
     patch_empty_staff_and_user_lookup(monkeypatch)
     staff = StaffProfile(
         id=uuid4(),
@@ -114,7 +113,6 @@ async def test_update_staff_profile_can_update_salary_only(monkeypatch) -> None:
         phone="0900000777",
         email="cashier@matcha.local",
         role=UserRole.CASHIER,
-        salary=Decimal("6000000.00"),
         date_joined=date(2026, 6, 1),
         status=StaffStatus.ACTIVE,
     )
@@ -132,10 +130,10 @@ async def test_update_staff_profile_can_update_salary_only(monkeypatch) -> None:
     result = await staff_service.update_staff_profile(
         db,
         staff.id,
-        StaffProfileUpdate(salary=Decimal("1000")),
+        StaffProfileUpdate(phone="0900000666"),
         actor_user_id=uuid4(),
     )
 
     assert result is staff
-    assert staff.salary == Decimal("1000")
+    assert staff.phone == "0900000666"
     assert db.commits == 1

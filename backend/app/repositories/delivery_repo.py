@@ -4,7 +4,7 @@ from decimal import Decimal
 from secrets import token_hex
 from uuid import UUID
 
-from sqlalchemy import exists, select
+from sqlalchemy import case, exists, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -354,3 +354,136 @@ async def create_reconciliation(
     await db.flush()
     await db.refresh(reconciliation)
     return reconciliation
+
+
+async def count_shipper_trips_by_created_window(
+    db: AsyncSession,
+    *,
+    shipper_id: UUID,
+    window_start: datetime,
+    window_end: datetime,
+) -> int:
+    stmt = select(func.count(DeliveryTrip.id)).where(
+        DeliveryTrip.shipper_id == shipper_id,
+        DeliveryTrip.deleted_at.is_(None),
+        DeliveryTrip.created_at >= window_start,
+        DeliveryTrip.created_at < window_end,
+    )
+    result = await db.execute(stmt)
+    return int(result.scalar_one())
+
+
+async def count_shipper_completed_trips_by_completed_window(
+    db: AsyncSession,
+    *,
+    shipper_id: UUID,
+    window_start: datetime,
+    window_end: datetime,
+) -> int:
+    stmt = select(func.count(DeliveryTrip.id)).where(
+        DeliveryTrip.shipper_id == shipper_id,
+        DeliveryTrip.deleted_at.is_(None),
+        DeliveryTrip.status.in_(
+            (DeliveryTripStatus.COMPLETED, DeliveryTripStatus.RECONCILED)
+        ),
+        DeliveryTrip.completed_at >= window_start,
+        DeliveryTrip.completed_at < window_end,
+    )
+    result = await db.execute(stmt)
+    return int(result.scalar_one())
+
+
+async def sum_shipper_planned_distance_by_completed_window(
+    db: AsyncSession,
+    *,
+    shipper_id: UUID,
+    window_start: datetime,
+    window_end: datetime,
+) -> Decimal:
+    stmt = select(
+        func.coalesce(func.sum(DeliveryTrip.total_distance_km), Decimal("0")).label(
+            "total"
+        )
+    ).where(
+        DeliveryTrip.shipper_id == shipper_id,
+        DeliveryTrip.deleted_at.is_(None),
+        DeliveryTrip.status.in_(
+            (DeliveryTripStatus.COMPLETED, DeliveryTripStatus.RECONCILED)
+        ),
+        DeliveryTrip.completed_at >= window_start,
+        DeliveryTrip.completed_at < window_end,
+    )
+    result = await db.execute(stmt)
+    return result.scalar_one()
+
+
+async def get_shipper_average_delivery_minutes(
+    db: AsyncSession,
+    *,
+    shipper_id: UUID,
+    window_start: datetime,
+    window_end: datetime,
+) -> Decimal:
+    duration_minutes = func.extract(
+        "epoch",
+        DeliveryTrip.completed_at - DeliveryTrip.started_at,
+    ) / 60
+    stmt = select(
+        func.coalesce(func.avg(duration_minutes), Decimal("0")).label("average")
+    ).where(
+        DeliveryTrip.shipper_id == shipper_id,
+        DeliveryTrip.deleted_at.is_(None),
+        DeliveryTrip.started_at.is_not(None),
+        DeliveryTrip.completed_at.is_not(None),
+        DeliveryTrip.status.in_(
+            (DeliveryTripStatus.COMPLETED, DeliveryTripStatus.RECONCILED)
+        ),
+        DeliveryTrip.completed_at >= window_start,
+        DeliveryTrip.completed_at < window_end,
+    )
+    result = await db.execute(stmt)
+    return result.scalar_one()
+
+
+async def get_shipper_order_status_counts_by_completed_window(
+    db: AsyncSession,
+    *,
+    shipper_id: UUID,
+    window_start: datetime,
+    window_end: datetime,
+) -> tuple[int, int]:
+    delivered_count = func.coalesce(
+        func.sum(
+            case(
+                (DeliveryTripOrder.status == DeliveryTripOrderStatus.DELIVERED, 1),
+                else_=0,
+            )
+        ),
+        0,
+    )
+    failed_count = func.coalesce(
+        func.sum(
+            case(
+                (DeliveryTripOrder.status == DeliveryTripOrderStatus.FAILED, 1),
+                else_=0,
+            )
+        ),
+        0,
+    )
+    stmt = (
+        select(delivered_count, failed_count)
+        .select_from(DeliveryTripOrder)
+        .join(DeliveryTrip, DeliveryTripOrder.trip_id == DeliveryTrip.id)
+        .where(
+            DeliveryTrip.shipper_id == shipper_id,
+            DeliveryTrip.deleted_at.is_(None),
+            DeliveryTrip.status.in_(
+                (DeliveryTripStatus.COMPLETED, DeliveryTripStatus.RECONCILED)
+            ),
+            DeliveryTrip.completed_at >= window_start,
+            DeliveryTrip.completed_at < window_end,
+        )
+    )
+    result = await db.execute(stmt)
+    delivered_orders, failed_orders = result.one()
+    return int(delivered_orders), int(failed_orders)

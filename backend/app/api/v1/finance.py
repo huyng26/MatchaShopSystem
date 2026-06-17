@@ -13,7 +13,6 @@ from app.schemas.finance import (
     ExpenseRead,
     FinanceSummaryRead,
     FinancialRecordRead,
-    StaffWageExpenseRead,
 )
 from app.services import finance_service
 from app.services.errors import ServiceError
@@ -48,26 +47,6 @@ async def list_expenses(
     try:
         expenses = await finance_service.list_expenses(db, month=month)
         return ok(read_list(ExpenseRead, expenses))
-    except ServiceError as error:
-        raise_service_error(error)
-
-
-@router.post("/expenses/staff-wages")
-async def create_staff_wage_expense(
-    current_user: FinanceUser,
-    db: Annotated[AsyncSession, Depends(get_db)],
-    month: str,
-) -> dict[str, Any]:
-    try:
-        result = await finance_service.create_staff_wage_expense(
-            db,
-            month=month,
-            created_by=current_user.id,
-        )
-        return created(
-            StaffWageExpenseRead.model_validate(result),
-            message="Staff wage expense created successfully",
-        )
     except ServiceError as error:
         raise_service_error(error)
 

@@ -47,9 +47,3 @@ class FinanceSummaryRead(BaseModel):
     material_cost: Decimal
     operating_expense: Decimal
     net_profit: Decimal
-
-
-class StaffWageExpenseRead(BaseModel):
-    expense: ExpenseRead
-    staff_count: int = Field(..., ge=0)
-    total_salary: Decimal = Field(..., ge=0, max_digits=12, decimal_places=2)

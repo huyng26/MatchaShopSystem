@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from types import SimpleNamespace
 from uuid import uuid4
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -86,6 +87,199 @@ def make_order(
         payments=[],
         created_at=datetime.now(timezone.utc),
     )
+
+
+@pytest.mark.asyncio
+async def test_get_shipper_performance_uses_delivery_metrics(monkeypatch):
+    db = FakeDb()
+    shipper_id = uuid4()
+    captured = {}
+
+    monkeypatch.setattr(
+        delivery_service,
+        "_shop_timezone",
+        lambda: ZoneInfo("Asia/Ho_Chi_Minh"),
+    )
+
+    async def get_staff_profile_by_id(db, staff_id):
+        captured["staff_id"] = staff_id
+        return make_staff(uuid4(), staff_id=staff_id, role=UserRole.SHIPPER)
+
+    async def count_shipper_trips_by_created_window(db, **kwargs):
+        captured["total"] = kwargs
+        return 6
+
+    async def count_shipper_completed_trips_by_completed_window(db, **kwargs):
+        captured["completed"] = kwargs
+        return 4
+
+    async def sum_shipper_planned_distance_by_completed_window(db, **kwargs):
+        captured["distance"] = kwargs
+        return Decimal("12.3456")
+
+    async def get_shipper_average_delivery_minutes(db, **kwargs):
+        captured["average"] = kwargs
+        return Decimal("31.126")
+
+    async def get_shipper_order_status_counts_by_completed_window(db, **kwargs):
+        captured["orders"] = kwargs
+        return 9, 1
+
+    monkeypatch.setattr(
+        delivery_service.staff_repo,
+        "get_staff_profile_by_id",
+        get_staff_profile_by_id,
+    )
+    monkeypatch.setattr(
+        delivery_service.delivery_repo,
+        "count_shipper_trips_by_created_window",
+        count_shipper_trips_by_created_window,
+    )
+    monkeypatch.setattr(
+        delivery_service.delivery_repo,
+        "count_shipper_completed_trips_by_completed_window",
+        count_shipper_completed_trips_by_completed_window,
+    )
+    monkeypatch.setattr(
+        delivery_service.delivery_repo,
+        "sum_shipper_planned_distance_by_completed_window",
+        sum_shipper_planned_distance_by_completed_window,
+    )
+    monkeypatch.setattr(
+        delivery_service.delivery_repo,
+        "get_shipper_average_delivery_minutes",
+        get_shipper_average_delivery_minutes,
+    )
+    monkeypatch.setattr(
+        delivery_service.delivery_repo,
+        "get_shipper_order_status_counts_by_completed_window",
+        get_shipper_order_status_counts_by_completed_window,
+    )
+
+    result = await delivery_service.get_shipper_performance(
+        db,
+        shipper_id=shipper_id,
+        month="2026-06",
+    )
+
+    expected_window = {
+        "shipper_id": shipper_id,
+        "window_start": datetime(2026, 5, 31, 17, tzinfo=timezone.utc),
+        "window_end": datetime(2026, 6, 30, 17, tzinfo=timezone.utc),
+    }
+    assert result.shipper_id == shipper_id
+    assert result.month == "2026-06"
+    assert result.total_trips == 6
+    assert result.completed_trips == 4
+    assert result.delivered_orders == 9
+    assert result.failed_orders == 1
+    assert result.total_orders == 10
+    assert result.planned_distance_km == Decimal("12.346")
+    assert result.average_delivery_minutes == Decimal("31.13")
+    assert result.success_rate == Decimal("90.00")
+    assert captured["staff_id"] == shipper_id
+    assert captured["total"] == expected_window
+    assert captured["completed"] == expected_window
+    assert captured["distance"] == expected_window
+    assert captured["average"] == expected_window
+    assert captured["orders"] == expected_window
+
+
+@pytest.mark.asyncio
+async def test_get_current_shipper_performance_uses_current_user_staff(monkeypatch):
+    db = FakeDb()
+    shipper_user = make_user(UserRole.SHIPPER)
+    own_shipper = make_staff(shipper_user.id)
+    captured = {}
+
+    monkeypatch.setattr(
+        delivery_service,
+        "_shop_timezone",
+        lambda: ZoneInfo("Asia/Ho_Chi_Minh"),
+    )
+
+    async def get_staff_profile_by_user_id(db, user_id):
+        assert user_id == shipper_user.id
+        return own_shipper
+
+    async def count_shipper_trips_by_created_window(db, **kwargs):
+        captured["shipper_id"] = kwargs["shipper_id"]
+        return 0
+
+    async def count_shipper_completed_trips_by_completed_window(db, **kwargs):
+        return 0
+
+    async def sum_shipper_planned_distance_by_completed_window(db, **kwargs):
+        return Decimal("0")
+
+    async def get_shipper_average_delivery_minutes(db, **kwargs):
+        return Decimal("0")
+
+    async def get_shipper_order_status_counts_by_completed_window(db, **kwargs):
+        return 0, 0
+
+    monkeypatch.setattr(
+        delivery_service.staff_repo,
+        "get_staff_profile_by_user_id",
+        get_staff_profile_by_user_id,
+    )
+    monkeypatch.setattr(
+        delivery_service.delivery_repo,
+        "count_shipper_trips_by_created_window",
+        count_shipper_trips_by_created_window,
+    )
+    monkeypatch.setattr(
+        delivery_service.delivery_repo,
+        "count_shipper_completed_trips_by_completed_window",
+        count_shipper_completed_trips_by_completed_window,
+    )
+    monkeypatch.setattr(
+        delivery_service.delivery_repo,
+        "sum_shipper_planned_distance_by_completed_window",
+        sum_shipper_planned_distance_by_completed_window,
+    )
+    monkeypatch.setattr(
+        delivery_service.delivery_repo,
+        "get_shipper_average_delivery_minutes",
+        get_shipper_average_delivery_minutes,
+    )
+    monkeypatch.setattr(
+        delivery_service.delivery_repo,
+        "get_shipper_order_status_counts_by_completed_window",
+        get_shipper_order_status_counts_by_completed_window,
+    )
+
+    result = await delivery_service.get_current_shipper_performance(
+        db,
+        current_user=shipper_user,
+        month="2026-06",
+    )
+
+    assert result.shipper_id == own_shipper.id
+    assert captured["shipper_id"] == own_shipper.id
+    assert result.success_rate == Decimal("0.00")
+
+
+@pytest.mark.asyncio
+async def test_get_shipper_performance_rejects_non_shipper(monkeypatch):
+    async def get_staff_profile_by_id(db, staff_id):
+        return make_staff(uuid4(), staff_id=staff_id, role=UserRole.CASHIER)
+
+    monkeypatch.setattr(
+        delivery_service.staff_repo,
+        "get_staff_profile_by_id",
+        get_staff_profile_by_id,
+    )
+
+    with pytest.raises(ServiceError) as error:
+        await delivery_service.get_shipper_performance(
+            FakeDb(),
+            shipper_id=uuid4(),
+            month="2026-06",
+        )
+
+    assert error.value.code == "staff_is_not_shipper"
+    assert error.value.status_code == 409
 
 
 @pytest.mark.asyncio

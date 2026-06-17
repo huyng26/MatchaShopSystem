@@ -26,6 +26,7 @@ from app.schemas.delivery import (
     DeliveryTripCreate,
     DeliveryTripDetailRead,
     DeliveryTripRead,
+    ShipperPerformanceRead,
 )
 from app.services import delivery_service
 from app.services.errors import ServiceError
@@ -95,6 +96,26 @@ async def list_delivery_trips(
         status=status,
     )
     return ok(read_list(DeliveryTripRead, trips))
+
+
+@router.get("/shippers/{shipper_id}/performance")
+async def get_shipper_performance(
+    shipper_id: UUID,
+    month: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(
+        require_roles(UserRole.ADMIN, UserRole.DELIVERY_MANAGER)
+    ),
+) -> dict[str, Any]:
+    try:
+        performance = await delivery_service.get_shipper_performance(
+            db,
+            shipper_id=shipper_id,
+            month=month,
+        )
+        return ok(ShipperPerformanceRead.model_validate(performance))
+    except ServiceError as error:
+        raise_service_error(error)
 
 
 @router.get("/trips/{trip_id}")

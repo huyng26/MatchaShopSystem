@@ -63,6 +63,19 @@ class DeliveryTripAssign(BaseModel):
     shipper_id: UUID
 
 
+class ShipperPerformanceRead(BaseModel):
+    shipper_id: UUID
+    month: str
+    total_trips: int = Field(..., ge=0)
+    completed_trips: int = Field(..., ge=0)
+    delivered_orders: int = Field(..., ge=0)
+    failed_orders: int = Field(..., ge=0)
+    total_orders: int = Field(..., ge=0)
+    planned_distance_km: Decimal = Field(..., ge=0)
+    average_delivery_minutes: Decimal = Field(..., ge=0)
+    success_rate: Decimal = Field(..., ge=0)
+
+
 class DeliveryLocationUpdate(BaseModel):
     latitude: Decimal = Field(..., ge=-90, le=90, max_digits=10, decimal_places=7)
     longitude: Decimal = Field(..., ge=-180, le=180, max_digits=10, decimal_places=7)

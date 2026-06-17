@@ -10,6 +10,7 @@ from app.schemas.shipper import (
     ShipperLocationUpdate,
     ShipperOrderDelivered,
     ShipperOrderFailed,
+    ShipperPerformanceRead,
 )
 from app.services import delivery_service
 
@@ -44,6 +45,19 @@ async def get_assigned_trip(
     current_user: User,
 ) -> DeliveryTrip:
     return await delivery_service.get_trip(db, trip_id, current_user=current_user)
+
+
+async def get_performance(
+    db: AsyncSession,
+    *,
+    current_user: User,
+    month: str,
+) -> ShipperPerformanceRead:
+    return await delivery_service.get_current_shipper_performance(
+        db,
+        current_user=current_user,
+        month=month,
+    )
 
 
 async def start_assigned_trip(

@@ -3,6 +3,7 @@ from app.schemas.delivery import (
     DeliveryLocationUpdate,
     DeliveryOrderDelivered,
     DeliveryOrderFailed,
+    ShipperPerformanceRead as DeliveryShipperPerformanceRead,
     DeliveryTripDetailRead,
     DeliveryTripRead,
 )
@@ -13,3 +14,4 @@ ShipperLocationUpdate = DeliveryLocationUpdate
 ShipperLocationLogRead = DeliveryLocationLogRead
 ShipperOrderDelivered = DeliveryOrderDelivered
 ShipperOrderFailed = DeliveryOrderFailed
+ShipperPerformanceRead = DeliveryShipperPerformanceRead
