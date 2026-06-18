@@ -292,6 +292,7 @@
             if (Array.isArray(data?.items)) return data.items;
             return [];
         };
+        const normalizePhone = (value) => String(value || '').replace(/\D/g, '');
         const fetchApiData = async (path, options = {}) => {
             const response = await fetch(`${API_BASE_URL}${path}`, {
                 ...options,
@@ -305,6 +306,16 @@
                 throw new Error(payload?.message || 'Request failed');
             }
             return payload?.data ?? payload;
+        };
+        const findExistingCustomerByPhone = async (phone) => {
+            const normalizedPhone = normalizePhone(phone);
+            if (!normalizedPhone) return null;
+
+            const customers = getListData(await fetchApiData(`/customers?q=${encodeURIComponent(phone)}`));
+            return customers.find((customer) => (
+                normalizePhone(customer.phone) === normalizedPhone
+                && String(customer.id) !== String(currentCustomer?.id)
+            )) || null;
         };
         const setText = (id, value) => {
             const element = document.getElementById(id);
@@ -487,9 +498,20 @@
             };
 
             saveButton.disabled = true;
-            saveButton.textContent = 'Saving...';
-            setStatus('Saving customer...');
+            saveButton.textContent = 'Checking...';
+            setStatus('Checking phone number...');
             try {
+                if (payload.phone) {
+                    const existingCustomer = await findExistingCustomerByPhone(payload.phone);
+                    if (existingCustomer) {
+                        setStatus(`Phone number already exists for ${existingCustomer.name || 'another customer'}.`, 'error');
+                        document.getElementById('edit-customer-phone').focus();
+                        return;
+                    }
+                }
+
+                saveButton.textContent = 'Saving...';
+                setStatus('Saving customer...');
                 await fetchApiData(`/customers/${encodeURIComponent(customerId)}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
