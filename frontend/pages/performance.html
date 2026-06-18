@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Performance | The Botanical Atelier</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script src="../assets/js/tailwind-config.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/style.css?v=notification-toast-fix-20260616" />
+</head>
+
+<body class="page-performance bg-background text-on-surface antialiased overflow-x-hidden" data-page="performance">
+  <aside id="app-sidebar" class="h-screen w-72 fixed left-0 top-0 z-40 bg-[#002c04] dark:bg-[#001a02] shadow-[32px_0_64px_-12px_rgba(0,44,4,0.08)] flex flex-col py-8 px-6"></aside>
+  <header id="app-topbar" class="fixed top-0 right-0 left-72 h-20 z-30 bg-[#f9f9f8]/80 dark:bg-[#191c1c]/80 backdrop-blur-2xl flex items-center justify-between px-10"></header>
+
+  <main class="ml-72 min-h-screen">
+    <div class="p-10 pt-24 space-y-8">
+      <section class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 class="font-headline text-4xl text-primary">Performance</h1>
+          <p class="page-header-subtitle">Monthly delivery quality and delivered order history for the signed-in shipper.</p>
+        </div>
+        <button id="performance-page-refresh" type="button" class="inline-flex items-center gap-2 rounded-full bg-surface-container-high px-5 py-2.5 text-sm font-bold text-on-surface hover:bg-surface-container-highest">
+          <span class="material-symbols-outlined text-[18px]">refresh</span>
+          Refresh
+        </button>
+      </section>
+
+      <section class="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
+        <div class="mb-5 flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 class="font-headline text-2xl font-bold text-primary">My Monthly Performance</h2>
+            <p class="text-sm text-on-surface-variant">Calculated from completed or reconciled trips in the selected month.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-3">
+            <input id="shipper-performance-month" type="month" class="rounded-full border-outline bg-surface px-5 py-2.5 text-sm font-bold text-primary focus:border-secondary focus:ring-secondary" />
+            <button id="shipper-performance-refresh" type="button" class="inline-flex items-center gap-2 rounded-full bg-surface-container-high px-5 py-2.5 text-sm font-bold text-on-surface hover:bg-surface-container-highest">
+              <span class="material-symbols-outlined text-[18px]">monitoring</span>
+              Update
+            </button>
+          </div>
+        </div>
+        <p id="shipper-performance-status" class="hidden rounded-xl px-4 py-3 text-sm font-bold"></p>
+        <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div class="rounded-xl bg-surface-container-low p-4">
+            <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Created trips</p>
+            <p id="shipper-perf-total-trips" class="mt-2 text-3xl font-bold text-primary">0</p>
+          </div>
+          <div class="rounded-xl bg-surface-container-low p-4">
+            <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Completed</p>
+            <p id="shipper-perf-completed-trips" class="mt-2 text-3xl font-bold text-primary">0</p>
+          </div>
+          <div class="rounded-xl bg-surface-container-low p-4">
+            <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Success rate</p>
+            <p id="shipper-perf-success-rate" class="mt-2 text-3xl font-bold text-secondary">0%</p>
+          </div>
+          <div class="rounded-xl bg-surface-container-low p-4">
+            <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Orders</p>
+            <p id="shipper-perf-orders" class="mt-2 text-lg font-bold text-primary">0 / 0</p>
+            <p class="mt-1 text-xs font-bold text-on-surface-variant">delivered / failed</p>
+          </div>
+          <div class="rounded-xl bg-surface-container-low p-4">
+            <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Planned route</p>
+            <p id="shipper-perf-distance" class="mt-2 text-lg font-bold text-primary">0.000 km</p>
+          </div>
+          <div class="rounded-xl bg-surface-container-low p-4">
+            <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Avg trip time</p>
+            <p id="shipper-perf-average" class="mt-2 text-lg font-bold text-primary">0 min</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="management-table-card overflow-hidden rounded-2xl border border-outline-variant/10 bg-surface-container-lowest shadow-sm">
+        <div class="flex flex-wrap items-start justify-between gap-4 px-6 py-5">
+          <div>
+            <h2 class="font-headline text-2xl font-bold text-primary">Delivery History</h2>
+            <p id="performance-history-caption" class="text-sm text-on-surface-variant">Delivered orders in the selected month.</p>
+          </div>
+        </div>
+        <!-- <p id="performance-history-status" class="mx-6 mb-4 hidden rounded-xl px-4 py-3 text-sm font-bold"></p> -->
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-[960px] border-collapse text-left">
+            <thead>
+              <tr class="bg-surface-container-low/50">
+                <th class="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-stone-400 font-label">Order</th>
+                <th class="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-stone-400 font-label">Delivered</th>
+                <th class="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-stone-400 font-label">Customer</th>
+                <th class="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-stone-400 font-label">Address</th>
+                <th class="px-6 py-4 text-right text-[10px] font-bold uppercase tracking-widest text-stone-400 font-label">Collected</th>
+              </tr>
+            </thead>
+            <tbody id="performance-history-list" class="divide-y divide-surface-container">
+              <tr>
+                <td class="px-6 py-8 text-center text-sm font-bold text-stone-500" colspan="5">Loading delivery history...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="management-table-footer flex items-center justify-between border-t border-outline-variant/10 bg-surface-container-low/30 px-6 py-4">
+          <p id="performance-history-count" class="text-xs font-medium text-on-surface-variant">Loading delivery history...</p>
+          <div id="performance-history-pagination" class="hidden items-center gap-2">
+            <button id="performance-history-page-prev" type="button"
+              class="flex h-8 w-8 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant transition-colors hover:bg-surface-container-highest disabled:cursor-not-allowed disabled:opacity-40"
+              aria-label="Previous delivered orders page">
+              <span class="material-symbols-outlined text-sm">chevron_left</span>
+            </button>
+            <span id="performance-history-page-label" class="text-xs font-medium text-on-surface-variant">Page 1 of 1</span>
+            <button id="performance-history-page-next" type="button"
+              class="flex h-8 w-8 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant transition-colors hover:bg-surface-container-highest disabled:cursor-not-allowed disabled:opacity-40"
+              aria-label="Next delivered orders page">
+              <span class="material-symbols-outlined text-sm">chevron_right</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <div class="mt-12 text-center">
+        <p class="text-[10px] text-stone-400 font-label uppercase tracking-widest">Hoppers' Matcha Internal Portal © 2026</p>
+      </div>
+    </div>
+  </main>
+
+  <div id="delivery-history-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4 py-8 backdrop-blur-sm" aria-hidden="true">
+    <div class="max-h-full w-full max-w-3xl overflow-hidden rounded-xl bg-surface-container-lowest shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="delivery-history-modal-title">
+      <div class="flex items-start justify-between gap-4 border-b border-outline-variant/30 px-6 py-5">
+        <div class="min-w-0">
+          <h2 id="delivery-history-modal-title" class="truncate font-headline text-2xl font-bold text-primary">Order Detail</h2>
+          <p id="delivery-history-modal-subtitle" class="mt-1 text-sm text-on-surface-variant">Delivered order information.</p>
+        </div>
+        <button id="delivery-history-modal-close" type="button" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant transition hover:bg-surface-container-high" aria-label="Close order detail">
+          <span class="material-symbols-outlined text-[20px]">close</span>
+        </button>
+      </div>
+      <div id="delivery-history-modal-body" class="max-h-[calc(100vh-180px)] overflow-y-auto px-6 py-5">
+        <p class="rounded-xl bg-surface-container-low p-4 text-sm font-bold text-on-surface-variant">Select an order to view detail.</p>
+      </div>
+      <div class="flex justify-end border-t border-outline-variant/30 px-6 py-4">
+        <button id="delivery-history-modal-dismiss" type="button" class="rounded-xl bg-surface-container-low px-5 py-2.5 text-sm font-bold text-primary hover:bg-surface-container-high">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/layout.js?v=shipper-performance-page-20260618"></script>
+  <script src="../assets/js/main.js?v=shipper-performance-page-20260618"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const API_BASE_URL = window.MATCHA_API_BASE_URL || 'http://localhost:8000/api/v1';
+      const monthInput = document.getElementById('shipper-performance-month');
+      const performanceRefreshButton = document.getElementById('shipper-performance-refresh');
+      const pageRefreshButton = document.getElementById('performance-page-refresh');
+      const performanceStatus = document.getElementById('shipper-performance-status');
+      const historyStatus = document.getElementById('performance-history-status');
+      const historyList = document.getElementById('performance-history-list');
+      const historyCount = document.getElementById('performance-history-count');
+      const historyCaption = document.getElementById('performance-history-caption');
+      const historyPagination = document.getElementById('performance-history-pagination');
+      const historyPreviousPageButton = document.getElementById('performance-history-page-prev');
+      const historyNextPageButton = document.getElementById('performance-history-page-next');
+      const historyPageLabel = document.getElementById('performance-history-page-label');
+      const searchInput = document.getElementById('topbar-search');
+      const modal = document.getElementById('delivery-history-modal');
+      const modalTitle = document.getElementById('delivery-history-modal-title');
+      const modalSubtitle = document.getElementById('delivery-history-modal-subtitle');
+      const modalBody = document.getElementById('delivery-history-modal-body');
+      const modalCloseButton = document.getElementById('delivery-history-modal-close');
+      const modalDismissButton = document.getElementById('delivery-history-modal-dismiss');
+
+      const state = {
+        performance: null,
+        trips: [],
+        tripDetails: [],
+        orders: [],
+        currentPage: 1,
+        searchQuery: '',
+      };
+      const historyPageSize = 5;
+
+      const statusMeta = {
+        assigned: { label: 'Assigned', className: 'bg-secondary-container/30 text-secondary' },
+        delivered: { label: 'Delivered', className: 'bg-secondary text-on-secondary' },
+        failed: { label: 'Failed', className: 'bg-error-container/40 text-error' },
+        completed: { label: 'Completed', className: 'bg-surface-container-high text-on-surface' },
+        reconciled: { label: 'Reconciled', className: 'bg-secondary text-on-secondary' },
+        in_transit: { label: 'In transit', className: 'bg-primary/10 text-primary' },
+      };
+
+      const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      }[character]));
+
+      const setText = (id, value) => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = value;
+      };
+
+      const getTokenHeaders = () => {
+        const token = localStorage.getItem('matcha_access_token');
+        return token ? { Authorization: `Bearer ${token}` } : {};
+      };
+
+      const fetchApiData = async (path, options = {}) => {
+        const response = await fetch(`${API_BASE_URL}${path}`, {
+          ...options,
+          headers: {
+            ...getTokenHeaders(),
+            ...(options.headers || {}),
+          },
+        });
+        const payload = await response.json().catch(() => null);
+
+        if (!response.ok || payload?.success === false) {
+          throw new Error(payload?.message || 'Request failed');
+        }
+
+        return payload?.data ?? payload;
+      };
+
+      const getListData = (data) => {
+        if (Array.isArray(data)) return data;
+        if (Array.isArray(data?.items)) return data.items;
+        return [];
+      };
+
+      const getCurrentMonth = () => {
+        const now = new Date();
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      };
+
+      const formatMoney = (value) => new Intl.NumberFormat('vi-VN', {
+        style: 'currency',
+        currency: 'VND',
+        maximumFractionDigits: 0,
+      }).format(Number(value) || 0);
+
+      const formatNumber = (value, digits = 0) => Number(value || 0).toLocaleString('vi-VN', {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits,
+      });
+
+      const formatLabel = (value) => String(value || '-')
+        .split('_')
+        .filter(Boolean)
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ') || '-';
+
+      const formatDateTime = (value) => {
+        if (!value) return '-';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return String(value);
+        return date.toLocaleString('vi-VN', {
+          hour: '2-digit',
+          minute: '2-digit',
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+        });
+      };
+
+      const formatMinutes = (value) => {
+        const minutes = Number(value || 0);
+        if (!minutes) return '0 min';
+        if (minutes < 60) return `${formatNumber(minutes, 2)} min`;
+        const hours = Math.floor(minutes / 60);
+        const remainder = Math.round(minutes % 60);
+        return `${hours}h ${remainder}m`;
+      };
+
+      const getMonthKey = (value) => {
+        if (!value) return '';
+        const direct = String(value).match(/^(\d{4}-\d{2})/);
+        if (direct) return direct[1];
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return '';
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      };
+
+      const getBadge = (value) => {
+        const key = String(value || '').toLowerCase();
+        const meta = statusMeta[key] || { label: formatLabel(key), className: 'bg-surface-container-high text-on-surface-variant' };
+        return `<span class="inline-flex rounded-full px-3 py-1 text-xs font-bold ${meta.className}">${escapeHtml(meta.label)}</span>`;
+      };
+
+      const setStatus = (element, message = '', type = 'info') => {
+        if (!element) return;
+        element.textContent = message;
+        element.className = `rounded-xl px-4 py-3 text-sm font-bold ${
+          type === 'error'
+            ? 'bg-error-container/30 text-error'
+            : type === 'success'
+              ? 'bg-secondary-container/30 text-secondary'
+              : 'bg-surface-container-low text-on-surface-variant'
+        }`;
+        element.classList.toggle('hidden', !message);
+      };
+
+      const renderPerformance = () => {
+        const performance = state.performance || {};
+        const deliveredOrders = Number(performance.delivered_orders || 0);
+        const failedOrders = Number(performance.failed_orders || 0);
+
+        setText('shipper-perf-total-trips', formatNumber(performance.total_trips || 0));
+        setText('shipper-perf-completed-trips', formatNumber(performance.completed_trips || 0));
+        setText('shipper-perf-success-rate', `${formatNumber(performance.success_rate || 0, 2)}%`);
+        setText('shipper-perf-orders', `${formatNumber(deliveredOrders)} / ${formatNumber(failedOrders)}`);
+        setText('shipper-perf-distance', `${formatNumber(performance.planned_distance_km || 0, 3)} km`);
+        setText('shipper-perf-average', formatMinutes(performance.average_delivery_minutes || 0));
+      };
+
+      const normalizeSearchText = (value) => String(value ?? '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+
+      const matchesSearch = (order) => {
+        const query = normalizeSearchText(state.searchQuery);
+        if (!query) return true;
+        return [
+          order.order_code,
+          order.trip_code,
+          order.customer_name,
+          order.customer_phone,
+          order.delivery_address,
+          order.status,
+          order.payment_status,
+          order.payment_method,
+          order.cod_collected,
+          order.amount_to_collect,
+          order.note,
+        ].some((value) => normalizeSearchText(value).includes(query));
+      };
+
+      const getVisibleOrders = () => state.orders.filter(matchesSearch);
+
+      const getHistoryTotalPages = (totalItems) => Math.max(1, Math.ceil(totalItems / historyPageSize));
+
+      const updateHistoryPagination = (totalItems) => {
+        const totalPages = getHistoryTotalPages(totalItems);
+        if (state.currentPage > totalPages) state.currentPage = totalPages;
+        if (state.currentPage < 1) state.currentPage = 1;
+
+        if (historyPagination) {
+          historyPagination.classList.toggle('hidden', totalItems <= historyPageSize);
+          historyPagination.classList.toggle('flex', totalItems > historyPageSize);
+        }
+        if (historyPreviousPageButton) historyPreviousPageButton.disabled = state.currentPage <= 1;
+        if (historyNextPageButton) historyNextPageButton.disabled = state.currentPage >= totalPages;
+        if (historyPageLabel) historyPageLabel.textContent = `Page ${state.currentPage} of ${totalPages}`;
+      };
+
+      const buildOrderHistory = () => {
+        const selectedMonth = monthInput?.value || getCurrentMonth();
+        state.orders = state.tripDetails
+          .flatMap((trip) => (trip.orders || []).map((order) => ({
+            ...order,
+            history_key: `${trip.id}:${order.order_id}:${order.stop_order}`,
+            trip_id: trip.id,
+            trip_code: trip.trip_code,
+            trip_status: trip.status,
+            trip_created_at: trip.created_at,
+            trip_started_at: trip.started_at,
+            trip_completed_at: trip.completed_at,
+            trip_reconciled_at: trip.reconciled_at,
+            trip_distance_km: trip.total_distance_km,
+            trip_duration_minutes: trip.total_duration_minutes,
+          })))
+          .filter((order) => order.status === 'delivered')
+          .filter((order) => getMonthKey(order.delivered_at || order.trip_completed_at || order.trip_created_at) === selectedMonth)
+          .sort((first, second) => new Date(second.delivered_at || second.trip_completed_at || second.trip_created_at || 0) - new Date(first.delivered_at || first.trip_completed_at || first.trip_created_at || 0));
+      };
+
+      const renderHistory = () => {
+        const visibleOrders = getVisibleOrders();
+        const selectedMonth = monthInput?.value || getCurrentMonth();
+        if (historyCaption) historyCaption.textContent = `Delivered orders in ${selectedMonth}.`;
+
+        if (!state.orders.length) {
+          if (historyCount) historyCount.textContent = 'Showing 0 of 0 delivered orders';
+          updateHistoryPagination(0);
+          historyList.innerHTML = '<tr><td class="px-6 py-8 text-center text-sm font-bold text-stone-500" colspan="5">No delivered orders found for the selected month.</td></tr>';
+          return;
+        }
+
+        if (!visibleOrders.length) {
+          if (historyCount) historyCount.textContent = 'Showing 0 of 0 delivered orders';
+          updateHistoryPagination(0);
+          historyList.innerHTML = '<tr><td class="px-6 py-8 text-center text-sm font-bold text-stone-500" colspan="5">No delivered orders match your search.</td></tr>';
+          return;
+        }
+
+        const totalPages = getHistoryTotalPages(visibleOrders.length);
+        if (state.currentPage > totalPages) state.currentPage = totalPages;
+        const startIndex = (state.currentPage - 1) * historyPageSize;
+        const pageOrders = visibleOrders.slice(startIndex, startIndex + historyPageSize);
+        const endIndex = startIndex + pageOrders.length;
+
+        if (historyCount) {
+          historyCount.textContent = `Showing ${startIndex + 1}-${endIndex} of ${visibleOrders.length} delivered order${visibleOrders.length === 1 ? '' : 's'}`;
+        }
+        updateHistoryPagination(visibleOrders.length);
+
+        historyList.innerHTML = pageOrders.map((order) => `
+          <tr class="cursor-pointer transition-colors hover:bg-surface-container-low" data-order-key="${escapeHtml(order.history_key)}">
+            <td class="px-6 py-4">
+              <p class="font-bold text-primary">${escapeHtml(order.order_code)}</p>
+              <p class="mt-1 text-xs font-bold text-on-surface-variant">${escapeHtml(order.trip_code)}</p>
+            </td>
+            <td class="px-6 py-4 text-xs font-bold text-on-surface-variant">${escapeHtml(formatDateTime(order.delivered_at || order.trip_completed_at))}</td>
+            <td class="px-6 py-4">
+              <p class="font-bold text-on-surface">${escapeHtml(order.customer_name || 'Phone customer')}</p>
+              <p class="mt-1 text-xs text-on-surface-variant">${escapeHtml(order.customer_phone || '-')}</p>
+            </td>
+            <td class="px-6 py-4 text-sm text-on-surface-variant">
+              <span class="line-clamp-2">${escapeHtml(order.delivery_address || '-')}</span>
+            </td>
+            <td class="px-6 py-4 text-right font-bold text-primary">${escapeHtml(formatMoney(order.cod_collected || order.amount_to_collect || 0))}</td>
+          </tr>
+        `).join('');
+      };
+
+      const buildMapUrl = (latitude, longitude) => {
+        if (latitude === null || latitude === undefined || longitude === null || longitude === undefined) return '';
+        return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${latitude},${longitude}`)}`;
+      };
+
+      const renderOrderDetail = (order) => {
+        const mapUrl = buildMapUrl(order.delivery_latitude, order.delivery_longitude);
+        const leg = [
+          order.distance_from_previous_km !== null && order.distance_from_previous_km !== undefined ? `${Number(order.distance_from_previous_km).toFixed(1)} km` : '',
+          order.duration_from_previous_minutes !== null && order.duration_from_previous_minutes !== undefined ? `${Number(order.duration_from_previous_minutes)} min` : '',
+        ].filter(Boolean).join(' / ');
+
+        modalTitle.textContent = order.order_code || 'Order Detail';
+        modalSubtitle.textContent = `${order.trip_code || 'Trip'} - ${formatDateTime(order.delivered_at || order.trip_completed_at)}`;
+        modalBody.innerHTML = `
+          <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+            ${getBadge(order.status)}
+            <span class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Stop ${escapeHtml(order.stop_order || '-')}</span>
+          </div>
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div class="rounded-xl bg-surface-container-low p-4">
+              <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Customer</p>
+              <p class="mt-2 text-base font-bold text-primary">${escapeHtml(order.customer_name || 'Phone customer')}</p>
+              <p class="mt-1 text-sm text-on-surface-variant">${escapeHtml(order.customer_phone || '-')}</p>
+            </div>
+            <div class="rounded-xl bg-surface-container-low p-4">
+              <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Trip</p>
+              <p class="mt-2 text-base font-bold text-primary">${escapeHtml(order.trip_code || '-')}</p>
+              <div class="mt-2">${getBadge(order.trip_status)}</div>
+            </div>
+            <div class="rounded-xl bg-surface-container-low p-4 md:col-span-2">
+              <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Delivery address</p>
+              <p class="mt-2 text-sm font-bold text-primary">${escapeHtml(order.delivery_address || '-')}</p>
+              ${mapUrl ? `<a class="mt-3 inline-flex items-center gap-1 rounded-full bg-surface-container-high px-3 py-2 text-xs font-bold text-primary hover:bg-surface-container-highest" href="${mapUrl}" target="_blank" rel="noreferrer"><span class="material-symbols-outlined text-[16px]">map</span>Open map</a>` : ''}
+            </div>
+            <div class="rounded-xl bg-surface-container-low p-4">
+              <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Payment</p>
+              <p class="mt-2 text-sm font-bold text-primary">${escapeHtml(formatLabel(order.payment_method || order.payment_status))}</p>
+              <p class="mt-1 text-sm text-on-surface-variant">Total ${escapeHtml(formatMoney(order.total_amount))}</p>
+            </div>
+            <div class="rounded-xl bg-surface-container-low p-4">
+              <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">COD collected</p>
+              <p class="mt-2 text-lg font-bold text-primary">${escapeHtml(formatMoney(order.cod_collected))}</p>
+              <p class="mt-1 text-sm text-on-surface-variant">Expected ${escapeHtml(formatMoney(order.amount_to_collect))}</p>
+            </div>
+            <div class="rounded-xl bg-surface-container-low p-4">
+              <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Delivered at</p>
+              <p class="mt-2 text-sm font-bold text-primary">${escapeHtml(formatDateTime(order.delivered_at))}</p>
+            </div>
+            <div class="rounded-xl bg-surface-container-low p-4">
+              <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Leg from previous stop</p>
+              <p class="mt-2 text-sm font-bold text-primary">${escapeHtml(leg || '-')}</p>
+            </div>
+            ${order.note ? `
+              <div class="rounded-xl bg-surface-container-low p-4 md:col-span-2">
+                <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Note</p>
+                <p class="mt-2 text-sm text-on-surface">${escapeHtml(order.note)}</p>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      };
+
+      const openOrderModal = (orderKey) => {
+        const order = state.orders.find((item) => item.history_key === orderKey);
+        if (!order || !modal) return;
+        renderOrderDetail(order);
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        modal.setAttribute('aria-hidden', 'false');
+        modalCloseButton?.focus();
+      };
+
+      const closeOrderModal = () => {
+        if (!modal) return;
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        modal.setAttribute('aria-hidden', 'true');
+      };
+
+      const loadPerformance = async ({ silent = false } = {}) => {
+        const month = monthInput?.value || getCurrentMonth();
+        if (!silent) setStatus(performanceStatus, 'Loading monthly performance...');
+
+        try {
+          state.performance = await fetchApiData(`/shipper/performance?month=${encodeURIComponent(month)}`);
+          renderPerformance();
+          setStatus(
+            performanceStatus,
+            silent ? '' : `Performance loaded for ${state.performance.month || month}.`,
+            silent ? 'info' : 'success'
+          );
+        } catch (error) {
+          console.error('Failed to load shipper performance:', error);
+          state.performance = null;
+          renderPerformance();
+          setStatus(performanceStatus, error.message || 'Cannot load monthly performance.', 'error');
+        }
+      };
+
+      const loadHistory = async () => {
+        setStatus(historyStatus, 'Loading delivery history...');
+        if (historyCount) historyCount.textContent = 'Loading delivery history...';
+        if (historyPagination) {
+          historyPagination.classList.add('hidden');
+          historyPagination.classList.remove('flex');
+        }
+        historyList.innerHTML = '<tr><td class="px-6 py-8 text-center text-sm font-bold text-stone-500" colspan="5">Loading delivery history...</td></tr>';
+
+        try {
+          state.trips = getListData(await fetchApiData('/shipper/trips'));
+          const details = await Promise.all(state.trips.map((trip) =>
+            fetchApiData(`/shipper/trips/${encodeURIComponent(trip.id)}`).catch((error) => {
+              console.error('Failed to load shipper trip detail:', error);
+              return null;
+            })
+          ));
+          state.tripDetails = details.filter(Boolean);
+          buildOrderHistory();
+          state.currentPage = 1;
+          renderHistory();
+          setStatus(historyStatus, `Loaded ${state.orders.length} delivered order${state.orders.length === 1 ? '' : 's'}.`, 'success');
+        } catch (error) {
+          console.error('Failed to load delivery history:', error);
+          state.trips = [];
+          state.tripDetails = [];
+          state.orders = [];
+          renderHistory();
+          setStatus(historyStatus, error.message || 'Cannot load delivery history.', 'error');
+        }
+      };
+
+      const loadPage = async ({ silentPerformance = false } = {}) => {
+        await Promise.all([
+          loadPerformance({ silent: silentPerformance }),
+          loadHistory(),
+        ]);
+      };
+
+      if (monthInput && !monthInput.value) {
+        monthInput.value = getCurrentMonth();
+      }
+
+      performanceRefreshButton?.addEventListener('click', () => loadPage());
+      pageRefreshButton?.addEventListener('click', () => loadPage());
+      monthInput?.addEventListener('change', () => loadPage());
+      searchInput?.addEventListener('input', () => {
+        state.searchQuery = searchInput.value || '';
+        state.currentPage = 1;
+        renderHistory();
+      });
+      historyPreviousPageButton?.addEventListener('click', () => {
+        if (state.currentPage <= 1) return;
+        state.currentPage -= 1;
+        renderHistory();
+      });
+      historyNextPageButton?.addEventListener('click', () => {
+        const totalPages = getHistoryTotalPages(getVisibleOrders().length);
+        if (state.currentPage >= totalPages) return;
+        state.currentPage += 1;
+        renderHistory();
+      });
+      historyList?.addEventListener('click', (event) => {
+        const row = event.target.closest('[data-order-key]');
+        if (!row) return;
+        openOrderModal(row.dataset.orderKey || '');
+      });
+      modalCloseButton?.addEventListener('click', closeOrderModal);
+      modalDismissButton?.addEventListener('click', closeOrderModal);
+      modal?.addEventListener('click', (event) => {
+        if (event.target === modal) closeOrderModal();
+      });
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+          closeOrderModal();
+        }
+      });
+
+      renderPerformance();
+      loadPage({ silentPerformance: true });
+    });
+  </script>
+</body>
+
+</html>

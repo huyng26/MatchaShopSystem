@@ -199,6 +199,36 @@
         </div>
     </main>
 
+    <div id="delivery-performance-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4 py-8 backdrop-blur-sm" aria-hidden="true">
+        <div class="max-h-full w-full max-w-2xl overflow-hidden rounded-xl bg-surface-container-lowest shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="delivery-performance-title">
+            <div class="flex items-start justify-between gap-4 border-b border-outline-variant/30 px-6 py-5">
+                <div class="min-w-0">
+                    <h2 id="delivery-performance-title" class="truncate font-headline text-2xl font-bold text-primary">Shipper Performance</h2>
+                    <p id="delivery-performance-subtitle" class="mt-1 text-sm text-on-surface-variant">Monthly metrics from completed or reconciled trips.</p>
+                </div>
+                <button id="delivery-performance-close" type="button" class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-container-low text-on-surface-variant transition hover:bg-surface-container-high" aria-label="Close shipper performance">
+                    <span class="material-symbols-outlined text-[20px]">close</span>
+                </button>
+            </div>
+            <div class="max-h-[calc(100vh-180px)] overflow-y-auto px-6 py-5">
+                <div class="grid gap-3 sm:grid-cols-[1fr_auto]">
+                    <input id="delivery-performance-month" type="month" class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm font-bold text-primary focus:border-secondary focus:ring-secondary" />
+                    <button id="delivery-performance-refresh" type="button" class="inline-flex items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-3 text-sm font-bold text-on-secondary hover:bg-secondary/90">
+                        <span class="material-symbols-outlined text-[18px]">monitoring</span>
+                        Load Performance
+                    </button>
+                </div>
+                <p id="delivery-performance-status" class="mt-4 hidden rounded-xl px-4 py-3 text-sm font-bold"></p>
+                <div id="delivery-performance-panel" class="mt-4 rounded-xl bg-surface-container-low p-4">
+                    <p class="text-sm font-bold text-on-surface-variant">Open a shipper from the active list to review monthly delivery quality.</p>
+                </div>
+            </div>
+            <div class="flex justify-end border-t border-outline-variant/30 px-6 py-4">
+                <button id="delivery-performance-dismiss" type="button" class="rounded-xl bg-surface-container-low px-5 py-2.5 text-sm font-bold text-primary hover:bg-surface-container-high">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script src="../assets/js/layout.js?v=notification-toast-fix-20260616"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="../assets/js/main.js?v=fm-20260530"></script>
@@ -221,11 +251,22 @@
             const selectedTripCaption = document.getElementById('selected-trip-caption');
             const shippersList = document.getElementById('active-shippers-list');
             const topbarSearchInput = document.getElementById('topbar-search');
+            const performanceModal = document.getElementById('delivery-performance-modal');
+            const performanceModalTitle = document.getElementById('delivery-performance-title');
+            const performanceModalSubtitle = document.getElementById('delivery-performance-subtitle');
+            const performanceCloseButton = document.getElementById('delivery-performance-close');
+            const performanceDismissButton = document.getElementById('delivery-performance-dismiss');
+            const performanceMonthInput = document.getElementById('delivery-performance-month');
+            const performanceRefreshButton = document.getElementById('delivery-performance-refresh');
+            const performanceStatus = document.getElementById('delivery-performance-status');
+            const performancePanel = document.getElementById('delivery-performance-panel');
 
             let deliveryQueue = [];
             let deliveryTrips = [];
             let shippers = [];
             let selectedTrip = null;
+            let selectedPerformanceShipperId = '';
+            let selectedShipperPerformance = null;
             let reconcileNotice = null;
             let deliverySearchQuery = '';
             let currentTripsPage = 1;
@@ -255,6 +296,20 @@
                 currency: 'VND',
                 maximumFractionDigits: 0,
             }).format(Number(value) || 0);
+
+            const formatNumber = (value, digits = 0) => Number(value || 0).toLocaleString('vi-VN', {
+                minimumFractionDigits: digits,
+                maximumFractionDigits: digits,
+            });
+
+            const getCurrentMonth = () => {
+                const now = new Date();
+                return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            };
+
+            if (performanceMonthInput && !performanceMonthInput.value) {
+                performanceMonthInput.value = getCurrentMonth();
+            }
 
             const formatDateTime = (value) => {
                 if (!value) return '-';
@@ -586,6 +641,19 @@
                 pageStatus.classList.toggle('hidden', !message);
             };
 
+            const setPerformanceStatus = (message = '', type = 'info') => {
+                if (!performanceStatus) return;
+                performanceStatus.textContent = message;
+                performanceStatus.className = `mt-4 rounded-xl px-4 py-3 text-sm font-bold ${
+                    type === 'error'
+                        ? 'bg-error-container/30 text-error'
+                        : type === 'success'
+                            ? 'bg-secondary-container/30 text-secondary'
+                            : 'bg-surface-container-low text-on-surface-variant'
+                }`;
+                performanceStatus.classList.toggle('hidden', !message);
+            };
+
             const getReconcileNoticeHtml = () => {
                 if (!reconcileNotice?.message) {
                     return '<p id="reconcile-cod-status" class="mt-3 hidden rounded-xl px-4 py-3 text-sm font-bold"></p>';
@@ -620,6 +688,136 @@
             const getShipperName = (shipperId) => {
                 if (!shipperId) return 'Unassigned';
                 return shippers.find((shipper) => shipper.id === shipperId)?.full_name || 'Assigned shipper';
+            };
+
+            const getSelectedPerformanceShipper = () => shippers.find((shipper) => shipper.id === selectedPerformanceShipperId);
+
+            const isPerformanceModalOpen = () => Boolean(performanceModal && !performanceModal.classList.contains('hidden'));
+
+            const updatePerformanceModalHeader = () => {
+                const selectedShipper = getSelectedPerformanceShipper();
+                const month = performanceMonthInput?.value || getCurrentMonth();
+
+                if (performanceModalTitle) {
+                    performanceModalTitle.textContent = selectedShipper?.full_name
+                        ? `${selectedShipper.full_name} Performance`
+                        : 'Shipper Performance';
+                }
+
+                if (performanceModalSubtitle) {
+                    performanceModalSubtitle.textContent = selectedShipper
+                        ? `Monthly metrics for ${month} from completed or reconciled trips.`
+                        : 'Monthly metrics from completed or reconciled trips.';
+                }
+            };
+
+            const closePerformanceModal = () => {
+                if (!performanceModal) return;
+                performanceModal.classList.add('hidden');
+                performanceModal.classList.remove('flex');
+                performanceModal.setAttribute('aria-hidden', 'true');
+                setPerformanceStatus('');
+            };
+
+            const openPerformanceModal = (shipperId) => {
+                if (!shipperId || !performanceModal) return;
+                selectedPerformanceShipperId = shipperId;
+                selectedShipperPerformance = null;
+                if (performanceMonthInput && !performanceMonthInput.value) {
+                    performanceMonthInput.value = getCurrentMonth();
+                }
+                setPerformanceStatus('');
+                updatePerformanceModalHeader();
+                renderPerformancePanel();
+                performanceModal.classList.remove('hidden');
+                performanceModal.classList.add('flex');
+                performanceModal.setAttribute('aria-hidden', 'false');
+                performanceRefreshButton?.focus();
+                loadSelectedShipperPerformance();
+            };
+
+            const formatPerformanceMinutes = (value) => {
+                const minutes = Number(value || 0);
+                if (!minutes) return '0 min';
+                if (minutes < 60) return `${formatNumber(minutes, 2)} min`;
+                const hours = Math.floor(minutes / 60);
+                const remainder = Math.round(minutes % 60);
+                return `${hours}h ${remainder}m`;
+            };
+
+            const renderPerformancePanel = () => {
+                if (!performancePanel) return;
+                const selectedShipper = getSelectedPerformanceShipper();
+                updatePerformanceModalHeader();
+
+                if (!selectedPerformanceShipperId) {
+                    performancePanel.innerHTML = '<p class="text-sm font-bold text-on-surface-variant">Open a shipper from the active list to review monthly delivery quality.</p>';
+                    return;
+                }
+
+                if (!selectedShipperPerformance) {
+                    performancePanel.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary-container/40 text-sm font-bold text-secondary">${escapeHtml(getInitials(selectedShipper?.full_name))}</div>
+                            <div class="min-w-0">
+                                <p class="truncate text-sm font-bold text-primary">${escapeHtml(selectedShipper?.full_name || 'Selected shipper')}</p>
+                                <p class="text-xs font-bold text-on-surface-variant">No performance loaded yet.</p>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const deliveredOrders = Number(selectedShipperPerformance.delivered_orders || 0);
+                const failedOrders = Number(selectedShipperPerformance.failed_orders || 0);
+                performancePanel.innerHTML = `
+                    <div class="mb-4 flex items-center gap-3">
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary-container/40 text-sm font-bold text-secondary">${escapeHtml(getInitials(selectedShipper?.full_name))}</div>
+                        <div class="min-w-0">
+                            <p class="truncate text-sm font-bold text-primary">${escapeHtml(selectedShipper?.full_name || 'Selected shipper')}</p>
+                            <p class="text-xs font-bold text-on-surface-variant">${escapeHtml(selectedShipperPerformance.month || performanceMonthInput?.value || '-')}</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                        <div class="rounded-lg bg-surface px-3 py-3">
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Created</p>
+                            <p class="mt-1 text-xl font-bold text-primary">${escapeHtml(formatNumber(selectedShipperPerformance.total_trips))}</p>
+                        </div>
+                        <div class="rounded-lg bg-surface px-3 py-3">
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Completed</p>
+                            <p class="mt-1 text-xl font-bold text-primary">${escapeHtml(formatNumber(selectedShipperPerformance.completed_trips))}</p>
+                        </div>
+                        <div class="rounded-lg bg-surface px-3 py-3">
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Success</p>
+                            <p class="mt-1 text-xl font-bold text-secondary">${escapeHtml(formatNumber(selectedShipperPerformance.success_rate, 2))}%</p>
+                        </div>
+                        <div class="rounded-lg bg-surface px-3 py-3">
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Orders</p>
+                            <p class="mt-1 text-sm font-bold text-primary">${escapeHtml(formatNumber(deliveredOrders))} delivered</p>
+                            <p class="text-xs font-bold text-error">${escapeHtml(formatNumber(failedOrders))} failed</p>
+                        </div>
+                        <div class="rounded-lg bg-surface px-3 py-3">
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Distance</p>
+                            <p class="mt-1 text-sm font-bold text-primary">${escapeHtml(formatNumber(selectedShipperPerformance.planned_distance_km, 3))} km</p>
+                        </div>
+                        <div class="rounded-lg bg-surface px-3 py-3">
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Avg time</p>
+                            <p class="mt-1 text-sm font-bold text-primary">${escapeHtml(formatPerformanceMinutes(selectedShipperPerformance.average_delivery_minutes))}</p>
+                        </div>
+                    </div>
+                `;
+            };
+
+            const renderPerformanceControls = () => {
+                if (selectedPerformanceShipperId && !shippers.some((shipper) => shipper.id === selectedPerformanceShipperId)) {
+                    selectedPerformanceShipperId = '';
+                    selectedShipperPerformance = null;
+                    closePerformanceModal();
+                }
+
+                if (isPerformanceModalOpen()) {
+                    renderPerformancePanel();
+                }
             };
 
             const getBadge = (status) => {
@@ -751,14 +949,20 @@
                 visibleShippers.forEach((shipper) => {
                     const activeTrip = deliveryTrips.find((trip) => trip.shipper_id === shipper.id && ['assigned', 'in_transit'].includes(trip.status));
                     const item = document.createElement('div');
-                    item.className = 'flex items-center gap-3 rounded-xl bg-surface-container-low p-4';
+                    item.className = 'rounded-xl bg-surface-container-low p-4';
                     item.innerHTML = `
-                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary-container/40 text-sm font-bold text-secondary">${escapeHtml(getInitials(shipper.full_name))}</div>
-                        <div class="min-w-0 flex-1">
-                            <p class="truncate text-sm font-bold text-on-surface">${escapeHtml(shipper.full_name)}</p>
-                            <p class="truncate text-xs text-on-surface-variant">${activeTrip ? `On ${activeTrip.trip_code}` : 'Available for assignment'}</p>
+                        <div class="flex items-center gap-3">
+                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary-container/40 text-sm font-bold text-secondary">${escapeHtml(getInitials(shipper.full_name))}</div>
+                            <div class="min-w-0 flex-1">
+                                <p class="truncate text-sm font-bold text-on-surface">${escapeHtml(shipper.full_name)}</p>
+                                <p class="truncate text-xs text-on-surface-variant">${activeTrip ? `On ${activeTrip.trip_code}` : 'Available for assignment'}</p>
+                            </div>
+                            <span class="rounded-full px-2.5 py-1 text-[10px] font-bold ${activeTrip ? 'bg-tertiary-fixed text-on-tertiary-fixed-variant' : 'bg-secondary-container/30 text-secondary'}">${activeTrip ? 'Busy' : 'Active'}</span>
                         </div>
-                        <span class="rounded-full px-2.5 py-1 text-[10px] font-bold ${activeTrip ? 'bg-tertiary-fixed text-on-tertiary-fixed-variant' : 'bg-secondary-container/30 text-secondary'}">${activeTrip ? 'Busy' : 'Active'}</span>
+                        <button class="view-shipper-performance mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-surface px-3 py-2 text-xs font-bold text-primary hover:bg-surface-container-high" type="button" data-shipper-id="${escapeHtml(shipper.id)}">
+                            <span class="material-symbols-outlined text-[16px]">query_stats</span>
+                            View monthly performance
+                        </button>
                     `;
                     shippersList.appendChild(item);
                 });
@@ -803,6 +1007,38 @@
                     `;
                     suggestedBatches.appendChild(item);
                 });
+            };
+
+            const loadSelectedShipperPerformance = async ({ silent = false } = {}) => {
+                if (!selectedPerformanceShipperId) {
+                    selectedShipperPerformance = null;
+                    renderPerformancePanel();
+                    setPerformanceStatus('');
+                    return;
+                }
+
+                const month = performanceMonthInput?.value || getCurrentMonth();
+                if (!silent) {
+                    selectedShipperPerformance = null;
+                    renderPerformancePanel();
+                    setPerformanceStatus('Loading shipper performance...');
+                }
+
+                try {
+                    selectedShipperPerformance = await fetchApiData(
+                        `/deliveries/shippers/${encodeURIComponent(selectedPerformanceShipperId)}/performance?month=${encodeURIComponent(month)}`
+                    );
+                    renderPerformancePanel();
+                    setPerformanceStatus(
+                        silent ? '' : `Performance loaded for ${selectedShipperPerformance.month || month}.`,
+                        silent ? 'info' : 'success'
+                    );
+                } catch (error) {
+                    console.error('Failed to load shipper performance:', error);
+                    selectedShipperPerformance = null;
+                    renderPerformancePanel();
+                    setPerformanceStatus(error.message || 'Cannot load shipper performance.', 'error');
+                }
             };
 
             const deliveredCodForTrip = (trip) => (trip?.orders || [])
@@ -970,6 +1206,7 @@
                     renderQueue();
                     renderTrips();
                     renderShippers();
+                    renderPerformanceControls();
                     renderTripDetail();
                     setPageStatus('');
                 } catch (error) {
@@ -1168,6 +1405,34 @@
                 suggestBatches(selectedIds);
             });
             document.getElementById('create-trip-selected').addEventListener('click', () => createTrip(getSelectedOrderIds()));
+            performanceCloseButton?.addEventListener('click', closePerformanceModal);
+            performanceDismissButton?.addEventListener('click', closePerformanceModal);
+            performanceModal?.addEventListener('click', (event) => {
+                if (event.target === performanceModal) {
+                    closePerformanceModal();
+                }
+            });
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && isPerformanceModalOpen()) {
+                    closePerformanceModal();
+                }
+            });
+            performanceMonthInput?.addEventListener('change', () => {
+                updatePerformanceModalHeader();
+                if (selectedPerformanceShipperId && isPerformanceModalOpen()) {
+                    loadSelectedShipperPerformance();
+                }
+            });
+            performanceRefreshButton?.addEventListener('click', () => {
+                if (selectedPerformanceShipperId) {
+                    loadSelectedShipperPerformance();
+                }
+            });
+            shippersList.addEventListener('click', (event) => {
+                const button = event.target.closest('.view-shipper-performance');
+                if (!button) return;
+                openPerformanceModal(button.dataset.shipperId || '');
+            });
             suggestedBatches.addEventListener('click', (event) => {
                 const button = event.target.closest('.create-trip-from-batch');
                 if (!button) return;

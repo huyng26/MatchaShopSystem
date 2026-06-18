@@ -139,6 +139,7 @@ const MATCHA_FILE_PAGE_MAP = {
   'POS_payment.html': 'pos-payment',
   'delivery_manage.html': 'delivery-manage',
   'shipper.html': 'shipper',
+  'performance.html': 'performance',
   'financial_management.html': 'financial-management',
   'menu.html': 'menu',
   'product_detail.html': 'product-detail',
@@ -190,14 +191,14 @@ function canFrontendRoleAccessPage(role, page) {
   if (MATCHA_PUBLIC_PAGES.has(page)) return true;
 
   if (role === 'admin') {
-    return page !== 'shipper';
+    return !['shipper', 'performance'].includes(page);
   }
 
   const allowedPagesByRole = {
     cashier: new Set(['pos-menu', 'pos-payment']),
     delivery_manager: new Set(['delivery-manage']),
     inventory_manager: new Set(['inventory-list', 'inventory-detail']),
-    shipper: new Set(['shipper']),
+    shipper: new Set(['shipper', 'performance']),
   };
 
   return Boolean(allowedPagesByRole[role]?.has(page));
@@ -490,11 +491,16 @@ const POS_CUSTOMER_STORAGE_KEY = 'matcha_pos_customer';
 const POS_ORDER_TYPE_STORAGE_KEY = 'matcha_pos_order_type';
 const POS_DELIVERY_DETAILS_STORAGE_KEY = 'matcha_pos_delivery_details';
 const POS_INSTORE_CUSTOMER_DETAILS_STORAGE_KEY = 'matcha_pos_instore_customer_details';
+const POS_STRIPE_CHECKOUT_STORAGE_KEY = 'matcha_pos_stripe_checkout';
+const POS_STRIPE_POLL_INTERVAL_MS = 2500;
+const POS_STRIPE_POLL_MAX_ATTEMPTS = 120;
 
 let POS_TOPPINGS = [];
 let POS_MENU_ITEMS = [];
 let POS_MENU_SEARCH_QUERY = '';
 let POS_PREPARING_DELIVERY_ORDERS = [];
+let POS_STRIPE_POLL_TIMEOUT_ID = null;
+let POS_STRIPE_POLL_ATTEMPTS = 0;
 
 const POS_FALLBACK_IMAGE =
   'https://images.unsplash.com/photo-1515823662972-da6a2e4d3002?auto=format&fit=crop&w=900&q=80';
@@ -727,7 +733,82 @@ function getPosPaymentLabel(value) {
   if (value === 'cod') return 'COD';
   if (value === 'cash') return 'cash';
   if (value === 'card') return 'card';
-  return 'QR bank transfer';
+  return 'Stripe Checkout QR';
+}
+
+function isPosStripeQrPayment(value) {
+  return value === 'qr';
+}
+
+function getPosStripeCartSignature() {
+  const items = buildPosOrderItems(getPosCart())
+    .map((item) => ({
+      product_id: item.product_id,
+      quantity: item.quantity,
+    }))
+    .sort((left, right) => String(left.product_id).localeCompare(String(right.product_id)));
+
+  return JSON.stringify({
+    order_type: getPosOrderType(),
+    total: getCartTotal(getPosCart()),
+    delivery_details: getPosOrderType() === 'delivery' ? getPosDeliveryDetails() : null,
+    instore_customer_details: getPosOrderType() === 'delivery' ? null : getPosInstoreCustomerDetails(),
+    items,
+  });
+}
+
+function getStoredPosStripeCheckout() {
+  try {
+    return JSON.parse(localStorage.getItem(POS_STRIPE_CHECKOUT_STORAGE_KEY) || 'null');
+  } catch {
+    return null;
+  }
+}
+
+function setStoredPosStripeCheckout(checkout) {
+  localStorage.setItem(POS_STRIPE_CHECKOUT_STORAGE_KEY, JSON.stringify(checkout || {}));
+}
+
+function clearStoredPosStripeCheckout() {
+  localStorage.removeItem(POS_STRIPE_CHECKOUT_STORAGE_KEY);
+}
+
+function canReuseStoredPosStripeCheckout(checkout) {
+  if (!checkout?.stripe_checkout_session_id || !checkout?.checkout_url) return false;
+  if (checkout.cart_signature !== getPosStripeCartSignature()) return false;
+  return String(checkout.status || 'pending') === 'pending';
+}
+
+function buildPosStripeCheckoutState(session, order) {
+  return {
+    payment_id: session.payment_id,
+    order_id: session.order_id || order?.id,
+    order_code: order?.order_code || getPosOrderCode(),
+    order_type: order?.order_type || getPosOrderType(),
+    stripe_checkout_session_id: session.stripe_checkout_session_id,
+    checkout_url: session.checkout_url,
+    qr_code_data_url: session.qr_code_data_url,
+    expires_at: session.expires_at || null,
+    status: session.status || 'pending',
+    amount: Number(order?.total_amount || getCartTotal(getPosCart())),
+    cart_signature: getPosStripeCartSignature(),
+    created_at: new Date().toISOString(),
+  };
+}
+
+function getPosStripeCheckoutFromRedirect(sessionId) {
+  const stored = getStoredPosStripeCheckout();
+  if (stored?.stripe_checkout_session_id === sessionId) {
+    return stored;
+  }
+  return {
+    stripe_checkout_session_id: sessionId,
+    order_code: getPosOrderCode(),
+    order_type: getPosOrderType(),
+    amount: getCartTotal(getPosCart()),
+    cart_signature: getPosStripeCartSignature(),
+    status: 'pending',
+  };
 }
 
 function setPosPaymentStatus(message = '', type = 'info') {
@@ -828,10 +909,32 @@ async function submitPosOrder(selectedPayment, checkoutDetails = {}, onStep = ()
   const processingOrder = await fetchMatchaApi(`/orders/${order.id}/start-processing`, {
     method: 'POST',
   });
+  const preparedOrder = processingOrder || order;
+  const orderId = preparedOrder.id || order.id;
 
-  const amount = Number(processingOrder.total_amount || order.total_amount || getCartTotal(cart));
+  if (isPosStripeQrPayment(selectedPayment)) {
+    onStep('Creating Stripe Checkout QR...');
+    const stripeSession = await fetchMatchaApi('/payments/stripe/checkout-session', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        order_id: orderId,
+        ready_for_delivery: orderType === 'delivery',
+      }),
+    });
+
+    return {
+      requiresStripeCheckout: true,
+      order: preparedOrder,
+      stripeSession,
+    };
+  }
+
+  const amount = Number(preparedOrder.total_amount || order.total_amount || getCartTotal(cart));
   const paymentPayload = {
-    order_id: processingOrder.id || order.id,
+    order_id: orderId,
     method: paymentMethod,
     amount,
   };
@@ -850,18 +953,18 @@ async function submitPosOrder(selectedPayment, checkoutDetails = {}, onStep = ()
   });
 
   if (orderType === 'delivery') {
-    return processingOrder || order;
+    return preparedOrder;
   }
 
   onStep('Completing in-shop order and deducting inventory...');
-  const completedOrder = await fetchMatchaApi(`/orders/${processingOrder.id || order.id}/complete`, {
+  const completedOrder = await fetchMatchaApi(`/orders/${orderId}/complete`, {
     method: 'POST',
   });
 
   return {
-    ...(processingOrder || order),
+    ...preparedOrder,
     ...(completedOrder || {}),
-    order_code: processingOrder.order_code || order.order_code,
+    order_code: preparedOrder.order_code || order.order_code,
   };
 }
 
@@ -1576,24 +1679,315 @@ function renderPosPaymentOrder() {
     .join('');
 }
 
-function initPosPayment() {
-  renderPosPaymentOrder();
+function setStripeQrStatus(message = '', type = 'info') {
+  const status = document.getElementById('stripeQrStatus');
+  if (!status) return;
 
-  const payBtn = document.getElementById('payBtn');
+  status.textContent = message;
+  status.classList.remove(
+    'bg-error/10',
+    'bg-secondary-container/20',
+    'bg-surface-container-low',
+    'text-error',
+    'text-secondary',
+    'text-on-surface-variant'
+  );
+
+  if (type === 'error') {
+    status.classList.add('bg-error/10', 'text-error');
+  } else if (type === 'success') {
+    status.classList.add('bg-secondary-container/20', 'text-secondary');
+  } else {
+    status.classList.add('bg-surface-container-low', 'text-on-surface-variant');
+  }
+}
+
+function openPosStripeQrModal(checkout) {
+  const modal = document.getElementById('stripeQrModal');
+  const card = document.getElementById('stripeQrCard');
+  const image = document.getElementById('stripeQrImage');
+  const openLink = document.getElementById('stripeQrOpenLink');
+  const sessionText = document.getElementById('stripeQrSessionId');
+  const orderCode = document.getElementById('stripeQrOrderCode');
+  const amount = document.getElementById('stripeQrAmount');
+  if (!modal || !card) return;
+
+  if (image) {
+    if (checkout.qr_code_data_url) {
+      image.src = checkout.qr_code_data_url;
+      image.closest('.aspect-square')?.classList.remove('hidden');
+    } else {
+      image.removeAttribute('src');
+      image.closest('.aspect-square')?.classList.add('hidden');
+    }
+  }
+  if (openLink) {
+    if (checkout.checkout_url) {
+      openLink.href = checkout.checkout_url;
+      openLink.classList.remove('pointer-events-none', 'opacity-50');
+      openLink.removeAttribute('aria-disabled');
+    } else {
+      openLink.href = '#';
+      openLink.classList.add('pointer-events-none', 'opacity-50');
+      openLink.setAttribute('aria-disabled', 'true');
+    }
+  }
+  if (sessionText) {
+    sessionText.textContent = checkout.stripe_checkout_session_id || 'Session pending';
+  }
+  if (orderCode) {
+    orderCode.textContent = checkout.order_code || checkout.order_id || '-';
+  }
+  if (amount) {
+    amount.textContent = formatVnd(checkout.amount || getCartTotal(getPosCart()));
+  }
+
+  modal.classList.remove('opacity-0', 'pointer-events-none');
+  modal.setAttribute('aria-hidden', 'false');
+  card.classList.remove('scale-95');
+  card.classList.add('scale-100');
+}
+
+function closePosStripeQrModal() {
+  const modal = document.getElementById('stripeQrModal');
+  const card = document.getElementById('stripeQrCard');
+  if (!modal || !card) return;
+
+  modal.classList.add('opacity-0', 'pointer-events-none');
+  modal.setAttribute('aria-hidden', 'true');
+  card.classList.add('scale-95');
+  card.classList.remove('scale-100');
+}
+
+function stopPosStripeCheckoutPolling() {
+  if (POS_STRIPE_POLL_TIMEOUT_ID !== null) {
+    window.clearTimeout(POS_STRIPE_POLL_TIMEOUT_ID);
+    POS_STRIPE_POLL_TIMEOUT_ID = null;
+  }
+  POS_STRIPE_POLL_ATTEMPTS = 0;
+}
+
+function isPosStripeCheckoutSuccessful(status) {
+  return status?.payment_status === 'success' && status?.order_payment_status === 'paid';
+}
+
+function isPosStripeCheckoutTerminal(status) {
+  return status?.payment_status === 'failed' || status?.payment_status === 'cancelled';
+}
+
+function getStripeSuccessTitle(status) {
+  if (status?.order_status === 'completed') return 'Order Completed';
+  if (status?.order_status === 'ready_for_delivery') return 'Order Ready for Delivery';
+  return 'Payment Confirmed';
+}
+
+function getStripeSuccessText(status, checkout) {
+  const orderCode = checkout?.order_code || status?.order_id || 'Order';
+  if (status?.order_status === 'completed') {
+    return `${orderCode} was paid by Stripe Checkout and completed.`;
+  }
+  if (status?.order_status === 'ready_for_delivery') {
+    return `${orderCode} was paid and sent to Delivery Manager.`;
+  }
+  return `${orderCode} was paid by Stripe Checkout.`;
+}
+
+function showPosPaymentSuccess(title, message) {
   const overlay = document.getElementById('successOverlay');
   const card = document.getElementById('successCard');
   const successTitle = document.getElementById('successTitle');
   const successText = document.getElementById('successPaymentText');
+  if (!overlay || !card) return;
+
+  if (successTitle) successTitle.textContent = title;
+  if (successText) successText.textContent = message;
+  overlay.classList.remove('opacity-0', 'pointer-events-none');
+  card.classList.remove('scale-90');
+  card.classList.add('scale-100');
+}
+
+function setPayButtonWaitingForStripe() {
+  const payBtn = document.getElementById('payBtn');
+  if (!payBtn) return;
+
+  payBtn.disabled = true;
+  payBtn.innerHTML =
+    '<span class="material-symbols-outlined animate-spin">progress_activity</span> Waiting for Stripe...';
+}
+
+async function fetchPosStripeCheckoutStatus(sessionId) {
+  return await fetchMatchaApi(
+    `/payments/stripe/checkout-session/${encodeURIComponent(sessionId)}/status`
+  );
+}
+
+function updateStoredPosStripeCheckoutStatus(checkout, status) {
+  const nextCheckout = {
+    ...checkout,
+    payment_status: status.payment_status,
+    order_status: status.order_status,
+    order_payment_status: status.order_payment_status,
+    paid_at: status.paid_at || null,
+    completed_at: status.completed_at || null,
+    status: status.payment_status || checkout.status,
+  };
+  setStoredPosStripeCheckout(nextCheckout);
+  return nextCheckout;
+}
+
+async function checkPosStripeCheckoutStatus(checkout, { scheduleNext = true } = {}) {
+  const sessionId = checkout?.stripe_checkout_session_id;
+  if (!sessionId) return null;
+
+  try {
+    const status = await fetchPosStripeCheckoutStatus(sessionId);
+    const nextCheckout = updateStoredPosStripeCheckoutStatus(checkout, status);
+
+    if (isPosStripeCheckoutSuccessful(status)) {
+      stopPosStripeCheckoutPolling();
+      setStripeQrStatus('Payment confirmed by Stripe webhook.', 'success');
+      setPosPaymentStatus('Payment confirmed by Stripe.', 'success');
+      closePosStripeQrModal();
+      showPosPaymentSuccess(
+        getStripeSuccessTitle(status),
+        getStripeSuccessText(status, nextCheckout)
+      );
+      return status;
+    }
+
+    if (isPosStripeCheckoutTerminal(status)) {
+      stopPosStripeCheckoutPolling();
+      setStripeQrStatus('Stripe marked this checkout as failed or cancelled.', 'error');
+      setPosPaymentStatus('Stripe payment failed or was cancelled.', 'error');
+      return status;
+    }
+
+    setStripeQrStatus('Waiting for Stripe webhook confirmation...');
+    setPosPaymentStatus('Waiting for Stripe payment confirmation...');
+
+    if (scheduleNext) {
+      POS_STRIPE_POLL_ATTEMPTS += 1;
+      if (POS_STRIPE_POLL_ATTEMPTS < POS_STRIPE_POLL_MAX_ATTEMPTS) {
+        POS_STRIPE_POLL_TIMEOUT_ID = window.setTimeout(
+          () => checkPosStripeCheckoutStatus(nextCheckout),
+          POS_STRIPE_POLL_INTERVAL_MS
+        );
+      } else {
+        setStripeQrStatus('Still waiting for payment confirmation. Check again when Stripe finishes processing.');
+        setPosPaymentStatus('Still waiting for Stripe confirmation.');
+      }
+    }
+
+    return status;
+  } catch (error) {
+    console.error('Failed to check Stripe checkout status:', error);
+    setStripeQrStatus(error.message || 'Cannot check Stripe status right now.', 'error');
+    setPosPaymentStatus(error.message || 'Cannot check Stripe status right now.', 'error');
+    if (scheduleNext) {
+      POS_STRIPE_POLL_ATTEMPTS += 1;
+      if (POS_STRIPE_POLL_ATTEMPTS < POS_STRIPE_POLL_MAX_ATTEMPTS) {
+        POS_STRIPE_POLL_TIMEOUT_ID = window.setTimeout(
+          () => checkPosStripeCheckoutStatus(checkout),
+          POS_STRIPE_POLL_INTERVAL_MS
+        );
+      }
+    }
+    return null;
+  }
+}
+
+function startPosStripeCheckoutPolling(checkout, { immediate = true } = {}) {
+  stopPosStripeCheckoutPolling();
+  setPayButtonWaitingForStripe();
+  openPosStripeQrModal(checkout);
+  setStripeQrStatus('Waiting for Stripe payment confirmation...');
+  setPosPaymentStatus('Waiting for Stripe payment confirmation...');
+
+  if (immediate) {
+    checkPosStripeCheckoutStatus(checkout);
+  } else {
+    POS_STRIPE_POLL_TIMEOUT_ID = window.setTimeout(
+      () => checkPosStripeCheckoutStatus(checkout),
+      POS_STRIPE_POLL_INTERVAL_MS
+    );
+  }
+}
+
+function handlePosStripeCheckoutRedirect() {
+  const params = new URLSearchParams(window.location.search);
+  const stripeState = params.get('stripe');
+  const sessionId = params.get('session_id');
+  if (!stripeState) return false;
+
+  const stored = getStoredPosStripeCheckout();
+  const checkout = sessionId
+    ? getPosStripeCheckoutFromRedirect(sessionId)
+    : stored;
+
+  if (stripeState === 'success' && sessionId) {
+    openPosStripeQrModal(checkout);
+    setStripeQrStatus('Stripe returned successfully. Confirming webhook status...');
+    startPosStripeCheckoutPolling(checkout);
+  } else if (stripeState === 'cancelled') {
+    if (checkout?.stripe_checkout_session_id) {
+      openPosStripeQrModal(checkout);
+      setStripeQrStatus('Stripe checkout was cancelled in the browser. The session may still be pending.', 'error');
+      startPosStripeCheckoutPolling(checkout);
+    } else {
+      setPosPaymentStatus('Stripe checkout was cancelled.', 'error');
+    }
+  }
+
+  window.history.replaceState({}, document.title, window.location.pathname);
+  return true;
+}
+
+function initPosPayment() {
+  renderPosPaymentOrder();
+
+  const payBtn = document.getElementById('payBtn');
   const newOrderBtn = document.getElementById('newOrderBtn');
   const paymentOrderCode = document.getElementById('paymentOrderCode');
+  const stripeQrCloseBtn = document.getElementById('stripeQrCloseBtn');
+  const stripeQrCheckStatusBtn = document.getElementById('stripeQrCheckStatusBtn');
   const originalPayBtnHtml = payBtn?.innerHTML;
+  const handledStripeRedirect = handlePosStripeCheckoutRedirect();
+
+  if (!handledStripeRedirect) {
+    const storedCheckout = getStoredPosStripeCheckout();
+    if (canReuseStoredPosStripeCheckout(storedCheckout)) {
+      startPosStripeCheckoutPolling(storedCheckout, { immediate: false });
+    }
+  }
+
+  stripeQrCloseBtn?.addEventListener('click', closePosStripeQrModal);
+  stripeQrCheckStatusBtn?.addEventListener('click', async () => {
+    const checkout = getStoredPosStripeCheckout();
+    if (!checkout?.stripe_checkout_session_id) return;
+    stripeQrCheckStatusBtn.disabled = true;
+    stripeQrCheckStatusBtn.innerHTML =
+      '<span class="material-symbols-outlined animate-spin">progress_activity</span> Checking...';
+    await checkPosStripeCheckoutStatus(checkout, { scheduleNext: false });
+    stripeQrCheckStatusBtn.disabled = false;
+    stripeQrCheckStatusBtn.innerHTML =
+      '<span class="material-symbols-outlined">sync</span> Check Status';
+  });
 
   payBtn?.addEventListener('click', async () => {
     const selectedPayment = document.querySelector('input[name="payment"]:checked')?.value;
-    if (!getPosCart().length || !overlay || !card) return;
+    if (!getPosCart().length) return;
+
     const isDelivery = isPosDeliveryOrder();
     const deliveryDetails = isDelivery ? collectDeliveryDetailsForm() : null;
     const instoreCustomerDetails = isDelivery ? null : collectInstoreCustomerForm();
+
+    if (isPosStripeQrPayment(selectedPayment)) {
+      const storedCheckout = getStoredPosStripeCheckout();
+      if (canReuseStoredPosStripeCheckout(storedCheckout)) {
+        startPosStripeCheckoutPolling(storedCheckout);
+        return;
+      }
+    }
 
     payBtn.disabled = true;
     payBtn.innerHTML =
@@ -1606,19 +2000,25 @@ function initPosPayment() {
         { deliveryDetails, instoreCustomerDetails },
         setPosPaymentStatus
       );
+
+      if (completedOrder?.requiresStripeCheckout) {
+        const checkout = buildPosStripeCheckoutState(
+          completedOrder.stripeSession,
+          completedOrder.order
+        );
+        setStoredPosStripeCheckout(checkout);
+        if (paymentOrderCode) {
+          paymentOrderCode.textContent = checkout.order_code || checkout.order_id;
+        }
+        startPosStripeCheckoutPolling(checkout, { immediate: false });
+        return;
+      }
+
       const orderCode = completedOrder.order_code || completedOrder.id || getPosOrderCode();
       localStorage.setItem(POS_ORDER_CODE_STORAGE_KEY, orderCode);
 
       if (paymentOrderCode) {
         paymentOrderCode.textContent = orderCode;
-      }
-      if (successTitle) {
-        successTitle.textContent = isDelivery ? 'Order In Preparation' : 'Order Completed';
-      }
-      if (successText) {
-        successText.textContent = isDelivery
-          ? `${orderCode} delivery order created with ${getPosPaymentLabel(selectedPayment)} and kept in preparation.`
-          : `${orderCode} completed successfully by ${getPosPaymentLabel(selectedPayment)}.`;
       }
       setPosPaymentStatus(
         isDelivery
@@ -1626,9 +2026,12 @@ function initPosPayment() {
           : 'Order completed successfully.',
         'success'
       );
-      overlay.classList.remove('opacity-0', 'pointer-events-none');
-      card.classList.remove('scale-90');
-      card.classList.add('scale-100');
+      showPosPaymentSuccess(
+        isDelivery ? 'Order In Preparation' : 'Order Completed',
+        isDelivery
+          ? `${orderCode} delivery order created with ${getPosPaymentLabel(selectedPayment)} and kept in preparation.`
+          : `${orderCode} completed successfully by ${getPosPaymentLabel(selectedPayment)}.`
+      );
     } catch (error) {
       console.error('Failed to complete POS order:', error);
       setPosPaymentStatus(
@@ -1649,6 +2052,8 @@ function initPosPayment() {
     localStorage.removeItem(POS_DELIVERY_DETAILS_STORAGE_KEY);
     localStorage.removeItem(POS_INSTORE_CUSTOMER_DETAILS_STORAGE_KEY);
     localStorage.removeItem(POS_ORDER_TYPE_STORAGE_KEY);
+    clearStoredPosStripeCheckout();
+    stopPosStripeCheckoutPolling();
     window.location.href = 'POS_menu.html';
   });
 }
@@ -1699,6 +2104,10 @@ function initShipper() {
   const stopNoteInput = document.getElementById('shipper-stop-note');
   const routeMapPanel = document.getElementById('shipper-route-map-panel');
   const searchInput = document.getElementById('topbar-search');
+  const performanceMonthInput = document.getElementById('shipper-performance-month');
+  const performanceRefreshButton = document.getElementById('shipper-performance-refresh');
+  const performanceStatus = document.getElementById('shipper-performance-status');
+  const hasPerformancePanel = Boolean(document.getElementById('shipper-perf-total-trips'));
 
   if (!tripList || !stopList) return;
 
@@ -1706,6 +2115,7 @@ function initShipper() {
     trips: [],
     selectedTrip: null,
     selectedStop: null,
+    performance: null,
     stopAction: 'delivered',
     isSendingLocation: false,
     isTrackingLocation: false,
@@ -1713,6 +2123,15 @@ function initShipper() {
     searchQuery: '',
   };
   const SHIPPER_LOCATION_UPDATE_INTERVAL_SECONDS = 30;
+
+  const getCurrentShipperMonth = () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  };
+
+  if (hasPerformancePanel && performanceMonthInput && !performanceMonthInput.value) {
+    performanceMonthInput.value = getCurrentShipperMonth();
+  }
 
   const tripStatusMeta = {
     pending_dispatch: { label: 'Pending dispatch', className: 'bg-tertiary-fixed text-on-tertiary-fixed-variant' },
@@ -1737,7 +2156,6 @@ function initShipper() {
   const setStatus = (message = '', type = 'info') => {
     if (!statusMessage) return;
     statusMessage.textContent = message;
-    statusMessage.classList.toggle('hidden', !message);
     statusMessage.className = `rounded-xl px-4 py-3 text-sm font-bold ${
       type === 'error'
         ? 'bg-error-container/30 text-error'
@@ -1745,15 +2163,29 @@ function initShipper() {
           ? 'bg-secondary-container/30 text-secondary'
           : 'bg-surface-container-low text-on-surface-variant'
     }`;
+    statusMessage.classList.toggle('hidden', !message);
   };
 
   const setStopFormStatus = (message = '', type = 'info') => {
     if (!stopFormStatus) return;
     stopFormStatus.textContent = message;
-    stopFormStatus.classList.toggle('hidden', !message);
     stopFormStatus.className = `text-sm font-bold ${
       type === 'error' ? 'text-error' : type === 'success' ? 'text-secondary' : 'text-on-surface-variant'
     }`;
+    stopFormStatus.classList.toggle('hidden', !message);
+  };
+
+  const setPerformanceStatus = (message = '', type = 'info') => {
+    if (!performanceStatus) return;
+    performanceStatus.textContent = message;
+    performanceStatus.className = `rounded-xl px-4 py-3 text-sm font-bold ${
+      type === 'error'
+        ? 'bg-error-container/30 text-error'
+        : type === 'success'
+          ? 'bg-secondary-container/30 text-secondary'
+          : 'bg-surface-container-low text-on-surface-variant'
+    }`;
+    performanceStatus.classList.toggle('hidden', !message);
   };
 
   const getBadge = (value, source = tripStatusMeta) => {
@@ -1778,6 +2210,20 @@ function initShipper() {
       day: '2-digit',
       month: '2-digit',
     });
+  };
+
+  const formatShipperNumber = (value, digits = 0) => Number(value || 0).toLocaleString('vi-VN', {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  });
+
+  const formatShipperPerformanceMinutes = (value) => {
+    const minutes = Number(value || 0);
+    if (!minutes) return '0 min';
+    if (minutes < 60) return `${formatShipperNumber(minutes, 2)} min`;
+    const hours = Math.floor(minutes / 60);
+    const remainder = Math.round(minutes % 60);
+    return `${hours}h ${remainder}m`;
   };
 
   const buildShipperMapUrl = (latitude, longitude) => {
@@ -2174,6 +2620,19 @@ function initShipper() {
     setText('shipper-stat-cod', formatVnd(codToCollect));
   };
 
+  const renderPerformance = () => {
+    const performance = state.performance || {};
+    const deliveredOrders = Number(performance.delivered_orders || 0);
+    const failedOrders = Number(performance.failed_orders || 0);
+
+    setText('shipper-perf-total-trips', formatShipperNumber(performance.total_trips || 0));
+    setText('shipper-perf-completed-trips', formatShipperNumber(performance.completed_trips || 0));
+    setText('shipper-perf-success-rate', `${formatShipperNumber(performance.success_rate || 0, 2)}%`);
+    setText('shipper-perf-orders', `${formatShipperNumber(deliveredOrders)} / ${formatShipperNumber(failedOrders)}`);
+    setText('shipper-perf-distance', `${formatShipperNumber(performance.planned_distance_km || 0, 3)} km`);
+    setText('shipper-perf-average', formatShipperPerformanceMinutes(performance.average_delivery_minutes || 0));
+  };
+
   const renderTrips = () => {
     const visibleTrips = getVisibleTrips();
     setText('shipper-trip-count', `${visibleTrips.length}`);
@@ -2366,6 +2825,25 @@ function initShipper() {
       renderTrips();
       renderTripDetail();
       setStatus(error.message || 'Cannot load assigned trips. Please sign in as a shipper.', 'error');
+    }
+  };
+
+  const loadShipperPerformance = async ({ silent = false } = {}) => {
+    const month = performanceMonthInput?.value || getCurrentShipperMonth();
+    if (!silent) setPerformanceStatus('Loading monthly performance...');
+
+    try {
+      state.performance = await fetchMatchaApi(`/shipper/performance?month=${encodeURIComponent(month)}`);
+      renderPerformance();
+      setPerformanceStatus(
+        silent ? '' : `Performance loaded for ${state.performance.month || month}.`,
+        silent ? 'info' : 'success'
+      );
+    } catch (error) {
+      console.error('Failed to load shipper performance:', error);
+      state.performance = null;
+      renderPerformance();
+      setPerformanceStatus(error.message || 'Cannot load monthly performance.', 'error');
     }
   };
 
@@ -2587,6 +3065,7 @@ function initShipper() {
       });
       closeStopModal();
       await loadTrips({ keepSelectedTrip: true });
+      if (hasPerformancePanel) await loadShipperPerformance({ silent: true });
       setStatus(isDelivered ? 'Order marked delivered.' : 'Order marked failed.', 'success');
     } catch (error) {
       console.error('Failed to update shipper stop:', error);
@@ -2611,7 +3090,12 @@ function initShipper() {
     if (failedButton) openStopModal(failedButton.dataset.orderId, 'failed');
   });
 
-  refreshButton?.addEventListener('click', () => loadTrips());
+  refreshButton?.addEventListener('click', () => {
+    loadTrips();
+    if (hasPerformancePanel) loadShipperPerformance();
+  });
+  performanceRefreshButton?.addEventListener('click', () => loadShipperPerformance());
+  performanceMonthInput?.addEventListener('change', () => loadShipperPerformance());
   searchInput?.addEventListener('input', () => {
     state.searchQuery = searchInput.value || '';
     renderTrips();
@@ -2638,7 +3122,9 @@ function initShipper() {
     if (event.target === stopModal) closeStopModal();
   });
 
+  if (hasPerformancePanel) renderPerformance();
   loadTrips();
+  if (hasPerformancePanel) loadShipperPerformance();
 }
 
 const FINANCE_STATE = {

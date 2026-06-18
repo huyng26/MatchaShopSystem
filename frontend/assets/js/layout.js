@@ -86,6 +86,9 @@ const SIDEBAR_HTML = `
     <a class="${_NAV_INACTIVE}" data-nav="shipper" href="shipper.html">
       <span class="material-symbols-outlined">two_wheeler</span><span>Ship</span>
     </a>
+    <a class="${_NAV_INACTIVE}" data-nav="performance" href="performance.html">
+      <span class="material-symbols-outlined">query_stats</span><span>Performance</span>
+    </a>
     <a class="${_NAV_INACTIVE}" data-nav="financial-management" href="financial_management.html">
       <span class="material-symbols-outlined">account_balance</span><span>Financial Management</span>
     </a>
@@ -186,6 +189,7 @@ const PAGE_CONFIG = {
   'pos-menu':        { activeNav: 'pos-menu',    searchPlaceholder: 'Search menu items...',               backUrl: null },
   'pos-payment':     { activeNav: 'pos-menu',    searchPlaceholder: 'Search payment items...',             backUrl: 'POS_menu.html', hideSearch: true },
   'shipper':         { activeNav: 'shipper',     searchPlaceholder: 'Search assigned trips or stops...',    backUrl: null },
+  'performance':     { activeNav: 'performance', searchPlaceholder: 'Search delivered orders...',           backUrl: null },
   'delivery-manage': { activeNav: 'delivery-manage', searchPlaceholder: 'Search orders, shippers or routes...', backUrl: null },
 };
 
@@ -202,6 +206,7 @@ const LAYOUT_NAV_PAGE = {
   'pos-menu': 'pos-menu',
   'delivery-manage': 'delivery-manage',
   shipper: 'shipper',
+  performance: 'performance',
   'financial-management': 'financial-management',
   menu: 'menu',
   inventory: 'inventory-list',
@@ -727,14 +732,14 @@ function canLayoutRoleAccessPage(role, page) {
   if (!PAGE_CONFIG[page]) return false;
 
   if (role === 'admin') {
-    return page !== 'shipper';
+    return !['shipper', 'performance'].includes(page);
   }
 
   const allowedPagesByRole = {
     cashier: new Set(['pos-menu', 'pos-payment']),
     delivery_manager: new Set(['delivery-manage']),
     inventory_manager: new Set(['inventory-list', 'inventory-detail']),
-    shipper: new Set(['shipper']),
+    shipper: new Set(['shipper', 'performance']),
   };
 
   return Boolean(allowedPagesByRole[role]?.has(page));
