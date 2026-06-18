@@ -35,16 +35,21 @@
                     <p class="page-header-subtitle">Manage your seasonal offerings. Adjust
                         availability and basic details for the admin view.</p>
                 </div>
-                <div class="relative flex gap-3">
-                    <button id="filter-menu-button" type="button"
-                        class="flex items-center gap-2 px-6 py-2.5 rounded-full bg-surface-container-high text-on-surface font-bold text-sm hover:bg-surface-container-highest transition-colors"
-                        aria-haspopup="true" aria-expanded="false">
-                        <span class="material-symbols-outlined text-sm" data-icon="filter_list">filter_list</span>
-                        <span id="active-filter-label">All Categories</span>
-                    </button>
-                    <div id="filter-menu"
-                        class="absolute right-0 top-full z-20 mt-3 hidden min-w-52 overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest py-2 shadow-xl">
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <button id="filter-menu-button" type="button"
+                            class="flex items-center gap-2 px-6 py-2.5 rounded-full bg-surface-container-high text-on-surface font-bold text-sm hover:bg-surface-container-highest transition-colors"
+                            aria-haspopup="true" aria-expanded="false">
+                            <span class="material-symbols-outlined text-sm" data-icon="filter_list">filter_list</span>
+                            <span id="active-filter-label">All Categories</span>
+                        </button>
+                        <div id="filter-menu"
+                            class="absolute right-0 top-full z-20 mt-3 hidden min-w-52 overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest py-2 shadow-xl">
+                        </div>
                     </div>
+                    <span id="product-count-label"
+                        class="flex items-center rounded-full bg-surface-container-low px-4 py-2 text-sm font-bold text-on-surface-variant"
+                        aria-live="polite">0 products</span>
                 </div>
             </div>
             <!-- Simplified Uniform Grid -->
@@ -187,6 +192,7 @@
         const filterMenuButton = document.getElementById('filter-menu-button');
         const filterMenu = document.getElementById('filter-menu');
         const activeFilterLabel = document.getElementById('active-filter-label');
+        const productCountLabel = document.getElementById('product-count-label');
         const topbarSearchInput = document.getElementById('topbar-search');
         let allProducts = [];
         let productCategories = [];
@@ -296,6 +302,11 @@
             if (activeFilterLabel) {
                 activeFilterLabel.textContent = activeCategory || 'All Categories';
             }
+        };
+
+        const updateProductCountLabel = (count) => {
+            if (!productCountLabel) return;
+            productCountLabel.textContent = `${count} ${count === 1 ? 'product' : 'products'}`;
         };
 
         const populateFilterMenu = (categories) => {
@@ -534,6 +545,7 @@
 
         const renderProducts = (products) => {
             productGrid.querySelectorAll('.product-card').forEach((card) => card.remove());
+            updateProductCountLabel(products.length);
 
             if (!products.length) {
                 const emptyState = document.createElement('div');
@@ -574,6 +586,7 @@
                 allProducts = [];
                 productCategories = [];
                 activeCategory = '';
+                updateProductCountLabel(0);
                 productGrid.querySelectorAll('.product-card').forEach((card) => card.remove());
                 populateCategorySelect([]);
                 populateFilterMenu([]);
