@@ -3204,28 +3204,6 @@ function setFinanceFormStatus(message = '', type = 'info') {
   );
 }
 
-function setFinanceStaffWageStatus(message = '', type = 'info') {
-  const status = document.getElementById('finance-staff-wage-status');
-  if (!status) return;
-
-  status.textContent = message || 'Generate monthly wage expense from active staff salaries.';
-  status.classList.remove('text-error', 'text-secondary', 'text-primary', 'text-on-surface-variant');
-  status.classList.add(
-    type === 'error' ? 'text-error' : type === 'success' ? 'text-secondary' : type === 'active' ? 'text-primary' : 'text-on-surface-variant'
-  );
-}
-
-function getFinanceStaffWageMessage(message) {
-  const normalizedMessage = String(message || '');
-  if (normalizedMessage.includes('staff_wage_expense_already_exists')) {
-    return 'Staff wages have already been generated for this month.';
-  }
-  if (normalizedMessage.includes('staff_wage_total_is_zero')) {
-    return 'No active staff salary is available to generate wages.';
-  }
-  return normalizedMessage || 'Cannot generate staff wage expense.';
-}
-
 function renderFinanceSummary(summary) {
   setFinanceText('finance-revenue', formatVnd(summary?.revenue || 0));
   setFinanceText('finance-material-cost', formatVnd(summary?.material_cost || 0));
@@ -3458,7 +3436,6 @@ function renderFinancePage() {
 
 function renderFinanceLoading() {
   setFinanceStatus('Loading finance data...');
-  setFinanceStaffWageStatus();
   renderFinanceSummary({});
   setFinanceText('finance-expense-count', 'Loading expenses...');
   FINANCE_STATE.expensePage = 1;
@@ -3552,7 +3529,6 @@ async function initFinancialManagement() {
   const refreshBtn = document.getElementById('finance-refresh-btn');
   const expenseForm = document.getElementById('finance-expense-form');
   const saveExpenseBtn = document.getElementById('finance-save-expense-btn');
-  const staffWageBtn = document.getElementById('finance-staff-wage-btn');
   const exportBtn = document.getElementById('finance-export-btn');
   const recordPrevBtn = document.getElementById('finance-record-prev');
   const recordNextBtn = document.getElementById('finance-record-next');
@@ -3606,34 +3582,6 @@ async function initFinancialManagement() {
       setFinanceFormStatus(error.message || 'Cannot create expense.', 'error');
     } finally {
       saveExpenseBtn.disabled = false;
-    }
-  });
-
-  staffWageBtn?.addEventListener('click', async () => {
-    const month = periodInput?.value || getCurrentFinanceMonth();
-    const originalStaffWageHtml = staffWageBtn.innerHTML;
-    staffWageBtn.disabled = true;
-    staffWageBtn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span> Generating...';
-    setFinanceStatus('Generating staff wage expense...');
-    setFinanceStaffWageStatus(`Generating staff wage expense for ${formatFinanceMonth(month)}...`, 'active');
-    try {
-      const result = await fetchMatchaApi(`/finance/expenses/staff-wages?month=${encodeURIComponent(month)}`, {
-        method: 'POST',
-      });
-      await loadFinanceData(month);
-      setFinanceStatus('Staff wage expense generated successfully.', 'success');
-      setFinanceStaffWageStatus(
-        `Created ${formatVnd(result?.total_salary || 0)} staff wage expense for ${result?.staff_count || 0} active staff.`,
-        'success'
-      );
-    } catch (error) {
-      console.error('Failed to generate staff wage expense:', error);
-      const friendlyMessage = getFinanceStaffWageMessage(error.message);
-      setFinanceStatus(friendlyMessage, 'error');
-      setFinanceStaffWageStatus(friendlyMessage, 'error');
-    } finally {
-      staffWageBtn.disabled = false;
-      staffWageBtn.innerHTML = originalStaffWageHtml;
     }
   });
 
