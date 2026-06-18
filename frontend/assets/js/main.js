@@ -492,6 +492,7 @@ const POS_ORDER_TYPE_STORAGE_KEY = 'matcha_pos_order_type';
 const POS_DELIVERY_DETAILS_STORAGE_KEY = 'matcha_pos_delivery_details';
 const POS_INSTORE_CUSTOMER_DETAILS_STORAGE_KEY = 'matcha_pos_instore_customer_details';
 const POS_STRIPE_CHECKOUT_STORAGE_KEY = 'matcha_pos_stripe_checkout';
+const POS_CHECKOUT_RUN_STORAGE_KEY = 'matcha_pos_checkout_run_id';
 const POS_STRIPE_POLL_INTERVAL_MS = 2500;
 const POS_STRIPE_POLL_MAX_ATTEMPTS = 120;
 
@@ -501,6 +502,10 @@ let POS_MENU_SEARCH_QUERY = '';
 let POS_PREPARING_DELIVERY_ORDERS = [];
 let POS_STRIPE_POLL_TIMEOUT_ID = null;
 let POS_STRIPE_POLL_ATTEMPTS = 0;
+let POS_INSTORE_CUSTOMER_LOOKUP_TIMEOUT_ID = null;
+let POS_INSTORE_CUSTOMER_LOOKUP_SEQUENCE = 0;
+let POS_DELIVERY_CUSTOMER_LOOKUP_TIMEOUT_ID = null;
+let POS_DELIVERY_CUSTOMER_LOOKUP_SEQUENCE = 0;
 
 const POS_FALLBACK_IMAGE =
   'https://images.unsplash.com/photo-1515823662972-da6a2e4d3002?auto=format&fit=crop&w=900&q=80';
@@ -627,6 +632,25 @@ function getPosOrderCode() {
   return getStoredPosOrderCode() || 'Generated on submit';
 }
 
+function createPosCheckoutRunId() {
+  if (window.crypto?.randomUUID) {
+    return window.crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function getPosCheckoutRunId() {
+  return localStorage.getItem(POS_CHECKOUT_RUN_STORAGE_KEY) || '';
+}
+
+function startNewPosCheckoutRun() {
+  const checkoutRunId = createPosCheckoutRunId();
+  localStorage.setItem(POS_CHECKOUT_RUN_STORAGE_KEY, checkoutRunId);
+  clearStoredPosStripeCheckout();
+  stopPosStripeCheckoutPolling();
+  return checkoutRunId;
+}
+
 function getPosDeliveryDetails() {
   try {
     return JSON.parse(localStorage.getItem(POS_DELIVERY_DETAILS_STORAGE_KEY)) || {};
@@ -684,7 +708,7 @@ function getCartTotal(cart) {
 
 function buildCustomizationSummary(item) {
   const toppings = item.toppings || [];
-  const parts = [item.temperature, item.iceLevel, item.sugarLevel].filter(Boolean);
+  const parts = [item.iceLevel, item.sugarLevel].filter(Boolean);
   if (toppings.length) {
     parts.push(toppings.map((topping) => topping.name).join(', '));
   }
@@ -775,6 +799,7 @@ function clearStoredPosStripeCheckout() {
 
 function canReuseStoredPosStripeCheckout(checkout) {
   if (!checkout?.stripe_checkout_session_id || !checkout?.checkout_url) return false;
+  if (!checkout.checkout_run_id || checkout.checkout_run_id !== getPosCheckoutRunId()) return false;
   if (checkout.cart_signature !== getPosStripeCartSignature()) return false;
   return String(checkout.status || 'pending') === 'pending';
 }
@@ -792,6 +817,7 @@ function buildPosStripeCheckoutState(session, order) {
     status: session.status || 'pending',
     amount: Number(order?.total_amount || getCartTotal(getPosCart())),
     cart_signature: getPosStripeCartSignature(),
+    checkout_run_id: getPosCheckoutRunId(),
     created_at: new Date().toISOString(),
   };
 }
@@ -807,6 +833,7 @@ function getPosStripeCheckoutFromRedirect(sessionId) {
     order_type: getPosOrderType(),
     amount: getCartTotal(getPosCart()),
     cart_signature: getPosStripeCartSignature(),
+    checkout_run_id: getPosCheckoutRunId(),
     status: 'pending',
   };
 }
@@ -842,6 +869,9 @@ function validateDeliveryDetails(details) {
 }
 
 function validateInstoreCustomerDetails(details) {
+  if (details?.customer_phone && !details.customer_name) {
+    throw new Error('Customer name is required when the phone number is not found.');
+  }
   if (!details?.create_customer_profile) return;
   const missing = [];
   if (!details.customer_phone) missing.push('customer phone');
@@ -1432,7 +1462,6 @@ async function initPosMenu() {
       image: item.image,
       basePrice: item.price,
       totalPrice: item.price + toppingsTotal,
-      temperature: formData.get('temperature'),
       iceLevel: formData.get('iceLevel'),
       sugarLevel: formData.get('sugarLevel'),
       toppings: selectedToppings,
@@ -1461,6 +1490,7 @@ async function initPosMenu() {
 
   completeBtn?.addEventListener('click', () => {
     if (!getPosCart().length) return;
+    startNewPosCheckoutRun();
     window.location.href = 'POS_payment.html';
   });
 
@@ -1547,6 +1577,8 @@ function populateInstoreCustomerForm() {
   if (createProfileInput) {
     createProfileInput.checked = Boolean(details.create_customer_profile);
   }
+
+  updateInstoreCustomerNameRequirement();
 }
 
 function collectInstoreCustomerForm() {
@@ -1557,6 +1589,112 @@ function collectInstoreCustomerForm() {
   };
   setPosInstoreCustomerDetails(details);
   return details;
+}
+
+function normalizePhoneForLookup(value) {
+  return String(value || '').replace(/\D/g, '');
+}
+
+function findCustomerByPhone(customers, phone) {
+  const targetPhone = normalizePhoneForLookup(phone);
+  if (!targetPhone) return null;
+  return customers.find((customer) => normalizePhoneForLookup(customer.phone) === targetPhone) || null;
+}
+
+function updateInstoreCustomerNameRequirement({ customerFound = false } = {}) {
+  if (isPosDeliveryOrder()) return;
+
+  const phoneInput = document.getElementById('instoreCustomerPhone');
+  const nameInput = document.getElementById('instoreCustomerName');
+  if (!phoneInput || !nameInput) return;
+
+  const hasPhone = Boolean(phoneInput.value.trim());
+  nameInput.required = hasPhone && !customerFound;
+}
+
+async function lookupInstoreCustomerByPhone(phone, sequence) {
+  const phoneInput = document.getElementById('instoreCustomerPhone');
+  const nameInput = document.getElementById('instoreCustomerName');
+  const createProfileInput = document.getElementById('instoreCreateCustomerProfile');
+  if (!phoneInput || !nameInput) return;
+
+  const normalizedPhone = normalizePhoneForLookup(phone);
+  if (!normalizedPhone) {
+    updateInstoreCustomerNameRequirement({ customerFound: false });
+    nameInput.dataset.autofilledCustomerPhone = '';
+    return;
+  }
+
+  try {
+    const customers = getApiListData(
+      await fetchMatchaApi(`/customers?q=${encodeURIComponent(phone.trim())}`)
+    );
+    if (sequence !== POS_INSTORE_CUSTOMER_LOOKUP_SEQUENCE) return;
+    if (normalizePhoneForLookup(phoneInput.value) !== normalizedPhone) return;
+
+    const customer = findCustomerByPhone(customers, phone);
+    if (customer) {
+      nameInput.value = customer.name || '';
+      nameInput.dataset.autofilledCustomerPhone = normalizedPhone;
+      if (createProfileInput) createProfileInput.checked = false;
+      updateInstoreCustomerNameRequirement({ customerFound: true });
+    } else {
+      if (nameInput.dataset.autofilledCustomerPhone) {
+        nameInput.value = '';
+      }
+      nameInput.dataset.autofilledCustomerPhone = '';
+      updateInstoreCustomerNameRequirement({ customerFound: false });
+    }
+
+    collectInstoreCustomerForm();
+  } catch (error) {
+    console.warn('Cannot lookup in-shop customer by phone:', error);
+    if (sequence !== POS_INSTORE_CUSTOMER_LOOKUP_SEQUENCE) return;
+    updateInstoreCustomerNameRequirement({ customerFound: false });
+  }
+}
+
+function scheduleInstoreCustomerLookup() {
+  const phoneInput = document.getElementById('instoreCustomerPhone');
+  const nameInput = document.getElementById('instoreCustomerName');
+  if (!phoneInput || !nameInput) return;
+
+  window.clearTimeout(POS_INSTORE_CUSTOMER_LOOKUP_TIMEOUT_ID);
+  const phone = phoneInput.value.trim();
+  const sequence = POS_INSTORE_CUSTOMER_LOOKUP_SEQUENCE + 1;
+  POS_INSTORE_CUSTOMER_LOOKUP_SEQUENCE = sequence;
+
+  if (!phone) {
+    if (nameInput.dataset.autofilledCustomerPhone) {
+      nameInput.value = '';
+    }
+    nameInput.dataset.autofilledCustomerPhone = '';
+    updateInstoreCustomerNameRequirement({ customerFound: false });
+    collectInstoreCustomerForm();
+    return;
+  }
+
+  updateInstoreCustomerNameRequirement({ customerFound: false });
+  POS_INSTORE_CUSTOMER_LOOKUP_TIMEOUT_ID = window.setTimeout(
+    () => lookupInstoreCustomerByPhone(phone, sequence),
+    300
+  );
+}
+
+async function resolveInstoreCustomerLookupNow() {
+  const phoneInput = document.getElementById('instoreCustomerPhone');
+  if (!phoneInput || isPosDeliveryOrder()) return;
+
+  window.clearTimeout(POS_INSTORE_CUSTOMER_LOOKUP_TIMEOUT_ID);
+  const phone = phoneInput.value.trim();
+  if (!phone) {
+    updateInstoreCustomerNameRequirement({ customerFound: false });
+    return;
+  }
+
+  const sequence = POS_INSTORE_CUSTOMER_LOOKUP_SEQUENCE + 1;
+  POS_INSTORE_CUSTOMER_LOOKUP_SEQUENCE = sequence;
+  await lookupInstoreCustomerByPhone(phone, sequence);
 }
 
 function getDeliveryMapErrorMessage(error) {
@@ -1602,6 +1740,7 @@ function populateDeliveryDetailsForm() {
     }
   });
 
+  updateDeliveryCustomerNameRequirement();
 }
 
 function collectDeliveryDetailsForm() {
@@ -1613,6 +1752,97 @@ function collectDeliveryDetailsForm() {
   };
   setPosDeliveryDetails(details);
   return details;
+}
+
+function updateDeliveryCustomerNameRequirement() {
+  if (!isPosDeliveryOrder()) return;
+
+  const nameInput = document.getElementById('deliveryCustomerName');
+  if (nameInput) {
+    nameInput.required = true;
+  }
+}
+
+async function lookupDeliveryCustomerByPhone(phone, sequence) {
+  const phoneInput = document.getElementById('deliveryCustomerPhone');
+  const nameInput = document.getElementById('deliveryCustomerName');
+  if (!phoneInput || !nameInput) return;
+
+  const normalizedPhone = normalizePhoneForLookup(phone);
+  if (!normalizedPhone) {
+    nameInput.dataset.autofilledCustomerPhone = '';
+    updateDeliveryCustomerNameRequirement();
+    return;
+  }
+
+  try {
+    const customers = getApiListData(
+      await fetchMatchaApi(`/customers?q=${encodeURIComponent(phone.trim())}`)
+    );
+    if (sequence !== POS_DELIVERY_CUSTOMER_LOOKUP_SEQUENCE) return;
+    if (normalizePhoneForLookup(phoneInput.value) !== normalizedPhone) return;
+
+    const customer = findCustomerByPhone(customers, phone);
+    if (customer) {
+      nameInput.value = customer.name || '';
+      nameInput.dataset.autofilledCustomerPhone = normalizedPhone;
+    } else if (nameInput.dataset.autofilledCustomerPhone) {
+      nameInput.value = '';
+      nameInput.dataset.autofilledCustomerPhone = '';
+    } else {
+      nameInput.dataset.autofilledCustomerPhone = '';
+    }
+
+    updateDeliveryCustomerNameRequirement();
+    collectDeliveryDetailsForm();
+  } catch (error) {
+    console.warn('Cannot lookup delivery customer by phone:', error);
+    if (sequence !== POS_DELIVERY_CUSTOMER_LOOKUP_SEQUENCE) return;
+    updateDeliveryCustomerNameRequirement();
+  }
+}
+
+function scheduleDeliveryCustomerLookup() {
+  const phoneInput = document.getElementById('deliveryCustomerPhone');
+  const nameInput = document.getElementById('deliveryCustomerName');
+  if (!phoneInput || !nameInput) return;
+
+  window.clearTimeout(POS_DELIVERY_CUSTOMER_LOOKUP_TIMEOUT_ID);
+  const phone = phoneInput.value.trim();
+  const sequence = POS_DELIVERY_CUSTOMER_LOOKUP_SEQUENCE + 1;
+  POS_DELIVERY_CUSTOMER_LOOKUP_SEQUENCE = sequence;
+
+  if (!phone) {
+    if (nameInput.dataset.autofilledCustomerPhone) {
+      nameInput.value = '';
+    }
+    nameInput.dataset.autofilledCustomerPhone = '';
+    updateDeliveryCustomerNameRequirement();
+    collectDeliveryDetailsForm();
+    return;
+  }
+
+  updateDeliveryCustomerNameRequirement();
+  POS_DELIVERY_CUSTOMER_LOOKUP_TIMEOUT_ID = window.setTimeout(
+    () => lookupDeliveryCustomerByPhone(phone, sequence),
+    300
+  );
+}
+
+async function resolveDeliveryCustomerLookupNow() {
+  const phoneInput = document.getElementById('deliveryCustomerPhone');
+  if (!phoneInput || !isPosDeliveryOrder()) return;
+
+  window.clearTimeout(POS_DELIVERY_CUSTOMER_LOOKUP_TIMEOUT_ID);
+  const phone = phoneInput.value.trim();
+  if (!phone) {
+    updateDeliveryCustomerNameRequirement();
+    return;
+  }
+
+  const sequence = POS_DELIVERY_CUSTOMER_LOOKUP_SEQUENCE + 1;
+  POS_DELIVERY_CUSTOMER_LOOKUP_SEQUENCE = sequence;
+  await lookupDeliveryCustomerByPhone(phone, sequence);
 }
 
 function renderPosPaymentOrder() {
@@ -1848,6 +2078,7 @@ async function checkPosStripeCheckoutStatus(checkout, { scheduleNext = true } = 
       setStripeQrStatus('Payment confirmed by Stripe webhook.', 'success');
       setPosPaymentStatus('Payment confirmed by Stripe.', 'success');
       closePosStripeQrModal();
+      clearStoredPosStripeCheckout();
       showPosPaymentSuccess(
         getStripeSuccessTitle(status),
         getStripeSuccessText(status, nextCheckout)
@@ -1950,6 +2181,13 @@ function initPosPayment() {
   const paymentOrderCode = document.getElementById('paymentOrderCode');
   const stripeQrCloseBtn = document.getElementById('stripeQrCloseBtn');
   const stripeQrCheckStatusBtn = document.getElementById('stripeQrCheckStatusBtn');
+  const instoreCustomerPhoneInput = document.getElementById('instoreCustomerPhone');
+  const instoreCustomerNameInput = document.getElementById('instoreCustomerName');
+  const instoreCreateCustomerProfileInput = document.getElementById('instoreCreateCustomerProfile');
+  const deliveryCustomerPhoneInput = document.getElementById('deliveryCustomerPhone');
+  const deliveryCustomerNameInput = document.getElementById('deliveryCustomerName');
+  const deliveryAddressInput = document.getElementById('deliveryAddress');
+  const deliveryOrderNoteInput = document.getElementById('deliveryOrderNote');
   const originalPayBtnHtml = payBtn?.innerHTML;
   const handledStripeRedirect = handlePosStripeCheckoutRedirect();
 
@@ -1961,6 +2199,27 @@ function initPosPayment() {
   }
 
   stripeQrCloseBtn?.addEventListener('click', closePosStripeQrModal);
+  instoreCustomerPhoneInput?.addEventListener('input', scheduleInstoreCustomerLookup);
+  instoreCustomerPhoneInput?.addEventListener('blur', scheduleInstoreCustomerLookup);
+  instoreCustomerNameInput?.addEventListener('input', () => {
+    instoreCustomerNameInput.dataset.autofilledCustomerPhone = '';
+    collectInstoreCustomerForm();
+  });
+  instoreCreateCustomerProfileInput?.addEventListener('change', collectInstoreCustomerForm);
+  if (instoreCustomerPhoneInput?.value.trim()) {
+    scheduleInstoreCustomerLookup();
+  }
+  deliveryCustomerPhoneInput?.addEventListener('input', scheduleDeliveryCustomerLookup);
+  deliveryCustomerPhoneInput?.addEventListener('blur', scheduleDeliveryCustomerLookup);
+  deliveryCustomerNameInput?.addEventListener('input', () => {
+    deliveryCustomerNameInput.dataset.autofilledCustomerPhone = '';
+    collectDeliveryDetailsForm();
+  });
+  deliveryAddressInput?.addEventListener('input', collectDeliveryDetailsForm);
+  deliveryOrderNoteInput?.addEventListener('input', collectDeliveryDetailsForm);
+  if (deliveryCustomerPhoneInput?.value.trim()) {
+    scheduleDeliveryCustomerLookup();
+  }
   stripeQrCheckStatusBtn?.addEventListener('click', async () => {
     const checkout = getStoredPosStripeCheckout();
     if (!checkout?.stripe_checkout_session_id) return;
@@ -1978,6 +2237,11 @@ function initPosPayment() {
     if (!getPosCart().length) return;
 
     const isDelivery = isPosDeliveryOrder();
+    if (isDelivery) {
+      await resolveDeliveryCustomerLookupNow();
+    } else {
+      await resolveInstoreCustomerLookupNow();
+    }
     const deliveryDetails = isDelivery ? collectDeliveryDetailsForm() : null;
     const instoreCustomerDetails = isDelivery ? null : collectInstoreCustomerForm();
 
@@ -2052,6 +2316,7 @@ function initPosPayment() {
     localStorage.removeItem(POS_DELIVERY_DETAILS_STORAGE_KEY);
     localStorage.removeItem(POS_INSTORE_CUSTOMER_DETAILS_STORAGE_KEY);
     localStorage.removeItem(POS_ORDER_TYPE_STORAGE_KEY);
+    localStorage.removeItem(POS_CHECKOUT_RUN_STORAGE_KEY);
     clearStoredPosStripeCheckout();
     stopPosStripeCheckoutPolling();
     window.location.href = 'POS_menu.html';
