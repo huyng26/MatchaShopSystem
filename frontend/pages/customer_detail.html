@@ -26,7 +26,7 @@
     <header id="app-topbar" class="fixed top-0 right-0 left-72 h-20 z-30 bg-[#f9f9f8]/80 dark:bg-[#191c1c]/80 backdrop-blur-2xl flex items-center justify-between px-10"></header>
     <!-- Main Canvas -->
     <main class="ml-72 pt-20 min-h-screen bg-surface p-8">
-        <div class="max-w-6xl mx-auto">
+        <div class="w-full">
             <!-- Profile Header & Highlights -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
                 <!-- Profile Summary Card -->
@@ -141,12 +141,13 @@
                                         <th class="px-6 py-4">Purchase Date</th>
                                         <th class="px-6 py-4">Primary Product</th>
                                         <th class="px-6 py-4">Total</th>
+                                        <th class="px-6 py-4 text-center">Points Earned</th>
                                         <th class="px-6 py-4">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody id="customer-orders-body" class="text-sm divide-y divide-stone-50">
                                     <tr>
-                                        <td class="px-6 py-8 text-center text-sm font-bold text-stone-500" colspan="5">Loading orders...</td>
+                                        <td class="px-6 py-8 text-center text-sm font-bold text-stone-500" colspan="6">Loading orders...</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -258,6 +259,12 @@
             currency: 'VND',
             maximumFractionDigits: 0,
         }).format(Number(value) || 0);
+        const calculateOrderPoints = (order) => {
+            if (String(order?.status || '').toLowerCase() !== 'completed') return 0;
+            const total = Number(order?.total_amount) || 0;
+            if (total <= 0) return 0;
+            return Math.max(1, Math.floor(total / 10000));
+        };
         const formatDate = (value) => {
             if (!value) return '--';
             const date = new Date(value);
@@ -330,7 +337,7 @@
             if (!orders.length) {
                 ordersBody.innerHTML = `
                     <tr>
-                        <td class="px-6 py-8 text-center text-sm font-bold text-stone-500" colspan="5">No orders found.</td>
+                        <td class="px-6 py-8 text-center text-sm font-bold text-stone-500" colspan="6">No orders found.</td>
                     </tr>
                 `;
                 return;
@@ -339,6 +346,7 @@
             orders.forEach((order) => {
                 const item = Array.isArray(order.items) && order.items.length ? order.items[0] : null;
                 const productName = item?.product_name || item?.name || order.order_type || '--';
+                const earnedPoints = calculateOrderPoints(order);
                 const row = document.createElement('tr');
                 row.className = 'hover:bg-surface-container-low/30';
                 row.innerHTML = `
@@ -346,6 +354,7 @@
                     <td class="px-6 py-4 text-stone-500">${escapeHtml(formatDate(order.created_at))}</td>
                     <td class="px-6 py-4 font-bold text-primary">${escapeHtml(productName)}</td>
                     <td class="px-6 py-4 font-bold text-primary">${escapeHtml(formatCurrency(order.total_amount))}</td>
+                    <td class="px-6 py-4 text-center font-bold ${earnedPoints > 0 ? 'text-secondary' : 'text-stone-400'}">${earnedPoints > 0 ? '+' : ''}${escapeHtml(formatNumber(earnedPoints))} pts</td>
                     <td class="px-6 py-4">
                         <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${getStatusClass(order.status)}">
                             ${escapeHtml(order.status || 'unknown')}
@@ -428,7 +437,7 @@
             setText('customer-id-label', customerId || '--');
             ordersBody.innerHTML = `
                 <tr>
-                    <td class="px-6 py-8 text-center text-sm font-bold text-error" colspan="5">${escapeHtml(message)}</td>
+                    <td class="px-6 py-8 text-center text-sm font-bold text-error" colspan="6">${escapeHtml(message)}</td>
                 </tr>
             `;
             activityList.innerHTML = `<div class="relative"><p class="text-sm font-bold text-error">${escapeHtml(message)}</p></div>`;
