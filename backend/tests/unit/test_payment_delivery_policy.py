@@ -5,7 +5,7 @@ from uuid import uuid4
 
 import pytest
 
-from app.models.order import OrderPaymentStatus, OrderType
+from app.models.order import OrderPaymentStatus, OrderStatus, OrderType
 from app.models.payment import PaymentEventStatus, PaymentMethod
 from app.schemas.payment import PaymentCreate
 from app.services import payment_service
@@ -32,6 +32,11 @@ class FakeDb:
         self.refreshes += 1
 
 
+@pytest.fixture
+def anyio_backend() -> str:
+    return "asyncio"
+
+
 def make_order(*, order_type: OrderType = OrderType.DELIVERY):
     return SimpleNamespace(
         id=uuid4(),
@@ -42,7 +47,7 @@ def make_order(*, order_type: OrderType = OrderType.DELIVERY):
     )
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_cod_delivery_payment_is_pending_and_does_not_mark_paid(monkeypatch):
     db = FakeDb()
     order = make_order(order_type=OrderType.DELIVERY)
@@ -97,7 +102,7 @@ async def test_cod_delivery_payment_is_pending_and_does_not_mark_paid(monkeypatc
     assert db.rollbacks == 0
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_card_delivery_payment_marks_order_paid(monkeypatch):
     db = FakeDb()
     order = make_order(order_type=OrderType.DELIVERY)
@@ -144,7 +149,7 @@ async def test_card_delivery_payment_marks_order_paid(monkeypatch):
     assert db.rollbacks == 0
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_cod_instore_payment_is_rejected(monkeypatch):
     db = FakeDb()
     order = make_order(order_type=OrderType.INSTORE)
@@ -169,7 +174,7 @@ async def test_cod_instore_payment_is_rejected(monkeypatch):
     assert error.value.status_code == 409
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_cash_delivery_payment_is_rejected(monkeypatch):
     db = FakeDb()
     order = make_order(order_type=OrderType.DELIVERY)
@@ -193,3 +198,78 @@ async def test_cash_delivery_payment_is_rejected(monkeypatch):
 
     assert error.value.code == "cash_not_allowed_for_delivery_order"
     assert error.value.status_code == 409
+
+
+@pytest.mark.anyio
+async def test_stripe_status_poll_syncs_completed_session(monkeypatch):
+    db = FakeDb()
+    session_id = "cs_test_paid"
+    order = SimpleNamespace(
+        id=uuid4(),
+        status=OrderStatus.IN_PROGRESS,
+        payment_status=OrderPaymentStatus.UNPAID,
+        completed_at=None,
+    )
+    payment = SimpleNamespace(
+        id=uuid4(),
+        order_id=order.id,
+        order=order,
+        method=PaymentMethod.BANK_TRANSFER,
+        status=PaymentEventStatus.PENDING,
+        gateway_transaction_id=session_id,
+        metadata_={"checkout_url": "https://checkout.stripe.test/session"},
+        paid_at=None,
+    )
+    captured = {}
+
+    async def get_payment_by_gateway_transaction_id(db, lookup_session_id, **kwargs):
+        captured.setdefault("lookups", []).append((lookup_session_id, kwargs))
+        return payment
+
+    def retrieve_checkout_session(*, session_id, secret_key):
+        captured["retrieved"] = (session_id, secret_key)
+        return SimpleNamespace(
+            id=session_id,
+            status="complete",
+            payment_status="paid",
+        )
+
+    async def handle_completed(db, session):
+        captured["completed_session"] = session.id
+        payment.status = PaymentEventStatus.SUCCESS
+        payment.paid_at = datetime.now(timezone.utc)
+        order.payment_status = OrderPaymentStatus.PAID
+        order.status = OrderStatus.COMPLETED
+        order.completed_at = datetime.now(timezone.utc)
+        return {"processed": True, "payment_id": payment.id}
+
+    monkeypatch.setattr(
+        payment_service.payment_repo,
+        "get_payment_by_gateway_transaction_id",
+        get_payment_by_gateway_transaction_id,
+    )
+    monkeypatch.setattr(
+        payment_service.stripe_gateway,
+        "retrieve_checkout_session",
+        retrieve_checkout_session,
+    )
+    monkeypatch.setattr(
+        payment_service,
+        "_handle_stripe_checkout_completed",
+        handle_completed,
+    )
+    monkeypatch.setattr(
+        payment_service,
+        "get_settings",
+        lambda: SimpleNamespace(stripe_secret_key="sk_test"),
+    )
+
+    status = await payment_service.get_stripe_checkout_session_status(db, session_id)
+
+    assert captured["retrieved"] == (session_id, "sk_test")
+    assert captured["completed_session"] == session_id
+    assert status["payment_status"] == PaymentEventStatus.SUCCESS
+    assert status["order_payment_status"] == OrderPaymentStatus.PAID
+    assert status["order_status"] == OrderStatus.COMPLETED
+    assert db.commits == 1
+    assert db.rollbacks == 0

@@ -52,6 +52,18 @@ def create_checkout_session(
     )
 
 
+def retrieve_checkout_session(
+    *,
+    session_id: str,
+    secret_key: str,
+) -> Any:
+    stripe = require_stripe()
+    return stripe.checkout.Session.retrieve(
+        session_id,
+        api_key=secret_key,
+    )
+
+
 def construct_webhook_event(
     *,
     payload: bytes,

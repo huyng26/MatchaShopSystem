@@ -199,6 +199,15 @@ async def get_stripe_checkout_session_status(
         raise ServiceError("stripe_checkout_session_not_found", status_code=404)
     if payment.order is None:
         raise ServiceError("order_not_found", status_code=404)
+
+    await _sync_stripe_checkout_status_from_gateway(db, payment)
+    payment = await payment_repo.get_payment_by_gateway_transaction_id(
+        db,
+        session_id,
+        load_order=True,
+    )
+    if payment is None or payment.order is None:
+        raise ServiceError("stripe_checkout_session_not_found", status_code=404)
     return _stripe_checkout_status_response(payment)
 
 
@@ -330,6 +339,43 @@ def _stripe_checkout_status_response(payment: Payment) -> dict[str, Any]:
         "paid_at": payment.paid_at,
         "completed_at": order.completed_at,
     }
+
+
+async def _sync_stripe_checkout_status_from_gateway(
+    db: AsyncSession,
+    payment: Payment,
+) -> None:
+    if payment.status != PaymentEventStatus.PENDING:
+        return
+
+    settings = get_settings()
+    if not settings.stripe_secret_key or not payment.gateway_transaction_id:
+        return
+
+    session = stripe_gateway.retrieve_checkout_session(
+        session_id=payment.gateway_transaction_id,
+        secret_key=settings.stripe_secret_key,
+    )
+    stripe_status = _stripe_field(session, "status")
+    stripe_payment_status = _stripe_field(session, "payment_status")
+
+    try:
+        if stripe_status == "complete" and stripe_payment_status in {
+            "paid",
+            "no_payment_required",
+        }:
+            await _handle_stripe_checkout_completed(db, session)
+            await db.commit()
+        elif stripe_status == "expired":
+            await _handle_stripe_checkout_terminal_status(
+                db,
+                session,
+                status=PaymentEventStatus.CANCELLED,
+            )
+            await db.commit()
+    except Exception:
+        await db.rollback()
+        raise
 
 
 def _build_qr_code_data_url(value: str) -> str:
