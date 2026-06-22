@@ -309,11 +309,29 @@ function normalizeLayoutNotificationActionUrl(actionUrl) {
   return value;
 }
 
+function getLayoutNotificationMessage(notification) {
+  if (notification?.type !== 'inventory.low_stock') {
+    return notification?.message || '';
+  }
+
+  const metadata = notification.metadata || {};
+  const currentStock = Number(metadata.current_stock);
+  if (!Number.isFinite(currentStock)) return notification?.message || '';
+
+  const formattedStock = new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: 3,
+    useGrouping: false,
+  }).format(currentStock);
+  const ingredientName = metadata.ingredient_name || 'Ingredient';
+  const unit = metadata.unit || '';
+  return `${ingredientName} stock is ${formattedStock}${unit ? ` ${unit}` : ''}, at or below the minimum threshold.`;
+}
+
 function renderLayoutNotificationItem(notification) {
   const unreadClass = notification.read_at ? '' : ' is-unread';
   const severity = escapeLayoutNotificationHtml(notification.severity || 'info');
   const title = escapeLayoutNotificationHtml(notification.title || 'Notification');
-  const message = escapeLayoutNotificationHtml(notification.message || '');
+  const message = escapeLayoutNotificationHtml(getLayoutNotificationMessage(notification));
   const time = escapeLayoutNotificationHtml(formatLayoutNotificationTime(notification.created_at));
   const typeLabel = escapeLayoutNotificationHtml(getLayoutNotificationSeverityLabel(notification));
   const icon = escapeLayoutNotificationHtml(getLayoutNotificationIcon(notification));
@@ -407,7 +425,7 @@ function showLayoutNotificationToast(container, notification, onActivate) {
     getLayoutNotificationSeverityLabel(notification),
   );
   const title = escapeLayoutNotificationHtml(notification.title || 'Notification');
-  const message = escapeLayoutNotificationHtml(notification.message || '');
+  const message = escapeLayoutNotificationHtml(getLayoutNotificationMessage(notification));
   const time = escapeLayoutNotificationHtml(
     formatLayoutNotificationTime(notification.created_at),
   );

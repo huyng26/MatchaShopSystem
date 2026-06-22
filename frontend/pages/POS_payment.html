@@ -65,11 +65,11 @@
             <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
               <label class="space-y-2">
                 <span class="text-sm font-bold text-on-surface">Customer Phone</span>
-                <input id="instoreCustomerPhone" type="tel" class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" placeholder="Leave blank for walk-in" />
+                <input id="instoreCustomerPhone" type="tel" autocomplete="off" class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" placeholder="Leave blank for walk-in" />
               </label>
               <label class="space-y-2">
                 <span class="text-sm font-bold text-on-surface">Customer Name</span>
-                <input id="instoreCustomerName" type="text" class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" placeholder="Auto-filled if phone exists; required if new" />
+                <input id="instoreCustomerName" type="text" autocomplete="off" class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" placeholder="Auto-filled if phone exists; required if new" />
               </label>
               <label class="md:col-span-2 flex items-start gap-3 rounded-xl bg-surface-container-low p-4">
                 <input id="instoreCreateCustomerProfile" type="checkbox" class="mt-1 rounded border-outline text-secondary focus:ring-secondary" />
@@ -89,11 +89,11 @@
             <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
               <label class="space-y-2">
                 <span class="text-sm font-bold text-on-surface">Customer Phone</span>
-                <input id="deliveryCustomerPhone" type="tel" class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" placeholder="Enter phone number" />
+                <input id="deliveryCustomerPhone" type="tel" autocomplete="off" class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" placeholder="Enter phone number" />
               </label>
               <label class="space-y-2">
                 <span class="text-sm font-bold text-on-surface">Customer Name</span>
-                <input id="deliveryCustomerName" type="text" class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" placeholder="Auto-filled if phone exists; required if new" />
+                <input id="deliveryCustomerName" type="text" autocomplete="off" class="w-full rounded-xl border-outline bg-surface px-4 py-3 text-sm focus:border-secondary focus:ring-secondary" placeholder="Auto-filled if phone exists; required if new" />
               </label>
               <label class="space-y-2 md:col-span-2">
                 <span class="text-sm font-bold text-on-surface">Delivery Address</span>
@@ -244,7 +244,7 @@
   </div>
 
   <script src="../assets/js/layout.js?v=notification-toast-fix-20260616"></script>
-  <script src="../assets/js/main.js?v=stripe-qr-flow-20260618"></script>
+  <script src="../assets/js/main.js?v=customer-reset-20260622"></script>
 </body>
 
 </html>

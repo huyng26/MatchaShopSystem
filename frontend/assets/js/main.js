@@ -646,6 +646,9 @@ function getPosCheckoutRunId() {
 function startNewPosCheckoutRun() {
   const checkoutRunId = createPosCheckoutRunId();
   localStorage.setItem(POS_CHECKOUT_RUN_STORAGE_KEY, checkoutRunId);
+  localStorage.removeItem(POS_CUSTOMER_STORAGE_KEY);
+  localStorage.removeItem(POS_INSTORE_CUSTOMER_DETAILS_STORAGE_KEY);
+  localStorage.removeItem(POS_DELIVERY_DETAILS_STORAGE_KEY);
   clearStoredPosStripeCheckout();
   stopPosStripeCheckoutPolling();
   return checkoutRunId;
@@ -653,26 +656,34 @@ function startNewPosCheckoutRun() {
 
 function getPosDeliveryDetails() {
   try {
-    return JSON.parse(localStorage.getItem(POS_DELIVERY_DETAILS_STORAGE_KEY)) || {};
+    const details = JSON.parse(localStorage.getItem(POS_DELIVERY_DETAILS_STORAGE_KEY)) || {};
+    return details.checkout_run_id === getPosCheckoutRunId() ? details : {};
   } catch {
     return {};
   }
 }
 
 function setPosDeliveryDetails(details) {
-  localStorage.setItem(POS_DELIVERY_DETAILS_STORAGE_KEY, JSON.stringify(details || {}));
+  localStorage.setItem(POS_DELIVERY_DETAILS_STORAGE_KEY, JSON.stringify({
+    ...(details || {}),
+    checkout_run_id: getPosCheckoutRunId(),
+  }));
 }
 
 function getPosInstoreCustomerDetails() {
   try {
-    return JSON.parse(localStorage.getItem(POS_INSTORE_CUSTOMER_DETAILS_STORAGE_KEY)) || {};
+    const details = JSON.parse(localStorage.getItem(POS_INSTORE_CUSTOMER_DETAILS_STORAGE_KEY)) || {};
+    return details.checkout_run_id === getPosCheckoutRunId() ? details : {};
   } catch {
     return {};
   }
 }
 
 function setPosInstoreCustomerDetails(details) {
-  localStorage.setItem(POS_INSTORE_CUSTOMER_DETAILS_STORAGE_KEY, JSON.stringify(details || {}));
+  localStorage.setItem(POS_INSTORE_CUSTOMER_DETAILS_STORAGE_KEY, JSON.stringify({
+    ...(details || {}),
+    checkout_run_id: getPosCheckoutRunId(),
+  }));
 }
 
 function updatePosOrderModeUi() {

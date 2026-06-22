@@ -186,11 +186,13 @@
         const lowStockFilterButton = document.getElementById('low-stock-filter');
         const ingredientImageInput = document.getElementById('ingredient-image');
         const ingredientImagePreview = document.getElementById('ingredient-image-preview');
+        const searchInput = document.getElementById('topbar-search');
         const API_BASE_URL = window.MATCHA_API_BASE_URL || 'http://localhost:8000/api/v1';
         const pageSize = 5;
         let lowStockOnly = false;
         let ingredientsCache = [];
         let currentPage = 1;
+        let searchQuery = '';
 
         const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
             '&': '&amp;',
@@ -206,6 +208,12 @@
             currency: 'VND',
             maximumFractionDigits: 0,
         }).format(Number(value) || 0);
+
+        const normalizeSearchText = (value) => String(value ?? '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .trim();
 
         const setFormStatus = (message, type = 'info') => {
             ingredientFormStatus.textContent = message;
@@ -297,6 +305,23 @@
             return fetchApiData(lowStockOnly ? '/inventory/low-stock' : '/ingredients');
         };
 
+        const getFilteredIngredients = () => {
+            if (!searchQuery) return ingredientsCache;
+
+            return ingredientsCache.filter((ingredient) => {
+                const status = getIngredientStatus(ingredient);
+                return normalizeSearchText([
+                    ingredient.name,
+                    ingredient.id,
+                    ingredient.unit,
+                    ingredient.current_stock,
+                    ingredient.minimum_threshold,
+                    ingredient.cost_per_unit,
+                    status.label,
+                ].join(' ')).includes(searchQuery);
+            });
+        };
+
         const getTotalPages = (ingredientCount) => Math.max(1, Math.ceil(ingredientCount / pageSize));
 
         const updatePaginationControls = (ingredientCount) => {
@@ -314,13 +339,15 @@
             tableBody.innerHTML = '';
 
             if (!ingredients.length) {
-                tableCount.textContent = lowStockOnly
-                    ? 'Showing 0 ingredients that need restocking'
-                    : 'Showing 0 ingredients';
+                tableCount.textContent = searchQuery
+                    ? 'Showing 0 matching ingredients'
+                    : lowStockOnly
+                        ? 'Showing 0 ingredients that need restocking'
+                        : 'Showing 0 ingredients';
                 updatePaginationControls(0);
                 tableBody.innerHTML = `
                     <tr>
-                        <td class="px-6 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="6">${lowStockOnly ? 'No low-stock ingredients found.' : 'No ingredients found.'}</td>
+                        <td class="px-6 py-8 text-center text-sm font-bold text-on-surface-variant" colspan="6">${searchQuery ? 'No ingredients match your search.' : lowStockOnly ? 'No low-stock ingredients found.' : 'No ingredients found.'}</td>
                     </tr>
                 `;
                 return;
@@ -380,7 +407,7 @@
                 const ingredients = await fetchIngredients();
                 ingredientsCache = getListData(ingredients);
                 currentPage = 1;
-                renderIngredients(ingredientsCache);
+                renderIngredients(getFilteredIngredients());
             } catch (error) {
                 console.error('Failed to load ingredients:', error);
                 tableCount.textContent = 'Cannot load ingredients';
@@ -404,15 +431,21 @@
             updateLowStockFilterState();
             await loadIngredients();
         });
+        searchInput?.addEventListener('input', () => {
+            searchQuery = normalizeSearchText(searchInput.value);
+            currentPage = 1;
+            renderIngredients(getFilteredIngredients());
+        });
         previousPageButton.addEventListener('click', () => {
             if (currentPage <= 1) return;
             currentPage -= 1;
-            renderIngredients(ingredientsCache);
+            renderIngredients(getFilteredIngredients());
         });
         nextPageButton.addEventListener('click', () => {
-            if (currentPage >= getTotalPages(ingredientsCache.length)) return;
+            const filteredIngredients = getFilteredIngredients();
+            if (currentPage >= getTotalPages(filteredIngredients.length)) return;
             currentPage += 1;
-            renderIngredients(ingredientsCache);
+            renderIngredients(filteredIngredients);
         });
         modal.addEventListener('click', (event) => {
             if (event.target === modal) {
